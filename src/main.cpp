@@ -1,4 +1,5 @@
-#import <iostream>
+#include <iostream>
+#include "VideoTranscoder.cpp"
 
 using namespace std;
 
