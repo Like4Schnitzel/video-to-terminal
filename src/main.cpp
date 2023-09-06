@@ -1,5 +1,4 @@
-#include <iostream>
-#include "VideoTranscoder.cpp"
+#include "VideoTranscoder.hpp"
 
 using namespace std;
 
