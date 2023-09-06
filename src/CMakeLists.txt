@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 2.9)
 set(CMAKE_CXX_STANDARD 17)
-set( OpenCV_DIR "~/opencv/build/" )
 project( VideoToTerminal )
 find_package( OpenCV REQUIRED )
 include_directories( ${OpenCV_INCLUDE_DIRS} )
