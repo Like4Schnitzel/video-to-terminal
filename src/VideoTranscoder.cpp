@@ -12,7 +12,13 @@ VideoTranscoder::VideoTranscoder(std::string path)
     std::cout << "\"" << path << "\" opened successfully.\n";
 }
 
+VideoTranscoder::~VideoTranscoder()
+{
+    vidCap.release();
+}
+
 cv::Mat VideoTranscoder::getFrame()
 {
+    vidCap >> frame;
     return frame;
 }

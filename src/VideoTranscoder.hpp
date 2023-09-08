@@ -14,5 +14,6 @@ class VideoTranscoder
         std::string vidPath;
     public:
         VideoTranscoder(std::string);
+        ~VideoTranscoder();
         cv::Mat getFrame();
 };
