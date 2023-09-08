@@ -12,8 +12,11 @@ class VideoTranscoder
         cv::Mat frame;
         cv::VideoCapture vidCap;
         std::string vidPath;
+        int vidHeight;
+        int vidWidth;
     public:
         VideoTranscoder(std::string);
         ~VideoTranscoder();
         cv::Mat getFrame();
+        int getFPS();
 };

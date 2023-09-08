@@ -1,6 +1,4 @@
 #include "VideoTranscoder.hpp"
-#include <opencv2/core/utility.hpp>
-#include <opencv2/highgui.hpp>
 
 using namespace std;
 
@@ -11,16 +9,7 @@ int main()
     cin >> videoPath;
 
     VideoTranscoder trans = VideoTranscoder(videoPath);
-    cv::Mat currentFrame = trans.getFrame();
-    while (!currentFrame.empty()) 
-    {
-        cv::imshow("Frame", currentFrame);
-        if (cv::waitKey(33) != -1)
-        {
-            break;
-        }
-        currentFrame = trans.getFrame();
-    }
+    cout << "FPS is " << trans.getFPS() << "\n";
 
     return 0;
 }
