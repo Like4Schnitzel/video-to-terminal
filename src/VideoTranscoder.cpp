@@ -27,7 +27,11 @@ cv::Mat VideoTranscoder::getFrame()
     return frame;
 }
 
-int VideoTranscoder::getFPS()
+float VideoTranscoder::getFPS()
 {
     return vidCap.get(cv::CAP_PROP_FPS);
+}
+
+void VideoTranscoder::transCodeFile()
+{
 }

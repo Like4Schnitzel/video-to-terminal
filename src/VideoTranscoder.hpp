@@ -12,11 +12,12 @@ class VideoTranscoder
         cv::Mat frame;
         cv::VideoCapture vidCap;
         std::string vidPath;
-        int vidHeight;
-        int vidWidth;
+        uint vidHeight;
+        uint vidWidth;
     public:
         VideoTranscoder(std::string);
         ~VideoTranscoder();
         cv::Mat getFrame();
-        int getFPS();
+        float getFPS();
+        void transCodeFile();
 };
