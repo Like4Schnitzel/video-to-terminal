@@ -1,4 +1,5 @@
 #include "VideoTranscoder.hpp"
+#include <vector>
 
 VideoTranscoder::VideoTranscoder(std::string path)
 {
@@ -32,6 +33,26 @@ float VideoTranscoder::getFPS()
     return vidCap.get(cv::CAP_PROP_FPS);
 }
 
+bool* int8ToBitArray(uint8_t num)
+{
+    bool* arr = (bool*)malloc(sizeof(bool) * 8);
+    for (int i = 7; i >= 0; i--)
+    {
+        arr[i] = num % 2;
+        num /= 2;
+    }
+    return arr;
+}
+
+void push_array(std::vector<bool> vec, bool* arr, int arrLen)
+{
+    for (int i = 0; i < arrLen; i++) {
+        vec.push_back(arr[i]);
+    }
+}
+
 void VideoTranscoder::transCodeFile()
 {
+    std::vector<bool> stdiContent = std::vector<bool>();
+    push_array(stdiContent, int8ToBitArray(86), 8);
 }
