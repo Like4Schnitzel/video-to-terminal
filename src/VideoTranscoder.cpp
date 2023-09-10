@@ -1,4 +1,6 @@
 #include "VideoTranscoder.hpp"
+#include "binaryUtils.hpp"
+#include <iostream>
 
 VideoTranscoder::VideoTranscoder(std::string path)
 {
@@ -47,16 +49,22 @@ int rfind(std::string str, char c)
 
 void VideoTranscoder::transCodeFile()
 {
-    const uint16_t versionNumber = 1;
+    const uint16_t versionNumber = 1;   // change if updates to the file format are made
 
     std::vector<bool> stdiContent = std::vector<bool>();
+    // file signature
     BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(uint8_t(86)), 8);
     BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(uint8_t(84)), 8);
     BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(uint8_t(68)), 8);
     BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(uint8_t(73)), 8);
-    //std::cout << "Amount of written bits: " << stdiContent.size() << "\n";
+
+    // version number
+    BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(versionNumber), 16);
+
+    // FPS
+    BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(getFPS()), 32);
 
     const std::string vtdiFilePath = vidPath.substr(0, rfind(vidPath, '.')) + ".vtdi";
     BinaryUtils::writeToFile(vtdiFilePath, stdiContent);
-    std::cout << "Transcoded file written succesfully to \"" << vtdiFilePath <<"\"!\n";
+    std::cout << "Wrote " << stdiContent.size()/8 << " bytes to \"" << vtdiFilePath <<"\"!\n";
 }

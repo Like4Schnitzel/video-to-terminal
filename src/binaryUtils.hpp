@@ -6,6 +6,8 @@
 #include <iostream>
 #include <fstream>
 #include <stdexcept>
+#include <bitset>
+#include <climits>
 
 class BinaryUtils {
     public:
@@ -26,4 +28,6 @@ class BinaryUtils {
             }
             return arr;
         }
+
+        static bool* numToBitArray(float);
 };
