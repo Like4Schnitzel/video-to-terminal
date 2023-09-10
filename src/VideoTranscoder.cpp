@@ -16,6 +16,8 @@ VideoTranscoder::VideoTranscoder(std::string path)
     vidWidth = vidCap.get(cv::CAP_PROP_FRAME_WIDTH);
     vidHeight = vidCap.get(cv::CAP_PROP_FRAME_HEIGHT);
     std::cout << "Video dimensions: " << vidWidth << "x" << vidHeight << "\n";
+    vidFPS = vidCap.get(cv::CAP_PROP_FPS);
+    std::cout << "Video FPS: " << vidFPS << "\n";
 }
 
 VideoTranscoder::~VideoTranscoder()
@@ -27,11 +29,6 @@ cv::Mat VideoTranscoder::getFrame()
 {
     vidCap >> frame;
     return frame;
-}
-
-float VideoTranscoder::getFPS()
-{
-    return vidCap.get(cv::CAP_PROP_FPS);
 }
 
 int rfind(std::string str, char c)
@@ -62,7 +59,7 @@ void VideoTranscoder::transCodeFile()
     BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(versionNumber), 16);
 
     // FPS
-    BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(getFPS()), 32);
+    BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(vidFPS), 32);
 
     const std::string vtdiFilePath = vidPath.substr(0, rfind(vidPath, '.')) + ".vtdi";
     BinaryUtils::writeToFile(vtdiFilePath, stdiContent);

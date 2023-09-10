@@ -17,7 +17,6 @@ int main(int argc, char** argv)
 
     VideoTranscoder trans = VideoTranscoder(videoPath);
     trans.transCodeFile();
-    cout << "FPS is " << trans.getFPS() << "\n";
 
     return 0;
 }

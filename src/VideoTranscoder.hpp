@@ -15,10 +15,10 @@ class VideoTranscoder
         std::string vidPath;
         uint vidHeight;
         uint vidWidth;
+        float vidFPS;
     public:
         VideoTranscoder(std::string);
         ~VideoTranscoder();
         cv::Mat getFrame();
-        float getFPS();
         void transCodeFile();
 };
