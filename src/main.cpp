@@ -9,6 +9,7 @@ int main()
     cin >> videoPath;
 
     VideoTranscoder trans = VideoTranscoder(videoPath);
+    trans.transCodeFile();
     cout << "FPS is " << trans.getFPS() << "\n";
 
     return 0;
