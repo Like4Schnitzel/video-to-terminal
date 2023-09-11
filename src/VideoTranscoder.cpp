@@ -54,12 +54,13 @@ void VideoTranscoder::transCodeFile()
     BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(uint8_t(84)), 8);
     BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(uint8_t(68)), 8);
     BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(uint8_t(73)), 8);
-
     // version number
     BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(versionNumber), 16);
-
     // FPS
     BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(vidFPS), 32);
+    // width and height
+    BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(vidWidth), 16);
+    BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(vidHeight), 16);
 
     const std::string vtdiFilePath = vidPath.substr(0, rfind(vidPath, '.')) + ".vtdi";
     BinaryUtils::writeToFile(vtdiFilePath, stdiContent);
