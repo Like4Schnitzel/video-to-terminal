@@ -5,7 +5,7 @@
 #include <opencv2/videoio.hpp>
 #include <stdexcept>
 #include <iostream>
-#include "binaryUtils.hpp"
+#include "BinaryUtils.hpp"
 
 class VideoTranscoder 
 {

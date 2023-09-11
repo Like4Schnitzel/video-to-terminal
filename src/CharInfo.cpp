@@ -1,4 +1,4 @@
-#include "charInfo.hpp"
+#include "CharInfo.hpp"
 
 CharInfo::CharInfo()
 {

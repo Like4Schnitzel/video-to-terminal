@@ -1,4 +1,4 @@
-#include "binaryUtils.hpp"
+#include "BinaryUtils.hpp"
 
 void BinaryUtils::pushArray(std::vector<bool>* vec, bool* arr, int arrLen)
 {
