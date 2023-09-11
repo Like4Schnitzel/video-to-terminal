@@ -16,9 +16,11 @@ class VideoTranscoder
         uint16_t vidHeight;
         uint16_t vidWidth;
         uint32_t vidFrames;
+        uint16_t vidTHeight;
+        uint16_t vidTWidth;
         float vidFPS;
     public:
-        VideoTranscoder(std::string);
+        VideoTranscoder(std::string path, uint16_t terminalWidth, uint16_t terminalHeight);
         ~VideoTranscoder();
         cv::Mat getFrame();
         void transCodeFile();

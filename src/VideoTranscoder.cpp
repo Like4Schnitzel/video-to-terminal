@@ -1,7 +1,7 @@
 #include "VideoTranscoder.hpp"
 #include "binaryUtils.hpp"
 
-VideoTranscoder::VideoTranscoder(std::string path)
+VideoTranscoder::VideoTranscoder(std::string path, uint16_t terminalWidth, uint16_t terminalHeight)
 {
     vidPath = path;
     std::cout << "Attempting to open \"" << path << "\".\n";
@@ -19,6 +19,9 @@ VideoTranscoder::VideoTranscoder(std::string path)
     std::cout << "Video FPS: " << vidFPS << "\n";
     vidFrames = vidCap.get(cv::CAP_PROP_FRAME_COUNT);
     std::cout << "Video Frames: " << vidFrames << "\n";
+    vidTWidth = terminalWidth;
+    vidTHeight = terminalHeight;
+    std::cout << "Terminal dimensions: " << terminalWidth << "x" << terminalHeight << " characters\n";
 }
 
 VideoTranscoder::~VideoTranscoder()
@@ -64,6 +67,9 @@ void VideoTranscoder::transCodeFile()
     // width and height
     BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(vidWidth), 16);
     BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(vidHeight), 16);
+    // terminal width and height
+    BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(vidTWidth), 16);
+    BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(vidTHeight), 16);
 
     const std::string vtdiFilePath = vidPath.substr(0, rfind(vidPath, '.')) + ".vtdi";
     BinaryUtils::writeToFile(vtdiFilePath, stdiContent);
