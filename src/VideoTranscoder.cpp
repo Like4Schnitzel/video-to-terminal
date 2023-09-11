@@ -1,6 +1,5 @@
 #include "VideoTranscoder.hpp"
 #include "binaryUtils.hpp"
-#include <iostream>
 
 VideoTranscoder::VideoTranscoder(std::string path)
 {
@@ -18,6 +17,8 @@ VideoTranscoder::VideoTranscoder(std::string path)
     std::cout << "Video dimensions: " << vidWidth << "x" << vidHeight << "\n";
     vidFPS = vidCap.get(cv::CAP_PROP_FPS);
     std::cout << "Video FPS: " << vidFPS << "\n";
+    vidFrames = vidCap.get(cv::CAP_PROP_FRAME_COUNT);
+    std::cout << "Video Frames: " << vidFrames << "\n";
 }
 
 VideoTranscoder::~VideoTranscoder()
@@ -56,6 +57,8 @@ void VideoTranscoder::transCodeFile()
     BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(uint8_t(73)), 8);
     // version number
     BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(versionNumber), 16);
+    // frames
+    BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(vidFrames), 32);
     // FPS
     BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(vidFPS), 32);
     // width and height
