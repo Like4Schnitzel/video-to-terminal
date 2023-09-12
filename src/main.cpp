@@ -6,7 +6,7 @@ int stringToInt(std::string s)
 {
     int n = 0;
     int mult = 1;
-    for (int i = s.length() - 1; i >= 1; i--)
+    for (int i = s.length() - 1; i >= 0; i--)
     {
         if (s[i] < '0' || s[i] > '9')
         {
@@ -14,19 +14,6 @@ int stringToInt(std::string s)
         }
         n += (s[i] - '0') * mult;
         mult *= 10;
-    }
-
-    if (s[0] == '-')
-    {
-        n = -n;
-    }
-    else if (s[0] >= '0' && s[0] <= '9')
-    {
-        n += (s[0] - '0') * mult;
-    }
-    else
-    {
-        throw invalid_argument("Input must be a number.");
     }
 
     return n;
@@ -66,7 +53,7 @@ int main(int argc, char** argv)
     }
 
     VideoTranscoder trans = VideoTranscoder(videoPath, tWidth, tHeight);
-    trans.transCodeFile();
+    trans.transcodeFile();
 
     return 0;
 }
