@@ -7,6 +7,12 @@
 #include <iostream>
 #include "BinaryUtils.hpp"
 
+struct CharInfo {
+    cv::Vec3b foregroundRGB;
+    cv::Vec3b foregroundRGB;
+    uint8_t chara;
+};
+
 class VideoTranscoder 
 {
     private:
@@ -23,5 +29,6 @@ class VideoTranscoder
         VideoTranscoder(std::string path, uint16_t terminalWidth, uint16_t terminalHeight);
         ~VideoTranscoder();
         cv::Mat getFrame();
-        void transCodeFile();
+        void transcodeFile();
+        CharInfo* transcodeFrame();
 };
