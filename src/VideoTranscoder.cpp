@@ -70,6 +70,22 @@ void VideoTranscoder::transcodeFile()
     BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(vidTWidth), 16);
     BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(vidTHeight), 16);
 
+    const int totalTerminalChars = vidTWidth * vidTHeight;
+    for (vidCap>>frame; !frame.empty(); vidCap>>frame)
+    {
+        CharInfo* frameChars = transcodeFrame();
+        for (int i = 0; i < totalTerminalChars; i++)
+        {
+            bool* charInfoBits = BinaryUtils::charInfoToBitArray(frameChars[i]);
+            BinaryUtils::pushArray(&stdiContent, charInfoBits, sizeof(CharInfo)*8);
+        }
+        CharInfo ender;
+        ender.foregroundRGB = {0, 0, 0};
+        ender.backgroundRGB = {0, 0, 0};
+        ender.chara = 32;
+        BinaryUtils::pushArray(&stdiContent, BinaryUtils::charInfoToBitArray(ender), sizeof(CharInfo)*8);
+    }
+
     const std::string vtdiFilePath = vidPath.substr(0, rfind(vidPath, '.')) + ".vtdi";
     BinaryUtils::writeToFile(vtdiFilePath, stdiContent);
     std::cout << "Wrote " << stdiContent.size()/8 << " bytes to \"" << vtdiFilePath <<"\"!\n";
@@ -175,7 +191,7 @@ CharInfo* VideoTranscoder::transcodeFrame()
         int heightPixelsPerChar = vidHeight / vidTHeight;
 
         //cv::imshow("biggest image", frame);
-        std::cout << "frame dimensions: " << frame.size().width << "x" << frame.size().height << "\n";
+        //std::cout << "frame dimensions: " << frame.size().width << "x" << frame.size().height << "\n";
         for (int y = 0; y < vidHeight; y += heightPixelsPerChar)
         {
             for (int x = 0; x < vidWidth; x += widthPixelsPerChar)
