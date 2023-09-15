@@ -63,7 +63,7 @@ bool* BinaryUtils::numToBitArray(float num)
 
 bool* BinaryUtils::charInfoToBitArray(CharInfo ci)
 {
-    bool* result = (bool*)malloc(sizeof(CharInfo));
+    bool* result = (bool*)malloc(sizeof(CharInfo)*8);
     int index = 0;
 
     for (cv::Vec3b vec : {ci.foregroundRGB, ci.backgroundRGB})
