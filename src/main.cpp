@@ -54,6 +54,8 @@ int main(int argc, char** argv)
 
     VideoTranscoder trans = VideoTranscoder(videoPath, tWidth, tHeight);
     trans.transcodeFile();
+    trans.getFrame();
+    trans.transcodeFrame();
 
     return 0;
 }
