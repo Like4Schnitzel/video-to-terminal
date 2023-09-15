@@ -60,3 +60,31 @@ bool* BinaryUtils::numToBitArray(float num)
     }
     return out;
 }
+
+bool* BinaryUtils::charInfoToBitArray(CharInfo ci)
+{
+    bool* result = (bool*)malloc(sizeof(CharInfo));
+    int index = 0;
+
+    for (cv::Vec3b vec : {ci.foregroundRGB, ci.backgroundRGB})
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            bool* numBits = numToBitArray(vec[i]);
+            for (int j = 0; j < 8; j++)
+            {
+                result[index] = numBits[j];
+                index++;
+            }
+        }
+    }
+
+    bool* numBits = numToBitArray(ci.chara);
+    for (int i = 0; i < 8; i++)
+    {
+        result[index] = numBits[i];
+        index++;
+    }
+
+    return result;
+}

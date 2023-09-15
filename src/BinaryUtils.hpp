@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <bitset>
 #include <climits>
+#include "VideoTranscoder.hpp"
 
 class BinaryUtils {
     public:
@@ -30,4 +31,6 @@ class BinaryUtils {
         }
 
         static bool* numToBitArray(float);
+
+        static bool* charInfoToBitArray(CharInfo ci);
 };
