@@ -5,7 +5,6 @@
 #include <opencv2/videoio.hpp>
 #include <stdexcept>
 #include <iostream>
-#include "BinaryUtils.hpp"
 
 struct CharInfo {
     cv::Vec3b foregroundRGB;

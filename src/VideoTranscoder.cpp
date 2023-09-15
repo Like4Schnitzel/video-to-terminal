@@ -1,4 +1,5 @@
 #include "VideoTranscoder.hpp"
+#include "BinaryUtils.hpp"
 
 VideoTranscoder::VideoTranscoder(std::string path, uint16_t terminalWidth, uint16_t terminalHeight)
 {
