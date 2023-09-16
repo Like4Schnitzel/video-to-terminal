@@ -15,7 +15,7 @@ void BinaryUtils::writeToFile(std::string fileName, std::vector<bool> bits)
     {
         throw std::logic_error("Bits are not divisible by 8.");
     }
-    const int byteSize = bits.size()/8;
+    const int byteSize = bits.size()/CHAR_BIT;
     char* toWrite = (char*)malloc(byteSize);    // you need to write full bytes to files, 1 char is equal to 1 byte
 
     std::ofstream file(fileName, std::ios::out | std::ios::binary);
@@ -63,7 +63,7 @@ bool* BinaryUtils::numToBitArray(float num)
 
 bool* BinaryUtils::charInfoToBitArray(CharInfo ci)
 {
-    bool* result = (bool*)malloc(sizeof(CharInfo)*8);
+    bool* result = (bool*)malloc(sizeof(CharInfo)*CHAR_BIT);
     int index = 0;
 
     for (cv::Vec3b vec : {ci.foregroundRGB, ci.backgroundRGB})
