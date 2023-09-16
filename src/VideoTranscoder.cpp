@@ -79,12 +79,11 @@ void VideoTranscoder::transcodeFile()
     std::cout << "Transcoding frames...\n";
     for (vidCap>>frame; !frame.empty(); vidCap>>frame)
     {
-        double newProgress = (int)((double) frameIndex / vidFrames * 100) / 100.;  // round to 2 digits
+        double newProgress = (int)((double) frameIndex / vidFrames * 10000) / 10000.;  // round to 4 digits
         if (newProgress != progress)
         {
             progress = newProgress;
-            std::cout << "test?";
-            std::cout << progress*100;
+            std::cout << progress*100 << "\% done      \r";
         }
         frameIndex++;
         CharInfo* frameChars = transcodeFrame();
