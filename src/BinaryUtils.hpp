@@ -14,11 +14,16 @@
 struct BoolArrayWithSize {
     bool* arr;
     int size;
+
+    ~BoolArrayWithSize()
+    {
+        free(arr);
+    }
 };
 
 class BinaryUtils {
     public:
-        static void pushArray(std::vector<bool>*, const bool*, const int);
+        static void pushArray(std::vector<bool>* vec, const bool* arr, const ulong arrLen);
         static void writeToFile(const std::string, const std::vector<bool>);
 
         template <typename uints>
@@ -40,5 +45,5 @@ class BinaryUtils {
 
         static bool* charInfoToBitArray(const CharInfo ci);
 
-        static BoolArrayWithSize compressBits(const bool* input, const int inputLength);
+        static BoolArrayWithSize compressBits(const bool* input, const ulong inputLength);
 };

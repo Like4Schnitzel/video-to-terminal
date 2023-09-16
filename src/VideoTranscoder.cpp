@@ -66,13 +66,13 @@ void VideoTranscoder::transcodeFile()
     const int totalTerminalChars = vidTWidth * vidTHeight;
     const int bitsInCharInfo = sizeof(CharInfo) * CHAR_BIT;
     const ulong totalVideoBits = (vidTWidth * vidTHeight + 1) * vidFrames * bitsInCharInfo;
+    ulong videoBitIndex = 0;
     CharInfo ender;
     ender.foregroundRGB = {0, 0, 0};
     ender.backgroundRGB = {0, 0, 0};
     ender.chara = 32;
     bool* enderBits = BinaryUtils::charInfoToBitArray(ender);
     bool* videoBits = (bool*)malloc(totalVideoBits);
-    int videoBitIndex = 0;
     int frameIndex = 0;
     double progress = -1;
     // writing transcoded video bits
@@ -83,7 +83,7 @@ void VideoTranscoder::transcodeFile()
         if (newProgress != progress)
         {
             progress = newProgress;
-            std::cout << progress*100 << "\% done      \r";
+            std::cout << progress*100 << "\% done...    \r";
         }
         frameIndex++;
         CharInfo* frameChars = transcodeFrame();
@@ -105,6 +105,7 @@ void VideoTranscoder::transcodeFile()
             videoBitIndex++;
         }
     }
+    std::cout << "100\% done!     \n";
     free(enderBits);
 
     if (totalVideoBits != videoBitIndex)
@@ -156,6 +157,7 @@ cv::Vec3b getAverageRGB(cv::Mat img)
         //std::cout << "Average RGB: " << (int)avrgRGB[0] << " " << (int)avrgRGB[1] << " " << (int)avrgRGB[2] << "\n";
         //cv::waitKey(0);
     }
+
     return avrgRGB;
 }
 

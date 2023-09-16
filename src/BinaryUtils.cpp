@@ -1,8 +1,8 @@
 #include "BinaryUtils.hpp"
 
-void BinaryUtils::pushArray(std::vector<bool>* vec, const bool* arr, const int arrLen)
+void BinaryUtils::pushArray(std::vector<bool>* vec, const bool* arr, const ulong arrLen)
 {
-    for (int i = 0; i < arrLen; i++) {
+    for (ulong i = 0; i < arrLen; i++) {
         (*vec).push_back(arr[i]);
         //std::cout << arr[i];
     }
@@ -15,7 +15,7 @@ void BinaryUtils::writeToFile(const std::string fileName, const std::vector<bool
     {
         throw std::logic_error("Bits are not divisible by 8.");
     }
-    const int byteSize = bits.size()/CHAR_BIT;
+    const ulong byteSize = bits.size()/CHAR_BIT;
     char* toWrite = (char*)malloc(byteSize);    // you need to write full bytes to files, 1 char is equal to 1 byte
 
     std::ofstream file(fileName, std::ios::out | std::ios::binary);
@@ -24,7 +24,7 @@ void BinaryUtils::writeToFile(const std::string fileName, const std::vector<bool
         throw std::runtime_error("Cannot open file to write to.");
     }
 
-    for (int i = 0; i < byteSize; i++)
+    for (ulong i = 0; i < byteSize; i++)
     {
         toWrite[i] = 0;
         // write bits to char
@@ -36,6 +36,7 @@ void BinaryUtils::writeToFile(const std::string fileName, const std::vector<bool
     }
 
     file.write(toWrite, byteSize);
+    free(toWrite);
     file.close();
 }
 
@@ -76,6 +77,7 @@ bool* BinaryUtils::charInfoToBitArray(const CharInfo ci)
                 result[index] = numBits[j];
                 index++;
             }
+            free(numBits);
         }
     }
 
@@ -85,21 +87,22 @@ bool* BinaryUtils::charInfoToBitArray(const CharInfo ci)
         result[index] = numBits[i];
         index++;
     }
+    free(numBits);
 
     return result;
 }
 
 // most of this is taken from https://gist.github.com/arq5x/5315739
-BoolArrayWithSize BinaryUtils::compressBits(const bool* input, const int inputLengthBytes)
+BoolArrayWithSize BinaryUtils::compressBits(const bool* input, const ulong inputLength)
 {
-    char out[inputLengthBytes];
+    char* out = (char*)malloc(inputLength);
     z_stream defstream;
     defstream.zalloc = Z_NULL;
     defstream.zfree = Z_NULL;
     defstream.opaque = Z_NULL;
-    defstream.avail_in = inputLengthBytes;
+    defstream.avail_in = inputLength;
     defstream.next_in = (Bytef*) input;
-    defstream.avail_out = (uInt) sizeof(out);
+    defstream.avail_out = inputLength;
     defstream.next_out = (Bytef*) out;
 
     std::cout << "compressing...\n";
@@ -107,9 +110,21 @@ BoolArrayWithSize BinaryUtils::compressBits(const bool* input, const int inputLe
     deflate(&defstream, Z_FINISH);
     deflateEnd(&defstream);
 
+    out = (char*)malloc(defstream.total_out);
     BoolArrayWithSize output;
-    output.size = strlen(out)*CHAR_BIT;
-    output.arr = (bool*) out;
+    output.size = defstream.total_out*CHAR_BIT;
+    bool* outBits = (bool*)malloc(output.size);
+    for (ulong i = 0; i < defstream.total_out; i++)
+    {
+        bool* tempOutBitsChar = numToBitArray(out[i]);
+        for (int j = 0; j < 8; j++)
+        {
+            outBits[8*i+j] = tempOutBitsChar[j];
+        }
+        free(tempOutBitsChar);
+    }
+    free(out);
+    output.arr = outBits;
 
     return output;
 }
