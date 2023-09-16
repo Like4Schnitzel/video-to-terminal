@@ -21,8 +21,8 @@ class BinaryUtils {
             const int byteSize = sizeof(num);
             //std::cout << "byteSize is " << byteSize << "\n";
 
-            bool* arr = (bool*)malloc(byteSize*8);
-            for (int i = byteSize*8-1; i >= 0; i--)
+            bool* arr = (bool*)malloc(byteSize*CHAR_BIT);
+            for (int i = byteSize*CHAR_BIT-1; i >= 0; i--)
             {
                 arr[i] = num % 2;
                 num /= 2;
