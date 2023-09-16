@@ -12,8 +12,8 @@
 
 class BinaryUtils {
     public:
-        static void pushArray(std::vector<bool>*, bool*, int);
-        static void writeToFile(std::string, std::vector<bool>);
+        static void pushArray(std::vector<bool>*, const bool*, const int);
+        static void writeToFile(const std::string, const std::vector<bool>);
 
         template <typename uints>
         static bool* numToBitArray(uints num)
@@ -30,7 +30,7 @@ class BinaryUtils {
             return arr;
         }
 
-        static bool* numToBitArray(float);
+        static bool* numToBitArray(const float);
 
-        static bool* charInfoToBitArray(CharInfo ci);
+        static bool* charInfoToBitArray(const CharInfo ci);
 };

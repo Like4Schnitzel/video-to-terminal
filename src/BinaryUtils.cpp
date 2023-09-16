@@ -1,6 +1,6 @@
 #include "BinaryUtils.hpp"
 
-void BinaryUtils::pushArray(std::vector<bool>* vec, bool* arr, int arrLen)
+void BinaryUtils::pushArray(std::vector<bool>* vec, const bool* arr, const int arrLen)
 {
     for (int i = 0; i < arrLen; i++) {
         (*vec).push_back(arr[i]);
@@ -9,7 +9,7 @@ void BinaryUtils::pushArray(std::vector<bool>* vec, bool* arr, int arrLen)
     //std::cout << " pushed to vector.\nVector size is " << (*vec).size() << "\n";
 }
 
-void BinaryUtils::writeToFile(std::string fileName, std::vector<bool> bits)
+void BinaryUtils::writeToFile(const std::string fileName, const std::vector<bool> bits)
 {
     if (bits.size() % 8 != 0)
     {
@@ -39,7 +39,7 @@ void BinaryUtils::writeToFile(std::string fileName, std::vector<bool> bits)
     file.close();
 }
 
-bool* BinaryUtils::numToBitArray(float num)
+bool* BinaryUtils::numToBitArray(const float num)
 {
     // i have no idea how this works, but it saves the bitwise representation in the variable `bits`
     // taken from https://stackoverflow.com/a/474058
@@ -61,7 +61,7 @@ bool* BinaryUtils::numToBitArray(float num)
     return out;
 }
 
-bool* BinaryUtils::charInfoToBitArray(CharInfo ci)
+bool* BinaryUtils::charInfoToBitArray(const CharInfo ci)
 {
     bool* result = (bool*)malloc(sizeof(CharInfo)*CHAR_BIT);
     int index = 0;
