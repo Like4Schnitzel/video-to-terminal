@@ -53,23 +53,14 @@ void VideoTranscoder::transcodeFile()
     const uint16_t versionNumber = 1;   // change if updates to the file format are made
 
     std::vector<bool> stdiContent = std::vector<bool>();
-    // file signature
-    BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(uint8_t(86)), 8);
-    BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(uint8_t(84)), 8);
-    BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(uint8_t(68)), 8);
-    BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(uint8_t(73)), 8);
-    // version number
-    BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(versionNumber), 16);
-    // frames
-    BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(vidFrames), 32);
-    // FPS
-    BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(vidFPS), 32);
-    // width and height
-    BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(vidWidth), 16);
-    BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(vidHeight), 16);
-    // terminal width and height
-    BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(vidTWidth), 16);
-    BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(vidTHeight), 16);
+
+    // write all the pre-video information to the file
+    auto args = std::make_tuple(
+        uint8_t(86), uint8_t(84), uint8_t(68), uint8_t(73), versionNumber, vidFrames, vidFPS, vidWidth, vidHeight, vidTWidth, vidTHeight
+    );
+    std::apply([&](auto... args) {
+        (..., BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(args), sizeof(args)*CHAR_BIT));
+    }, args);
 
     const int totalTerminalChars = vidTWidth * vidTHeight;
     for (vidCap>>frame; !frame.empty(); vidCap>>frame)
