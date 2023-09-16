@@ -39,7 +39,7 @@ int main(int argc, char** argv)
     }
     else
     {
-        cout << "Please enter a 16 bit unsigned int for the terminal width.";
+        cout << "Please enter a 16 bit unsigned int for the terminal width: ";
         cin >> tWidth;
     }
     if (argc > 3)
@@ -48,7 +48,7 @@ int main(int argc, char** argv)
     }
     else
     {
-        cout << "Please enter a 16 bit unsigned int for the terminal height.";
+        cout << "Please enter a 16 bit unsigned int for the terminal height: ";
         cin >> tHeight;
     }
 

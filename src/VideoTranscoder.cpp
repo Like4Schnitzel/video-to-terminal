@@ -65,17 +65,28 @@ void VideoTranscoder::transcodeFile()
     // settings constants for video bit writing
     const int totalTerminalChars = vidTWidth * vidTHeight;
     const int bitsInCharInfo = sizeof(CharInfo) * CHAR_BIT;
-    const int totalVideoBits = (vidTWidth * vidTHeight + 1) * vidFrames * bitsInCharInfo;
+    const ulong totalVideoBits = (vidTWidth * vidTHeight + 1) * vidFrames * bitsInCharInfo;
     CharInfo ender;
     ender.foregroundRGB = {0, 0, 0};
     ender.backgroundRGB = {0, 0, 0};
     ender.chara = 32;
-    const bool* enderBits = BinaryUtils::charInfoToBitArray(ender);
+    bool* enderBits = BinaryUtils::charInfoToBitArray(ender);
     bool* videoBits = (bool*)malloc(totalVideoBits);
     int videoBitIndex = 0;
+    int frameIndex = 0;
+    double progress = -1;
     // writing transcoded video bits
+    std::cout << "Transcoding frames...\n";
     for (vidCap>>frame; !frame.empty(); vidCap>>frame)
     {
+        double newProgress = (int)((double) frameIndex / vidFrames * 100) / 100.;  // round to 2 digits
+        if (newProgress != progress)
+        {
+            progress = newProgress;
+            std::cout << "test?";
+            std::cout << progress*100;
+        }
+        frameIndex++;
         CharInfo* frameChars = transcodeFrame();
         for (int i = 0; i < totalTerminalChars; i++)
         {
@@ -85,7 +96,9 @@ void VideoTranscoder::transcodeFile()
                 videoBits[videoBitIndex] = charInfoBits[j];
                 videoBitIndex++;
             }
+            free(charInfoBits);
         }
+        free(frameChars);
         // write frame ender bit sequence
         for (int i = 0; i < bitsInCharInfo; i++)
         {
@@ -93,14 +106,17 @@ void VideoTranscoder::transcodeFile()
             videoBitIndex++;
         }
     }
+    free(enderBits);
 
     if (totalVideoBits != videoBitIndex)
     {
         std::cout << "Something went wrong! videoBitIndex is " << videoBitIndex << " when it should be " << totalVideoBits << "\n";
     }
 
-    const bool* compressedVideoBits = videoBits;    // compression code goes here later
-    BinaryUtils::pushArray(&stdiContent, compressedVideoBits, videoBitIndex);
+    const BoolArrayWithSize compressedVideoBits = BinaryUtils::compressBits(videoBits, videoBitIndex);
+    std::cout << "Compressed video bits from " << videoBitIndex << "b to " << compressedVideoBits.size << "b\n";
+    free(videoBits);
+    BinaryUtils::pushArray(&stdiContent, compressedVideoBits.arr, compressedVideoBits.size);
 
     const std::string vtdiFilePath = vidPath.substr(0, rfind(vidPath, '.')) + ".vtdi";
     BinaryUtils::writeToFile(vtdiFilePath, stdiContent);
@@ -203,16 +219,16 @@ CharInfo* VideoTranscoder::transcodeFrame()
     // downscale
     if (vidWidth >= vidTWidth)
     {
-        int widthPixelsPerChar = vidWidth / vidTWidth;
-        int heightPixelsPerChar = vidHeight / vidTHeight;
+        const double widthPixelsPerChar = vidWidth / vidTWidth;
+        const double heightPixelsPerChar = vidHeight / vidTHeight;
 
         //cv::imshow("biggest image", frame);
         //std::cout << "frame dimensions: " << frame.size().width << "x" << frame.size().height << "\n";
-        for (int y = 0; y < vidHeight; y += heightPixelsPerChar)
+        for (double y = 0; y+heightPixelsPerChar < vidHeight; y += heightPixelsPerChar)
         {
-            for (int x = 0; x < vidWidth; x += widthPixelsPerChar)
+            for (double x = 0; x+widthPixelsPerChar < vidWidth; x += widthPixelsPerChar)
             {
-                cv::Mat framePart = this->frame(cv::Rect(x, y, widthPixelsPerChar, heightPixelsPerChar));
+                cv::Mat framePart = this->frame(cv::Rect((int)x, (int)y, (int)widthPixelsPerChar, (int)heightPixelsPerChar));
                 frameInfo[charIndex] = findBestBlockCharacter(framePart);
             }
         }

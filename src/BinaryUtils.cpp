@@ -88,3 +88,28 @@ bool* BinaryUtils::charInfoToBitArray(const CharInfo ci)
 
     return result;
 }
+
+// most of this is taken from https://gist.github.com/arq5x/5315739
+BoolArrayWithSize BinaryUtils::compressBits(const bool* input, const int inputLengthBytes)
+{
+    char out[inputLengthBytes];
+    z_stream defstream;
+    defstream.zalloc = Z_NULL;
+    defstream.zfree = Z_NULL;
+    defstream.opaque = Z_NULL;
+    defstream.avail_in = inputLengthBytes;
+    defstream.next_in = (Bytef*) input;
+    defstream.avail_out = (uInt) sizeof(out);
+    defstream.next_out = (Bytef*) out;
+
+    std::cout << "compressing...\n";
+    deflateInit(&defstream, Z_BEST_COMPRESSION);
+    deflate(&defstream, Z_FINISH);
+    deflateEnd(&defstream);
+
+    BoolArrayWithSize output;
+    output.size = strlen(out)*CHAR_BIT;
+    output.arr = (bool*) out;
+
+    return output;
+}

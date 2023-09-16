@@ -8,7 +8,13 @@
 #include <stdexcept>
 #include <bitset>
 #include <climits>
+#include <zlib.h>
 #include "VideoTranscoder.hpp"
+
+struct BoolArrayWithSize {
+    bool* arr;
+    int size;
+};
 
 class BinaryUtils {
     public:
@@ -33,4 +39,6 @@ class BinaryUtils {
         static bool* numToBitArray(const float);
 
         static bool* charInfoToBitArray(const CharInfo ci);
+
+        static BoolArrayWithSize compressBits(const bool* input, const int inputLength);
 };
