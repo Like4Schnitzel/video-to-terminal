@@ -1,7 +1,7 @@
 #include "VideoTranscoder.hpp"
 #include "BinaryUtils.hpp"
 
-VideoTranscoder::VideoTranscoder(std::string path, uint16_t terminalWidth, uint16_t terminalHeight)
+VideoTranscoder::VideoTranscoder(const std::string path, const uint16_t terminalWidth, const uint16_t terminalHeight)
 {
     vidPath = path;
     std::cout << "Attempting to open \"" << path << "\".\n";
@@ -62,21 +62,45 @@ void VideoTranscoder::transcodeFile()
         (..., BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(args), sizeof(args)*CHAR_BIT));
     }, args);
 
+    // settings constants for video bit writing
     const int totalTerminalChars = vidTWidth * vidTHeight;
+    const int bitsInCharInfo = sizeof(CharInfo) * CHAR_BIT;
+    const int totalVideoBits = (vidTWidth * vidTHeight + 1) * vidFrames * bitsInCharInfo;
+    CharInfo ender;
+    ender.foregroundRGB = {0, 0, 0};
+    ender.backgroundRGB = {0, 0, 0};
+    ender.chara = 32;
+    const bool* enderBits = BinaryUtils::charInfoToBitArray(ender);
+    bool* videoBits = (bool*)malloc(totalVideoBits);
+    int videoBitIndex = 0;
+    // writing transcoded video bits
     for (vidCap>>frame; !frame.empty(); vidCap>>frame)
     {
         CharInfo* frameChars = transcodeFrame();
         for (int i = 0; i < totalTerminalChars; i++)
         {
             bool* charInfoBits = BinaryUtils::charInfoToBitArray(frameChars[i]);
-            BinaryUtils::pushArray(&stdiContent, charInfoBits, sizeof(CharInfo)*8);
+            for (int j = 0; j < bitsInCharInfo; j++)
+            {
+                videoBits[videoBitIndex] = charInfoBits[j];
+                videoBitIndex++;
+            }
         }
-        CharInfo ender;
-        ender.foregroundRGB = {0, 0, 0};
-        ender.backgroundRGB = {0, 0, 0};
-        ender.chara = 32;
-        BinaryUtils::pushArray(&stdiContent, BinaryUtils::charInfoToBitArray(ender), sizeof(CharInfo)*8);
+        // write frame ender bit sequence
+        for (int i = 0; i < bitsInCharInfo; i++)
+        {
+            videoBits[videoBitIndex] = enderBits[i];
+            videoBitIndex++;
+        }
     }
+
+    if (totalVideoBits != videoBitIndex)
+    {
+        std::cout << "Something went wrong! videoBitIndex is " << videoBitIndex << " when it should be " << totalVideoBits << "\n";
+    }
+
+    const bool* compressedVideoBits = videoBits;    // compression code goes here later
+    BinaryUtils::pushArray(&stdiContent, compressedVideoBits, videoBitIndex);
 
     const std::string vtdiFilePath = vidPath.substr(0, rfind(vidPath, '.')) + ".vtdi";
     BinaryUtils::writeToFile(vtdiFilePath, stdiContent);
