@@ -1,5 +1,33 @@
 #include "BinaryUtils.hpp"
 
+template <typename T>
+char* bitArrayToCharArray(T bits, ulong len)
+{
+    if (typeid(bits) != typeid(bool*) && typeid(bits) != typeid(std::vector<bool>))
+    {
+        throw std::invalid_argument("bits must be of type bool* or std::vector<bool>");
+    }
+
+    if (len % 8 != 0)
+    {
+        throw std::logic_error("Bits are not divisible by 8.");
+    }
+
+    ulong byteSize = len / CHAR_BIT;
+    char* output = (char*)malloc(byteSize);
+    for (ulong i = 0; i < byteSize; i++)
+    {
+        output[i] = 0;
+        // write bits to char
+        for (int j = 0; j < 8; j++)
+        {
+            output[i] = output[i] << 1 | bits[i*8 + j];   //push already written bits to the left by one, then write 0 or 1 on the very right
+        }
+    }
+
+    return output;
+}
+
 void BinaryUtils::pushArray(std::vector<bool>* vec, const bool* arr, const ulong arrLen)
 {
     for (ulong i = 0; i < arrLen; i++) {
@@ -11,30 +39,14 @@ void BinaryUtils::pushArray(std::vector<bool>* vec, const bool* arr, const ulong
 
 void BinaryUtils::writeToFile(const std::string fileName, const std::vector<bool> bits)
 {
-    if (bits.size() % 8 != 0)
-    {
-        throw std::logic_error("Bits are not divisible by 8.");
-    }
     const ulong byteSize = bits.size()/CHAR_BIT;
-    char* toWrite = (char*)malloc(byteSize);    // you need to write full bytes to files, 1 char is equal to 1 byte
+    char* toWrite = bitArrayToCharArray(bits, bits.size());    // you need to write full bytes to files, 1 char is equal to 1 byte
 
     std::ofstream file(fileName, std::ios::out | std::ios::binary);
     if (!file.good())
     {
         throw std::runtime_error("Cannot open file to write to.");
     }
-
-    for (ulong i = 0; i < byteSize; i++)
-    {
-        toWrite[i] = 0;
-        // write bits to char
-        for (int j = 0; j < 8; j++)
-        {
-            toWrite[i] = toWrite[i] << 1 | bits[i*8 + j];   //push already written bits to the left by one, then write 0 or 1 on the very right
-        }
-        //std::cout << "Wrote bit " << toWrite[i] << " to file.\n";
-    }
-
     file.write(toWrite, byteSize);
     free(toWrite);
     file.close();
