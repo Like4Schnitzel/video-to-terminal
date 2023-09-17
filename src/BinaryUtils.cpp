@@ -3,11 +3,6 @@
 template <typename T>
 char* bitArrayToCharArray(T bits, ulong len)
 {
-    if (typeid(bits) != typeid(bool*) && typeid(bits) != typeid(std::vector<bool>))
-    {
-        throw std::invalid_argument("bits must be of type bool* or std::vector<bool>");
-    }
-
     if (len % 8 != 0)
     {
         throw std::logic_error("Bits are not divisible by 8.");
@@ -107,13 +102,14 @@ bool* BinaryUtils::charInfoToBitArray(const CharInfo ci)
 // most of this is taken from https://gist.github.com/arq5x/5315739
 BoolArrayWithSize BinaryUtils::compressBits(const bool* input, const ulong inputLength)
 {
+    char* in = bitArrayToCharArray(input, inputLength);
     char* out = (char*)malloc(inputLength);
     z_stream defstream;
     defstream.zalloc = Z_NULL;
     defstream.zfree = Z_NULL;
     defstream.opaque = Z_NULL;
     defstream.avail_in = inputLength;
-    defstream.next_in = (Bytef*) input;
+    defstream.next_in = (Bytef*) in;
     defstream.avail_out = inputLength;
     defstream.next_out = (Bytef*) out;
 
@@ -122,7 +118,6 @@ BoolArrayWithSize BinaryUtils::compressBits(const bool* input, const ulong input
     deflate(&defstream, Z_FINISH);
     deflateEnd(&defstream);
 
-    out = (char*)malloc(defstream.total_out);
     BoolArrayWithSize output;
     output.size = defstream.total_out*CHAR_BIT;
     bool* outBits = (bool*)malloc(output.size);
