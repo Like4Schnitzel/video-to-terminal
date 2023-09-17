@@ -13,7 +13,7 @@
 
 struct BoolArrayWithSize {
     bool* arr;
-    int size;
+    ulong size;
 
     ~BoolArrayWithSize()
     {
