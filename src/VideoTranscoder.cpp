@@ -116,6 +116,13 @@ void VideoTranscoder::transcodeFile()
     const BoolArrayWithSize compressedVideoBits = BinaryUtils::compressBits(videoBits, videoBitIndex);
     std::cout << "Compressed video bits from " << videoBitIndex << "b to " << compressedVideoBits.size << "b\n";
     free(videoBits);
+
+    // write uncompressed and compressed size to file
+    for (ulong n : {videoBitIndex, compressedVideoBits.size})
+    {
+        BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToBitArray(n), sizeof(n)*CHAR_BIT);
+    }
+    // write compressed bits to file
     BinaryUtils::pushArray(&stdiContent, compressedVideoBits.arr, compressedVideoBits.size);
 
     const std::string vtdiFilePath = vidPath.substr(0, rfind(vidPath, '.')) + ".vtdi";
