@@ -8,8 +8,8 @@ The next 4 bytes are the video's total frames as a uint.\
 The next 4 bytes are the video's FPS as a float.\
 The next 2 bytes are a uint giving the video's width in pixels, followed by another 2 bytes for height.\
 The next 2 bytes give the transcoded video width within the terminal, followed by another 2 bytes for height.\
-The next 8 bytes are a ulong giving the value of the frame information part's uncompressed size in bits.\
-The next 8 bytes are a ulong giving the value of the frame information part's compressed size in bits.\
+The next 8 bytes are a ulong giving the value of the frame information part's uncompressed size in bytes.\
+The next 8 bytes are a ulong giving the value of the frame information part's compressed size in bytes.\
 After that is the actual video display information, compressed by deflating.\
 The video is displayed by using foreground and background ANSI RGB codes together with [Unicode Block Elements](https://en.wikipedia.org/wiki/Block_Elements).\
 A frame is stored as a series of character information.\
