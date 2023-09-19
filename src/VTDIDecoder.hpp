@@ -14,6 +14,9 @@ class VTDIDecoder {
         int vidHeight;
         int terminalWidth;
         int terminalHeight;
+        float FPS;
+        int version;
     public:
         VTDIDecoder(std::string path);
+        void getStaticInfo();
 };
