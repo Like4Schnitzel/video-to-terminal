@@ -58,21 +58,6 @@ class BinaryUtils {
 
         static void writeToFile(const std::string, const std::vector<char>);
 
-        template <typename uints>
-        static bool* numToBitArray(uints num)
-        {
-            const int byteSize = sizeof(num);
-            //std::cout << "byteSize is " << byteSize << "\n";
-
-            bool* arr = (bool*)malloc(byteSize*CHAR_BIT);
-            for (int i = byteSize*CHAR_BIT-1; i >= 0; i--)
-            {
-                arr[i] = num % 2;
-                num /= 2;
-            }
-            return arr;
-        }
-
         static bool* numToBitArray(const float);
 
         template <typename uints>
@@ -90,8 +75,6 @@ class BinaryUtils {
         }
 
         static char* numToCharArray(const float);
-
-        static bool* charInfoToBitArray(const CharInfo ci);
 
         static char* charInfoToCharArray(const CharInfo ci);
 

@@ -43,36 +43,6 @@ char* BinaryUtils::numToCharArray(const float num)
     return floatBytes;
 }
 
-bool* BinaryUtils::charInfoToBitArray(const CharInfo ci)
-{
-    bool* result = (bool*)malloc(sizeof(CharInfo)*CHAR_BIT);
-    int index = 0;
-
-    for (cv::Vec3b vec : {ci.foregroundRGB, ci.backgroundRGB})
-    {
-        for (int i = 0; i < 3; i++)
-        {
-            bool* numBits = numToBitArray(vec[i]);
-            for (int j = 0; j < 8; j++)
-            {
-                result[index] = numBits[j];
-                index++;
-            }
-            free(numBits);
-        }
-    }
-
-    bool* numBits = numToBitArray(ci.chara);
-    for (int i = 0; i < 8; i++)
-    {
-        result[index] = numBits[i];
-        index++;
-    }
-    free(numBits);
-
-    return result;
-}
-
 char* BinaryUtils::charInfoToCharArray(const CharInfo ci)
 {
     char* result = (char*)malloc(sizeof(CharInfo));
