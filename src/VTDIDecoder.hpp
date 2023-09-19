@@ -24,4 +24,5 @@ class VTDIDecoder {
 
         int getVersion();
         uint32_t getFrameCount();
+        float getFPS();
 };

@@ -38,6 +38,9 @@ void VTDIDecoder::getStaticInfo()
     this->frameCount = BinaryUtils::charArrayToUint(VariousUtils::subArray(staticInfoBytes, index, index+4), 4);
     index += 4;
 
+    this->FPS = BinaryUtils::charArrayToFloat(VariousUtils::subArray(staticInfoBytes, index, index+4), 4);
+    index += 4;
+
     vtdiFile.close();
 }
 
@@ -49,4 +52,9 @@ int VTDIDecoder::getVersion()
 uint32_t VTDIDecoder::getFrameCount()
 {
     return frameCount;
+}
+
+float VTDIDecoder::getFPS()
+{
+    return FPS;
 }

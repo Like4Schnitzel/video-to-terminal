@@ -13,37 +13,18 @@ void BinaryUtils::writeToFile(const std::string fileName, const std::vector<char
     file.close();
 }
 
-bool* BinaryUtils::numToBitArray(const float num)
+char* BinaryUtils::numToCharArray(const float num)
 {
-    // i have no idea how this works, but it saves the bitwise representation in the variable `bits`
-    // taken from https://stackoverflow.com/a/474058
     union
     {
         float input;
         int output;
     } data;
     data.input = num;
-    std::bitset<sizeof(float) * CHAR_BIT> bits(data.output);
-
-    //std::cout << "float converted to " << bits << "\n";
-
-    bool* out = (bool*)malloc(sizeof(bool)*32);
-    for (int i = 0; i < 32; i++)
-    {
-        out[i] = bits[i];
-    }
-    return out;
+    return numToCharArray(data.output);
 }
 
-char* BinaryUtils::numToCharArray(const float num)
-{
-    bool* floatBits = numToBitArray(num);
-    char* floatBytes = bitArrayToCharArray(floatBits, 32);
-    free(floatBits);
-    return floatBytes;
-}
-
-ulong BinaryUtils::charArrayToUint(char* arr, int len)
+ulong BinaryUtils::charArrayToUint(const char* arr, const int len)
 {
     ulong num = 0;
     int markiplier = 1;
@@ -55,6 +36,21 @@ ulong BinaryUtils::charArrayToUint(char* arr, int len)
     }
 
     return num;
+}
+
+float BinaryUtils::charArrayToFloat(const char* arr, const int len)
+{
+    if (len != 4)
+    {
+        std::logic_error("Can only convert char arrays of length 4 to float.");
+    }
+
+    union {
+        unsigned int x;
+        float f;
+    } temp;
+    temp.x = charArrayToUint(arr, len);
+    return temp.f;
 }
 
 char* BinaryUtils::charInfoToCharArray(const CharInfo ci)

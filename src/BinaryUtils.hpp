@@ -58,7 +58,7 @@ class BinaryUtils {
 
         static void writeToFile(const std::string, const std::vector<char>);
 
-        static bool* numToBitArray(const float);
+        static char* numToCharArray(const float);
 
         template <typename uints>
         static char* numToCharArray(uints num)
@@ -74,9 +74,9 @@ class BinaryUtils {
             return arr;
         }
 
-        static ulong charArrayToUint(char* arr, int len);
+        static ulong charArrayToUint(const char* arr, const int len);
 
-        static char* numToCharArray(const float);
+        static float charArrayToFloat(const char* arr, const int len);
 
         static char* charInfoToCharArray(const CharInfo ci);
 
