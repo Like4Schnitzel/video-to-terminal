@@ -111,7 +111,7 @@ void VideoTranscoder::transcodeFile()
     {
         BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToCharArray(n), sizeof(n));
     }
-    // write compressed bits to file
+    // write compressed bytes to file array
     BinaryUtils::pushArray(&stdiContent, compressedVideoBytes.arr, compressedVideoBytes.size);
 
     const std::string vtdiFilePath = vidPath.substr(0, VariousUtils::rfind(vidPath, '.')) + ".vtdi";
