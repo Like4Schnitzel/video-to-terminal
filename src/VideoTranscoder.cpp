@@ -1,5 +1,6 @@
 #include "VideoTranscoder.hpp"
 #include "BinaryUtils.hpp"
+#include "VariousUtils.hpp"
 
 VideoTranscoder::VideoTranscoder(const std::string path, const uint16_t terminalWidth, const uint16_t terminalHeight)
 {
@@ -33,19 +34,6 @@ cv::Mat VideoTranscoder::getFrame()
 {
     vidCap >> frame;
     return frame;
-}
-
-int rfind(std::string str, char c)
-{
-    int i;
-    for (i = str.length()-1; i >= 0; i--)
-    {
-        if (str[i] == c)
-        {
-            break;
-        }
-    }
-    return i;
 }
 
 void VideoTranscoder::transcodeFile()
@@ -126,7 +114,7 @@ void VideoTranscoder::transcodeFile()
     // write compressed bits to file
     BinaryUtils::pushArray(&stdiContent, compressedVideoBytes.arr, compressedVideoBytes.size);
 
-    const std::string vtdiFilePath = vidPath.substr(0, rfind(vidPath, '.')) + ".vtdi";
+    const std::string vtdiFilePath = vidPath.substr(0, VariousUtils::rfind(vidPath, '.')) + ".vtdi";
     BinaryUtils::writeToFile(vtdiFilePath, stdiContent);
     std::cout << "Wrote " << stdiContent.size()/8 << " bytes to \"" << vtdiFilePath <<"\"!\n";
 }

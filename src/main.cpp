@@ -1,23 +1,8 @@
 #include "VideoTranscoder.hpp"
+#include "VTDIDecoder.hpp"
+#include "VariousUtils.hpp"
 
 using namespace std;
-
-int stringToInt(std::string s)
-{
-    int n = 0;
-    int mult = 1;
-    for (int i = s.length() - 1; i >= 0; i--)
-    {
-        if (s[i] < '0' || s[i] > '9')
-        {
-            throw invalid_argument("Input must be a number.");
-        }
-        n += (s[i] - '0') * mult;
-        mult *= 10;
-    }
-
-    return n;
-}
 
 int main(int argc, char** argv)
 {
@@ -35,7 +20,7 @@ int main(int argc, char** argv)
     }
     if (argc > 2)
     {
-        tWidth = stringToInt(argv[2]);
+        tWidth = VariousUtils::stringToInt(argv[2]);
     }
     else
     {
@@ -44,7 +29,7 @@ int main(int argc, char** argv)
     }
     if (argc > 3)
     {
-        tHeight = stringToInt(argv[3]);
+        tHeight = VariousUtils::stringToInt(argv[3]);
     }
     else
     {
@@ -54,6 +39,9 @@ int main(int argc, char** argv)
 
     VideoTranscoder trans = VideoTranscoder(videoPath, tWidth, tHeight);
     trans.transcodeFile();
+
+    const std::string vtdiFilePath = videoPath.substr(0, VariousUtils::rfind(videoPath, '.')) + ".vtdi";
+    VTDIDecoder player = VTDIDecoder(vtdiFilePath);
 
     return 0;
 }

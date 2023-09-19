@@ -5,12 +5,7 @@
 #include <opencv2/videoio.hpp>
 #include <stdexcept>
 #include <iostream>
-
-struct CharInfo {
-    cv::Vec3b foregroundRGB;
-    cv::Vec3b backgroundRGB;
-    uint8_t chara;
-};
+#include "CharInfoStruct.hpp"
 
 class VideoTranscoder 
 {
