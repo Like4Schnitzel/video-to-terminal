@@ -29,3 +29,9 @@ int VariousUtils::stringToInt(std::string s)
 
     return n;
 }
+
+bool VariousUtils::fileExists(std::string fileName)
+{
+    struct stat buffer;
+    return (stat (fileName.c_str(), &buffer) == 0);
+}
