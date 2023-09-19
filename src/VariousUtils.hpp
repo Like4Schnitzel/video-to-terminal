@@ -13,11 +13,11 @@ class VariousUtils {
         template <typename T>
         static T* subArray(const T* initArr, const int indexStart, const int indexEnd)
         {
-            T* sub = (T*)malloc((indexEnd-indexStart + 1) * sizeof(T));
+            T* sub = (T*)malloc((indexEnd-indexStart) * sizeof(T));
             int subIndex = 0;
-            for (int i = indexStart; i <= indexEnd; i++)
+            for (int i = indexStart; i < indexEnd; i++)
             {
-                sub[subIndex] = initArr[indexStart];
+                sub[subIndex] = initArr[i];
                 subIndex++;
             }
             return sub;
