@@ -74,6 +74,8 @@ class BinaryUtils {
             return arr;
         }
 
+        ulong charArrayToNum(char* arr, int len);
+
         static char* numToCharArray(const float);
 
         static char* charInfoToCharArray(const CharInfo ci);

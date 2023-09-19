@@ -43,6 +43,20 @@ char* BinaryUtils::numToCharArray(const float num)
     return floatBytes;
 }
 
+ulong BinaryUtils::charArrayToNum(char* arr, int len)
+{
+    ulong num = 0;
+    int markiplier = 1;
+
+    for (int i = 0; i < len; i++)
+    {
+        num += arr[len-i-1];    // going from right to left
+        markiplier *= 256;
+    }
+
+    return num;
+}
+
 char* BinaryUtils::charInfoToCharArray(const CharInfo ci)
 {
     char* result = (char*)malloc(sizeof(CharInfo));
