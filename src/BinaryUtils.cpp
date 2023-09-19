@@ -50,7 +50,7 @@ ulong BinaryUtils::charArrayToNum(char* arr, int len)
 
     for (int i = 0; i < len; i++)
     {
-        num += arr[len-i-1];    // going from right to left
+        num += (uint8_t) arr[len-i-1] * markiplier;    // going from right to left
         markiplier *= 256;
     }
 
