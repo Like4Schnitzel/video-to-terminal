@@ -48,5 +48,8 @@ int main(int argc, char** argv)
     VTDIDecoder player = VTDIDecoder(vtdiFilePath);
     player.getStaticInfo();
 
+    std::cout << "VTDI Info:\n";
+    std::cout << "Version: " << player.getVersion() << "\n";
+
     return 0;
 }

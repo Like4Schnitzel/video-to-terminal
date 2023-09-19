@@ -4,6 +4,8 @@
 #include <fstream>
 #include <iostream>
 #include "CharInfoStruct.hpp"
+#include "VariousUtils.hpp"
+#include "BinaryUtils.hpp"
 
 class VTDIDecoder {
     private:
@@ -19,4 +21,6 @@ class VTDIDecoder {
     public:
         VTDIDecoder(std::string path);
         void getStaticInfo();
+
+        int getVersion();
 };

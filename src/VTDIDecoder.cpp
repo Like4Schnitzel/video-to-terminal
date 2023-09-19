@@ -21,16 +21,24 @@ void VTDIDecoder::getStaticInfo()
     char* staticInfoBytes = (char*)malloc(staticByteSize);
     std::ifstream vtdiFile (vtdiPath);
     vtdiFile.read(staticInfoBytes, staticByteSize);
-    int index = 0;
+    int index;
 
-    for (int i = 0; i < 4; i++)
+    for (index = 0; index < 4; index++)
     {
-        if (staticInfoBytes[i] != expectedSig[i])
+        if (staticInfoBytes[index] != expectedSig[index])
         {
             std::runtime_error("File signature does not match expected signature.");
         }
     }
     std::cout << "File signature is correct!\n";
 
+    version = BinaryUtils::charArrayToNum(VariousUtils::subArray(staticInfoBytes, index, index+2), 2);
+    index += 2;
+
     vtdiFile.close();
+}
+
+int VTDIDecoder::getVersion()
+{
+    return version;
 }
