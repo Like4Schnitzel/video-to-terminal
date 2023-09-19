@@ -43,7 +43,7 @@ char* BinaryUtils::numToCharArray(const float num)
     return floatBytes;
 }
 
-ulong BinaryUtils::charArrayToNum(char* arr, int len)
+ulong BinaryUtils::charArrayToUint(char* arr, int len)
 {
     ulong num = 0;
     int markiplier = 1;
