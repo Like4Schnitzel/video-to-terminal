@@ -23,4 +23,5 @@ class VTDIDecoder {
         void getStaticInfo();
 
         int getVersion();
+        uint32_t getFrameCount();
 };

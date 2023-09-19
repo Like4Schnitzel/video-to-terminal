@@ -50,6 +50,7 @@ int main(int argc, char** argv)
 
     std::cout << "VTDI Info:\n";
     std::cout << "Version: " << player.getVersion() << "\n";
+    std::cout << "Frame count: " << player.getFrameCount() << "\n";
 
     return 0;
 }

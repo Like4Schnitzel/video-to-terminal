@@ -32,8 +32,11 @@ void VTDIDecoder::getStaticInfo()
     }
     std::cout << "File signature is correct!\n";
 
-    version = BinaryUtils::charArrayToNum(VariousUtils::subArray(staticInfoBytes, index, index+2), 2);
+    this->version = BinaryUtils::charArrayToNum(VariousUtils::subArray(staticInfoBytes, index, index+2), 2);
     index += 2;
+
+    this->frameCount = BinaryUtils::charArrayToNum(VariousUtils::subArray(staticInfoBytes, index, index+4), 4);
+    index += 4;
 
     vtdiFile.close();
 }
@@ -41,4 +44,9 @@ void VTDIDecoder::getStaticInfo()
 int VTDIDecoder::getVersion()
 {
     return version;
+}
+
+uint32_t VTDIDecoder::getFrameCount()
+{
+    return frameCount;
 }
