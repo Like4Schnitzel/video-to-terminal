@@ -44,7 +44,7 @@ void VideoTranscoder::transcodeFile()
 
     // write all the pre-video information to the file
     auto args = std::make_tuple(
-        uint8_t(86), uint8_t(84), uint8_t(68), uint8_t(73), versionNumber, vidFrames, vidFPS, vidWidth, vidHeight, vidTWidth, vidTHeight
+        uint8_t(86), uint8_t(84), uint8_t(68), uint8_t(73), versionNumber, vidFrames, vidFPS, vidTWidth, vidTHeight
     );
     std::apply([&](auto... args) {
         (..., BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToCharArray(args), sizeof(args)));
