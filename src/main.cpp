@@ -52,6 +52,7 @@ int main(int argc, char** argv)
     std::cout << "Version: " << player.getVersion() << "\n";
     std::cout << "Frame count: " << player.getFrameCount() << "\n";
     std::cout << "FPS: " << player.getFPS() << "\n";
+    std::cout << "Video dimensions: " << player.getVidWidth() << "x" << player.getVidHeight() << "\n";
 
     return 0;
 }
