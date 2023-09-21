@@ -39,11 +39,10 @@ void VTDIDecoder::getStaticInfo()
 {
     // these are taken from the spec
     const int expectedSig[] = {86, 84, 68, 73};
-    const int staticByteSize = 38;
 
-    char* staticInfoBytes = (char*)malloc(staticByteSize);
+    char* staticInfoBytes = (char*)malloc(6);
     std::ifstream vtdiFile (vtdiPath);
-    vtdiFile.read(staticInfoBytes, staticByteSize);
+    vtdiFile.read(staticInfoBytes, 6);
     int index;
 
     for (index = 0; index < 4; index++)
@@ -55,8 +54,28 @@ void VTDIDecoder::getStaticInfo()
     }
     std::cout << "File signature is correct!\n";
 
+    version = applyAssign(version, &index, staticInfoBytes);
+
+    switch (version)
+    {
+        case 1:
+        {
+            this->staticByteSize = 38;
+            break;
+        }
+        
+        default:
+        {
+            std::runtime_error("File version not supported by decoder!");
+            break;
+        }
+    }
+
+    vtdiFile.read(staticInfoBytes, staticByteSize-6);
+    index = 0;
+
     auto args = std::make_tuple(
-        &version, &frameCount, &FPS, &vidWidth, &vidHeight, &uncompressedSize, &compressedSize
+        &frameCount, &FPS, &vidWidth, &vidHeight, &uncompressedSize, &compressedSize
     );
     std::apply([&](auto&... args) {
         (..., (*args = applyAssign(*args, &index, staticInfoBytes)));

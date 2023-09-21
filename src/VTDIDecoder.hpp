@@ -9,6 +9,7 @@
 
 class VTDIDecoder {
     private:
+        int staticByteSize;
         std::string vtdiPath;
         CharInfo** currentFrame;
         uint32_t frameCount;
