@@ -71,7 +71,9 @@ void VTDIDecoder::getStaticInfo()
         }
     }
 
-    vtdiFile.read(staticInfoBytes, staticByteSize-6);
+    const int remainingBytes = staticByteSize - 6;
+    staticInfoBytes = (char*)malloc(remainingBytes);
+    vtdiFile.read(staticInfoBytes, remainingBytes);
     index = 0;
 
     auto args = std::make_tuple(
@@ -81,6 +83,7 @@ void VTDIDecoder::getStaticInfo()
         (..., (*args = applyAssign(*args, &index, staticInfoBytes)));
     }, args);
 
+    free(staticInfoBytes);
     vtdiFile.close();
 }
 
