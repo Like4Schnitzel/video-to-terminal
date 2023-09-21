@@ -12,6 +12,29 @@ VTDIDecoder::VTDIDecoder(std::string path)
     vtdiPath = path;
 }
 
+template <typename T>
+T applyAssign(T num, int* index, char*& sib)
+{
+    float comparisonTool;
+
+    int bytes = sizeof(T);
+    int oldIndex = *index;
+    *index += bytes;
+    char* sub = VariousUtils::subArray(sib, oldIndex, *index);
+    T result;
+    if (typeid(T) == typeid(comparisonTool))
+    {
+        result = BinaryUtils::charArrayToFloat(sub, bytes);
+    }
+    else
+    {
+        result = (T)BinaryUtils::charArrayToUint(sub, bytes);
+    }
+
+    free(sub);
+    return result;
+}
+
 void VTDIDecoder::getStaticInfo()
 {
     // these are taken from the spec
@@ -32,20 +55,12 @@ void VTDIDecoder::getStaticInfo()
     }
     std::cout << "File signature is correct!\n";
 
-    this->version = BinaryUtils::charArrayToUint(VariousUtils::subArray(staticInfoBytes, index, index+2), 2);
-    index += 2;
-
-    this->frameCount = BinaryUtils::charArrayToUint(VariousUtils::subArray(staticInfoBytes, index, index+4), 4);
-    index += 4;
-
-    this->FPS = BinaryUtils::charArrayToFloat(VariousUtils::subArray(staticInfoBytes, index, index+4), 4);
-    index += 4;
-
-    this->vidWidth = BinaryUtils::charArrayToUint(VariousUtils::subArray(staticInfoBytes, index, index+2), 2);
-    index += 2;
-
-    this->vidHeight = BinaryUtils::charArrayToUint(VariousUtils::subArray(staticInfoBytes, index, index+2), 2);
-    index += 2;
+    auto args = std::make_tuple(
+        &version, &frameCount, &FPS, &vidWidth, &vidHeight
+    );
+    std::apply([&](auto&... args) {
+        (..., (*args = applyAssign(*args, &index, staticInfoBytes)));
+    }, args);
 
     vtdiFile.close();
 }

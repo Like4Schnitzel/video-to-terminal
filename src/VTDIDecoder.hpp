@@ -12,12 +12,12 @@ class VTDIDecoder {
         std::string vtdiPath;
         CharInfo** currentFrame;
         uint32_t frameCount;
-        int vidWidth;
-        int vidHeight;
+        uint16_t vidWidth;
+        uint16_t vidHeight;
         int terminalWidth;
         int terminalHeight;
         float FPS;
-        int version;
+        uint16_t version;
     public:
         VTDIDecoder(std::string path);
         void getStaticInfo();
