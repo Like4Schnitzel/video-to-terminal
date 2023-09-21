@@ -56,7 +56,7 @@ void VTDIDecoder::getStaticInfo()
     std::cout << "File signature is correct!\n";
 
     auto args = std::make_tuple(
-        &version, &frameCount, &FPS, &vidWidth, &vidHeight
+        &version, &frameCount, &FPS, &vidWidth, &vidHeight, &uncompressedSize, &compressedSize
     );
     std::apply([&](auto&... args) {
         (..., (*args = applyAssign(*args, &index, staticInfoBytes)));
