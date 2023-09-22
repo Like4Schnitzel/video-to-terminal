@@ -107,6 +107,14 @@ void VTDIDecoder::playVideo()
     this->terminalHeight = terminalDimensions[1];
     free(terminalDimensions);
 
+    if (terminalWidth < vidWidth || terminalHeight < vidHeight)
+    {
+        std::stringstream errorMessage;
+        errorMessage << "The terminal's size (" << terminalWidth << "x" << terminalHeight << 
+        ") isn't big enough to display the video (" << vidWidth << "x" << vidHeight <<  ").";
+        throw std::runtime_error(errorMessage.str());
+    }
+
     vtdiFile.close();
     vtdiFile.clear();
 }
