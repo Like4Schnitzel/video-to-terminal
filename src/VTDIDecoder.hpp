@@ -11,6 +11,7 @@ class VTDIDecoder {
     private:
         int staticByteSize;
         std::string vtdiPath;
+        std::ifstream vtdiFile;
         CharInfo** currentFrame;
         uint32_t frameCount;
         uint16_t vidWidth;
@@ -24,6 +25,7 @@ class VTDIDecoder {
     public:
         VTDIDecoder(std::string path);
         void getStaticInfo();
+        void playVideo();
 
         int getVersion();
         uint32_t getFrameCount();

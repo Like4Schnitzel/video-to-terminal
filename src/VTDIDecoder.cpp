@@ -2,13 +2,16 @@
 
 VTDIDecoder::VTDIDecoder(std::string path)
 {
-    std::ifstream vtdiFile (path);
+    this->version = 0;
+
+    this->vtdiFile.open(path);
     if (!vtdiFile.good())
     {
         throw std::runtime_error("Cannot open file to read from.");
     }
     std::cout << "File opened succesfully.\n";
     vtdiFile.close();
+    vtdiFile.clear();
     vtdiPath = path;
 }
 
@@ -41,7 +44,7 @@ void VTDIDecoder::getStaticInfo()
     const int expectedSig[] = {86, 84, 68, 73};
 
     char* staticInfoBytes = (char*)malloc(6);
-    std::ifstream vtdiFile (vtdiPath);
+    vtdiFile.open(vtdiPath);
     vtdiFile.read(staticInfoBytes, 6);
     int index;
 
@@ -49,7 +52,7 @@ void VTDIDecoder::getStaticInfo()
     {
         if (staticInfoBytes[index] != expectedSig[index])
         {
-            std::runtime_error("File signature does not match expected signature.");
+            throw std::runtime_error("File signature does not match expected signature.");
         }
     }
     std::cout << "File signature is correct!\n";
@@ -66,7 +69,7 @@ void VTDIDecoder::getStaticInfo()
         
         default:
         {
-            std::runtime_error("File version not supported by decoder!");
+            throw std::runtime_error("File version not supported by decoder!");
             break;
         }
     }
@@ -85,6 +88,22 @@ void VTDIDecoder::getStaticInfo()
 
     free(staticInfoBytes);
     vtdiFile.close();
+    vtdiFile.clear();
+}
+
+void VTDIDecoder::playVideo()
+{
+    vtdiFile.open(vtdiPath);
+    // move past the static bytes
+    vtdiFile.seekg(staticByteSize);
+
+    if (version == 0)
+    {
+        throw std::runtime_error("It seems static info hasn't been initialized yet. Try running VTDIDecoder.getStaticInfo()");
+    }
+
+    vtdiFile.close();
+    vtdiFile.clear();
 }
 
 int VTDIDecoder::getVersion()

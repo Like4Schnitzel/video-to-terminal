@@ -54,5 +54,7 @@ int main(int argc, char** argv)
     std::cout << "FPS: " << player.getFPS() << "\n";
     std::cout << "Video dimensions: " << player.getVidWidth() << "x" << player.getVidHeight() << "\n";
 
+    player.playVideo();
+
     return 0;
 }
