@@ -22,4 +22,6 @@ class VariousUtils {
             }
             return sub;
         }
+
+        static int* getTerminalDimensions();
 };

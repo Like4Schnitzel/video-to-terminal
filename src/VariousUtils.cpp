@@ -35,3 +35,40 @@ bool VariousUtils::fileExists(std::string fileName)
     struct stat buffer;
     return (stat (fileName.c_str(), &buffer) == 0);
 }
+
+
+// taken from https://stackoverflow.com/a/23370070
+#ifdef WIN32
+#include <windows.h>
+
+int* VariousUtils::getTerminalDimensions()
+{
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    int columns, rows;
+
+    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+    columns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+    rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+
+    int* dimensions = (int*)malloc(2*sizeof(int));
+    dimensions[0] = columns;
+    dimensions[1] = rows;
+
+    return dimensions;
+}
+#else
+#include <sys/ioctl.h>
+#include <stdio.h>
+#include <unistd.h>
+
+int* VariousUtils::getTerminalDimensions()
+{
+    struct winsize w;
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+    int* dimensions = (int*)malloc(2*sizeof(int));
+    dimensions[0] = w.ws_col;
+    dimensions[1] = w.ws_row;
+
+    return dimensions;
+}
+#endif

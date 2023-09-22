@@ -97,10 +97,15 @@ void VTDIDecoder::playVideo()
     // move past the static bytes
     vtdiFile.seekg(staticByteSize);
 
-    if (version == 0)
+    if (this->version == 0)
     {
         throw std::runtime_error("It seems static info hasn't been initialized yet. Try running VTDIDecoder.getStaticInfo()");
     }
+
+    int* terminalDimensions = VariousUtils::getTerminalDimensions();
+    this->terminalWidth = terminalDimensions[0];
+    this->terminalHeight = terminalDimensions[1];
+    free(terminalDimensions);
 
     vtdiFile.close();
     vtdiFile.clear();
