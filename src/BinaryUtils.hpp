@@ -81,4 +81,6 @@ class BinaryUtils {
         static char* charInfoToCharArray(const CharInfo ci);
 
         static CharArrayWithSize compressBytes(const char* input, const ulong inputLength);
+
+        static char* decompressBytes(const char* input, const ulong inputLength, const ulong outputLength);
 };

@@ -99,3 +99,22 @@ CharArrayWithSize BinaryUtils::compressBytes(const char* input, const ulong inpu
 
     return output;
 }
+
+char* BinaryUtils::decompressBytes(const char* input, const ulong inputLength, const ulong outputLength)
+{
+    char* out = (char*)malloc(outputLength);
+    z_stream infstream;
+    infstream.zalloc = Z_NULL;
+    infstream.zfree = Z_NULL;
+    infstream.opaque = Z_NULL;
+    infstream.avail_in = inputLength;
+    infstream.next_in = (Bytef*) input;
+    infstream.avail_out = outputLength;
+    infstream.next_out = (Bytef*) out;
+
+    inflateInit(&infstream);
+    inflate(&infstream, Z_NO_FLUSH);
+    inflateEnd(&infstream);
+
+    return out;
+}
