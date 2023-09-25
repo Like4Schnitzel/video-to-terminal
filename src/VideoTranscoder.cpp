@@ -2,7 +2,7 @@
 #include "BinaryUtils.hpp"
 #include "VariousUtils.hpp"
 
-VideoTranscoder::VideoTranscoder(const std::string path, const uint16_t terminalWidth, const uint16_t terminalHeight)
+VideoTranscoder::VideoTranscoder(const std::string path, const uint16_t terminalWidth, const uint16_t terminalHeight, const uint32_t memoryCapacity)
 {
     vidPath = path;
     std::cout << "Attempting to open \"" << path << "\".\n";
@@ -23,6 +23,14 @@ VideoTranscoder::VideoTranscoder(const std::string path, const uint16_t terminal
     vidTWidth = terminalWidth;
     vidTHeight = terminalHeight;
     std::cout << "Terminal dimensions: " << terminalWidth << "x" << terminalHeight << " characters\n";
+
+    int frameSize = sizeof(CharInfo) * terminalHeight * terminalWidth;
+    if (memoryCapacity < frameSize)
+    {
+        throw std::invalid_argument("Memory cap must be enough to store at least one frame (" + std::to_string(frameSize) + "B).");
+    }
+    keepInMemory = memoryCapacity;
+    std::cout << "Memory capacity: " << memoryCapacity << "\n";
 }
 
 VideoTranscoder::~VideoTranscoder()

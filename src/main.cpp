@@ -9,6 +9,7 @@ int main(int argc, char** argv)
     string videoPath;
     uint16_t tWidth;
     uint16_t tHeight;
+    uint32_t memoryCap;
     if (argc > 1)
     {
         videoPath = argv[1];
@@ -40,8 +41,17 @@ int main(int argc, char** argv)
             cout << "Please enter a 16 bit unsigned int for the terminal height: ";
             cin >> tHeight;
         }
+        if (argc > 4)
+        {
+            memoryCap = VariousUtils::stringToInt(argv[4]);
+        }
+        else
+        {
+            cout << "Please enter memory capacity in bytes: ";
+            cin >> memoryCap;
+        }
 
-        VideoTranscoder trans = VideoTranscoder(videoPath, tWidth, tHeight);
+        VideoTranscoder trans = VideoTranscoder(videoPath, tWidth, tHeight, memoryCap);
         trans.transcodeFile();
     }
 
