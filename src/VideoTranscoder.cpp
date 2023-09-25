@@ -61,16 +61,15 @@ void VideoTranscoder::transcodeFile()
     // settings constants for video byte writing
     const int totalTerminalChars = vidTWidth * vidTHeight;
     const uint32_t totalFrameBytes = (vidTWidth * vidTHeight) * sizeof(CharInfo);
-    char* frameBytes = (char*)malloc(totalFrameBytes);
+    char* bundle = (char*)malloc(keepInMemory);
 
+    uint32_t bundleIndex = 0;
     int frameIndex = 0;
     double progress = -1;
     // writing transcoded video bytes
     std::cout << "Transcoding frames...\n";
     for (vidCap>>frame; !frame.empty(); vidCap>>frame)
     {
-        uint32_t videoByteIndex = 0;
-
         // progress update
         double newProgress = (int)((double) frameIndex / vidFrames * 10000) / 10000.;  // round to 4 digits
         if (newProgress != progress)
@@ -86,20 +85,26 @@ void VideoTranscoder::transcodeFile()
             char* charInfoBytes = BinaryUtils::charInfoToCharArray(frameChars[i]);
             for (int j = 0; j < sizeof(CharInfo); j++)
             {
-                frameBytes[videoByteIndex] = charInfoBytes[j];
-                videoByteIndex++;
+                bundle[bundleIndex] = charInfoBytes[j];
+                bundleIndex++;
             }
             free(charInfoBytes);
         }
         free(frameChars);
 
-        CharArrayWithSize compressedFrameBytes = BinaryUtils::compressBytes(frameBytes, videoByteIndex);
-        // write compressed size
-        BinaryUtils::writeToFile(vtdiFilePath, BinaryUtils::numToCharArray((uint32_t)compressedFrameBytes.size), sizeof(uint32_t), true, true);
-        // and uncompressed size
-        BinaryUtils::writeToFile(vtdiFilePath, BinaryUtils::numToCharArray(videoByteIndex), sizeof(uint32_t), true, true);
-        // and finally the compressed data
-        BinaryUtils::writeToFile(vtdiFilePath, compressedFrameBytes.arr, compressedFrameBytes.size, true);
+        // only compress once the memory cap or the last frame is reached
+        if (bundleIndex + totalFrameBytes > keepInMemory || frameIndex == vidFrames)
+        {
+            CharArrayWithSize compressedFrameBytes = BinaryUtils::compressBytes(bundle, bundleIndex);
+            // write compressed size
+            BinaryUtils::writeToFile(vtdiFilePath, BinaryUtils::numToCharArray((uint32_t)compressedFrameBytes.size), sizeof(uint32_t), true, true);
+            // and uncompressed size
+            BinaryUtils::writeToFile(vtdiFilePath, BinaryUtils::numToCharArray(bundleIndex), sizeof(uint32_t), true, true);
+            // and finally the compressed data
+            BinaryUtils::writeToFile(vtdiFilePath, compressedFrameBytes.arr, compressedFrameBytes.size, true);
+
+            bundleIndex = 0;
+        }
     }
     std::cout << "100\% done!     \n";
 }
