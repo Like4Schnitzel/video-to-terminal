@@ -63,7 +63,7 @@ void VTDIDecoder::getStaticInfo()
     {
         case 1:
         {
-            this->staticByteSize = 38;
+            this->staticByteSize = 18;
             break;
         }
         

@@ -1,16 +1,50 @@
 #include "BinaryUtils.hpp"
 
-void BinaryUtils::writeToFile(const std::string fileName, const std::vector<char> bytes)
+void BinaryUtils::writeToFile(const std::string fileName, const std::vector<char> bytes, const bool append)
 {
     const ulong byteSize = bytes.size()/CHAR_BIT;
 
-    std::ofstream file(fileName, std::ios::out | std::ios::binary);
+    std::ofstream file;
+    if (append)
+    {
+        file.open(fileName, std::ios_base::app | std::ios::binary);
+    }
+    else
+    {
+        file.open(fileName, std::ios::out | std::ios::binary);
+    }
+
     if (!file.good())
     {
         throw std::runtime_error("Cannot open file to write to.");
     }
     file.write(&bytes[0], byteSize);
     file.close();
+}
+
+void BinaryUtils::writeToFile(const std::string fileName, char* bytes, const ulong byteSize, const bool append, const bool freeArr)
+{
+    std::ofstream file;
+    if (append)
+    {
+        file.open(fileName, std::ios_base::app | std::ios::binary);
+    }
+    else
+    {
+        file.open(fileName, std::ios::out | std::ios::binary);
+    }
+
+    if (!file.good())
+    {
+        throw std::runtime_error("Cannot open file to write to.");
+    }
+    file.write(bytes, byteSize);
+    file.close();
+
+    if (freeArr)
+    {
+        free(bytes);
+    }
 }
 
 char* BinaryUtils::numToCharArray(const float num)
@@ -85,7 +119,7 @@ CharArrayWithSize BinaryUtils::compressBytes(const char* input, const ulong inpu
     defstream.avail_out = inputLength;
     defstream.next_out = (Bytef*) out;
 
-    std::cout << "compressing...\n";
+    //std::cout << "compressing...\n";
     deflateInit(&defstream, Z_BEST_COMPRESSION);
     deflate(&defstream, Z_FINISH);
     deflateEnd(&defstream);

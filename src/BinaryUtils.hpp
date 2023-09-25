@@ -56,7 +56,9 @@ class BinaryUtils {
             //std::cout << " pushed to vector.\nVector size is " << (*vec).size() << "\n";
         }
 
-        static void writeToFile(const std::string, const std::vector<char>);
+        static void writeToFile(const std::string, const std::vector<char>, const bool append);
+
+        static void writeToFile(const std::string fileName, char* bytes, const ulong byteSize, const bool append, const bool freeArr = false);
 
         static char* numToCharArray(const float);
 

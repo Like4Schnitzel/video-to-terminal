@@ -38,34 +38,31 @@ cv::Mat VideoTranscoder::getFrame()
 
 void VideoTranscoder::transcodeFile()
 {
+    const std::string vtdiFilePath = vidPath.substr(0, VariousUtils::rfind(vidPath, '.')) + ".vtdi";
     const uint16_t versionNumber = 1;   // change if updates to the file format are made
-
-    std::vector<char> stdiContent = std::vector<char>();
 
     // write all the pre-video information to the file
     auto args = std::make_tuple(
         uint8_t(86), uint8_t(84), uint8_t(68), uint8_t(73), versionNumber, vidFrames, vidFPS, vidTWidth, vidTHeight
     );
-    std::apply([&](auto... args) {
-        (..., BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToCharArray(args), sizeof(args)));
+    std::apply([&](auto... args)
+    {
+        (..., BinaryUtils::writeToFile(vtdiFilePath, (char*)BinaryUtils::numToCharArray(args), sizeof(args), true, true));
     }, args);
 
-    // settings constants for video bit writing
+    // settings constants for video byte writing
     const int totalTerminalChars = vidTWidth * vidTHeight;
-    const ulong totalVideoBytes = (vidTWidth * vidTHeight + 1) * sizeof(CharInfo) * vidFrames;
-    ulong videoByteIndex = 0;
-    CharInfo ender;
-    ender.foregroundRGB = {0, 0, 0};
-    ender.backgroundRGB = {0, 0, 0};
-    ender.chara = 32;
-    char* enderBytes = BinaryUtils::charInfoToCharArray(ender);
-    char* videoBytes = (char*)malloc(totalVideoBytes);
+    const uint32_t totalFrameBytes = (vidTWidth * vidTHeight) * sizeof(CharInfo);
+    char* frameBytes = (char*)malloc(totalFrameBytes);
+
     int frameIndex = 0;
     double progress = -1;
-    // writing transcoded video bits
+    // writing transcoded video bytes
     std::cout << "Transcoding frames...\n";
     for (vidCap>>frame; !frame.empty(); vidCap>>frame)
     {
+        uint32_t videoByteIndex = 0;
+
         // progress update
         double newProgress = (int)((double) frameIndex / vidFrames * 10000) / 10000.;  // round to 4 digits
         if (newProgress != progress)
@@ -81,42 +78,22 @@ void VideoTranscoder::transcodeFile()
             char* charInfoBytes = BinaryUtils::charInfoToCharArray(frameChars[i]);
             for (int j = 0; j < sizeof(CharInfo); j++)
             {
-                videoBytes[videoByteIndex] = charInfoBytes[j];
+                frameBytes[videoByteIndex] = charInfoBytes[j];
                 videoByteIndex++;
             }
             free(charInfoBytes);
         }
         free(frameChars);
-        // write frame ender byte sequence
-        for (int i = 0; i < sizeof(CharInfo); i++)
-        {
-            videoBytes[videoByteIndex] = enderBytes[i];
-            videoByteIndex++;
-        }
+
+        CharArrayWithSize compressedFrameBytes = BinaryUtils::compressBytes(frameBytes, videoByteIndex);
+        // write compressed size
+        BinaryUtils::writeToFile(vtdiFilePath, BinaryUtils::numToCharArray((uint32_t)compressedFrameBytes.size), sizeof(uint32_t), true, true);
+        // and uncompressed size
+        BinaryUtils::writeToFile(vtdiFilePath, BinaryUtils::numToCharArray(videoByteIndex), sizeof(uint32_t), true, true);
+        // and finally the compressed data
+        BinaryUtils::writeToFile(vtdiFilePath, compressedFrameBytes.arr, compressedFrameBytes.size, true);
     }
     std::cout << "100\% done!     \n";
-    free(enderBytes);
-
-    if (totalVideoBytes != videoByteIndex)
-    {
-        std::cout << "Something went wrong! videoBitIndex is " << videoByteIndex << " when it should be " << totalVideoBytes << "\n";
-    }
-
-    const CharArrayWithSize compressedVideoBytes = BinaryUtils::compressBytes(videoBytes, videoByteIndex);
-    std::cout << "Compressed video bytes from " << videoByteIndex << "B to " << compressedVideoBytes.size << "B\n";
-    free(videoBytes);
-
-    // write uncompressed and compressed size to file
-    for (ulong n : {videoByteIndex, compressedVideoBytes.size})
-    {
-        BinaryUtils::pushArray(&stdiContent, BinaryUtils::numToCharArray(n), sizeof(n));
-    }
-    // write compressed bytes to file array
-    BinaryUtils::pushArray(&stdiContent, compressedVideoBytes.arr, compressedVideoBytes.size);
-
-    const std::string vtdiFilePath = vidPath.substr(0, VariousUtils::rfind(vidPath, '.')) + ".vtdi";
-    BinaryUtils::writeToFile(vtdiFilePath, stdiContent);
-    std::cout << "Wrote " << stdiContent.size()/8 << " bytes to \"" << vtdiFilePath <<"\"!\n";
 }
 
 cv::Vec3b getAverageRGB(cv::Mat img)
