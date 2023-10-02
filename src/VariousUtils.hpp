@@ -24,4 +24,5 @@ class VariousUtils {
         }
 
         static int* getTerminalDimensions();
+        static char toLower(char c);
 };
