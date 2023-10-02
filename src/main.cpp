@@ -1,6 +1,7 @@
 #include "VideoTranscoder.hpp"
 #include "VTDIDecoder.hpp"
 #include "VariousUtils.hpp"
+#include <map>
 
 using namespace std;
 
@@ -47,8 +48,29 @@ int main(int argc, char** argv)
         }
         else
         {
+            std::string memCapString;
             cout << "Please enter memory capacity in bytes: ";
-            cin >> memoryCap;
+            cin >> memCapString;
+
+            std::map<char, int> prefixes = {
+                {'k', 1000},
+                {'m', 1000000},
+                {'g', 1000000000}
+            };
+
+            char lastChar = VariousUtils::toLower(memCapString.back());
+            if (lastChar >= '0' && lastChar <= '9')
+            {
+                memoryCap = VariousUtils::stringToInt(memCapString);
+            }
+            else if (lastChar == 'k' || lastChar == 'm' || lastChar == 'g')
+            {
+                memoryCap = VariousUtils::stringToInt(memCapString.substr(0, memCapString.length()-1)) * prefixes[lastChar];
+            }
+            else
+            {
+                throw std::runtime_error("Invalid input format.");
+            }
         }
 
         VideoTranscoder trans = VideoTranscoder(videoPath, tWidth, tHeight, memoryCap);
