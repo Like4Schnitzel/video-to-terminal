@@ -147,16 +147,9 @@ cv::Vec3b getAverageRGB(cv::Mat img)
     return avrgRGB;
 }
 
-int getTotalRGBDiff(cv::Vec3b v1, cv::Vec3b v2)
+int getRGBDiff(cv::Vec3b v1, cv::Vec3b v2)
 {
-    int diff = 0;
-    for (int i = 0; i < 3; i++)
-    {
-        int tempDiff = v1[i] - v2[i];
-        if (tempDiff < 0) tempDiff = -tempDiff;
-        diff += tempDiff;
-    }
-    return diff;
+    return (int) sqrt(pow(v1[0]-v2[0], 2) + pow(v1[1]-v2[1], 2) + pow(v1[2]-v2[2], 2));
 }
 
 CharInfo findBestBlockCharacter(cv::Mat img)
@@ -185,7 +178,7 @@ CharInfo findBestBlockCharacter(cv::Mat img)
         cv::Vec3b avgForegroundRGB = getAverageRGB(foreground);
         cv::Vec3b avgBackgroundRGB = getAverageRGB(background);
 
-        int totalRGBDiff = getTotalRGBDiff(avgForegroundRGB, avgBackgroundRGB);
+        int totalRGBDiff = getRGBDiff(avgForegroundRGB, avgBackgroundRGB);
         if (totalRGBDiff < minDiff)
         {
             minDiff = totalRGBDiff;

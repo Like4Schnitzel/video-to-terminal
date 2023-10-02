@@ -5,6 +5,7 @@
 #include <opencv2/videoio.hpp>
 #include <stdexcept>
 #include <iostream>
+#include <math.h>
 #include "CharInfoStruct.hpp"
 
 class VideoTranscoder 
