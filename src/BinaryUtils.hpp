@@ -11,16 +11,6 @@
 #include <zlib.h>
 #include "VideoTranscoder.hpp"
 
-struct CharArrayWithSize {
-    char* arr;
-    ulong size;
-
-    ~CharArrayWithSize()
-    {
-        free(arr);
-    }
-};
-
 class BinaryUtils {
     public:
         template <typename T>
@@ -81,8 +71,4 @@ class BinaryUtils {
         static float charArrayToFloat(const char* arr, const int len);
 
         static char* charInfoToCharArray(const CharInfo ci);
-
-        static CharArrayWithSize compressBytes(const char* input, const ulong inputLength);
-
-        static char* decompressBytes(const char* input, const ulong inputLength, const ulong outputLength);
 };

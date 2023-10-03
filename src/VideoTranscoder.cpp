@@ -2,7 +2,7 @@
 #include "BinaryUtils.hpp"
 #include "VariousUtils.hpp"
 
-VideoTranscoder::VideoTranscoder(const std::string path, const uint16_t terminalWidth, const uint16_t terminalHeight, const uint32_t memoryCapacity)
+VideoTranscoder::VideoTranscoder(const std::string path, const uint16_t terminalWidth, const uint16_t terminalHeight)
 {
     vidPath = path;
     std::cout << "Attempting to open \"" << path << "\".\n";
@@ -23,14 +23,6 @@ VideoTranscoder::VideoTranscoder(const std::string path, const uint16_t terminal
     vidTWidth = terminalWidth;
     vidTHeight = terminalHeight;
     std::cout << "Terminal dimensions: " << terminalWidth << "x" << terminalHeight << " characters\n";
-
-    int frameSize = sizeof(CharInfo) * terminalHeight * terminalWidth;
-    if (memoryCapacity < frameSize)
-    {
-        throw std::invalid_argument("Memory cap must be enough to store at least one frame (" + std::to_string(frameSize) + "B).");
-    }
-    keepInMemory = memoryCapacity;
-    std::cout << "Memory capacity: " << memoryCapacity << "\n";
 }
 
 VideoTranscoder::~VideoTranscoder()
@@ -61,9 +53,10 @@ void VideoTranscoder::transcodeFile()
     // settings constants for video byte writing
     const int totalTerminalChars = vidTWidth * vidTHeight;
     const uint32_t totalFrameBytes = (vidTWidth * vidTHeight) * sizeof(CharInfo);
-    char* bundle = (char*)malloc(keepInMemory);
+    char* frameBytes = (char*)malloc(totalFrameBytes);
+    CharInfo* previousFrameChars = (CharInfo*)malloc(totalFrameBytes);
 
-    uint32_t bundleIndex = 0;
+    uint32_t frameBytesIndex = 0;
     int frameIndex = 0;
     double progress = -1;
     // writing transcoded video bytes
@@ -80,31 +73,7 @@ void VideoTranscoder::transcodeFile()
         frameIndex++;
 
         CharInfo* frameChars = transcodeFrame();
-        for (int i = 0; i < totalTerminalChars; i++)
-        {
-            char* charInfoBytes = BinaryUtils::charInfoToCharArray(frameChars[i]);
-            for (int j = 0; j < sizeof(CharInfo); j++)
-            {
-                bundle[bundleIndex] = charInfoBytes[j];
-                bundleIndex++;
-            }
-            free(charInfoBytes);
-        }
         free(frameChars);
-
-        // only compress once the memory cap or the last frame is reached
-        if (bundleIndex + totalFrameBytes > keepInMemory || frameIndex == vidFrames)
-        {
-            CharArrayWithSize compressedFrameBytes = BinaryUtils::compressBytes(bundle, bundleIndex);
-            // write compressed size
-            BinaryUtils::writeToFile(vtdiFilePath, BinaryUtils::numToCharArray((uint32_t)compressedFrameBytes.size), sizeof(uint32_t), true, true);
-            // and uncompressed size
-            BinaryUtils::writeToFile(vtdiFilePath, BinaryUtils::numToCharArray(bundleIndex), sizeof(uint32_t), true, true);
-            // and finally the compressed data
-            BinaryUtils::writeToFile(vtdiFilePath, compressedFrameBytes.arr, compressedFrameBytes.size, true);
-
-            bundleIndex = 0;
-        }
     }
     std::cout << "100\% done!     \n";
 }

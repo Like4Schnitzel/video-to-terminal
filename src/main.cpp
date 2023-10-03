@@ -5,29 +5,6 @@
 
 using namespace std;
 
-int memCapInputFormat(string s)
-{
-    std::map<char, int> prefixes = {
-        {'k', 1000},
-        {'m', 1000000},
-        {'g', 1000000000}
-    };
-
-    char lastChar = VariousUtils::toLower(s.back());
-    if (lastChar >= '0' && lastChar <= '9')
-    {
-        return VariousUtils::stringToInt(s);
-    }
-    else if (lastChar == 'k' || lastChar == 'm' || lastChar == 'g')
-    {
-        return VariousUtils::stringToInt(s.substr(0, s.length()-1)) * prefixes[lastChar];
-    }
-    else
-    {
-        throw std::runtime_error("Invalid input format.");
-    }
-}
-
 int main(int argc, char** argv)
 {
     string videoPath;
@@ -65,20 +42,8 @@ int main(int argc, char** argv)
             cout << "Please enter a 16 bit unsigned int for the terminal height: ";
             cin >> tHeight;
         }
-        if (argc > 4)
-        {
-            memoryCap = memCapInputFormat(argv[4]);
-        }
-        else
-        {
-            std::string memCapString;
-            cout << "Please enter memory capacity in bytes: ";
-            cin >> memCapString;
 
-            memoryCap = memCapInputFormat(memCapString);
-        }
-
-        VideoTranscoder trans = VideoTranscoder(videoPath, tWidth, tHeight, memoryCap);
+        VideoTranscoder trans = VideoTranscoder(videoPath, tWidth, tHeight);
         trans.transcodeFile();
     }
 

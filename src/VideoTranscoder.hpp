@@ -20,9 +20,8 @@ class VideoTranscoder
         uint16_t vidTHeight;
         uint16_t vidTWidth;
         float vidFPS;
-        uint32_t keepInMemory;  // how many bytes of frame data to keep in memory before compressing and writing
     public:
-        VideoTranscoder(const std::string path, const uint16_t terminalWidth, const uint16_t terminalHeight, const uint32_t memoryCapacity);
+        VideoTranscoder(const std::string path, const uint16_t terminalWidth, const uint16_t terminalHeight);
         ~VideoTranscoder();
         cv::Mat getFrame();
         void transcodeFile();
