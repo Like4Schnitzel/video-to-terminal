@@ -26,4 +26,5 @@ class VideoTranscoder
         cv::Mat getFrame();
         void transcodeFile();
         CharInfo* transcodeFrame();
+        std::vector<bool> compressFrame(CharInfo* currentFrame, CharInfo* prevFrame);
 };

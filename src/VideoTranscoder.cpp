@@ -53,8 +53,7 @@ void VideoTranscoder::transcodeFile()
     // settings constants for video byte writing
     const int totalTerminalChars = vidTWidth * vidTHeight;
     const uint32_t totalFrameBytes = (vidTWidth * vidTHeight) * sizeof(CharInfo);
-    char* frameBytes = (char*)malloc(totalFrameBytes);
-    CharInfo* previousFrameChars = (CharInfo*)malloc(totalFrameBytes);
+    CharInfo* previousFrameChars = nullptr;
 
     uint32_t frameBytesIndex = 0;
     int frameIndex = 0;
@@ -64,18 +63,25 @@ void VideoTranscoder::transcodeFile()
     for (vidCap>>frame; !frame.empty(); vidCap>>frame)
     {
         // progress update
-        double newProgress = (int)((double) frameIndex / vidFrames * 10000) / 10000.;  // round to 4 digits
+        int newProgress = (int)((double) frameIndex / vidFrames * 10000) / 100.;  // round to 4 digits
         if (newProgress != progress)
         {
             progress = newProgress;
-            std::cout << progress*100 << "\% done...    \r";
+            std::cout << progress << "\% done...    \r";
         }
         frameIndex++;
 
         CharInfo* frameChars = transcodeFrame();
+        std::vector<bool> frameBits = compressFrame(frameChars, previousFrameChars);
         free(frameChars);
     }
     std::cout << "100\% done!     \n";
+}
+
+std::vector<bool> VideoTranscoder::compressFrame(CharInfo* currentFrame, CharInfo* prevFrame)
+{
+    std::vector<bool> result;
+    return result;
 }
 
 cv::Vec3b getAverageRGB(cv::Mat img)
