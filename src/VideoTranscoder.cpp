@@ -78,9 +78,65 @@ void VideoTranscoder::transcodeFile()
     std::cout << "100\% done!     \n";
 }
 
+int getCharInfoPosInArr(CharInfo ci, CharInfo* arr, int length)
+{
+    for (int i = 0; i < length; i++)
+    {
+        bool fgEqual = true;
+        bool bgEqual = true;
+        for (int j = 0; j < 3; j++)
+        {
+            if (fgEqual && ci.foregroundRGB[j] != arr[i].foregroundRGB[j])
+            {
+                fgEqual = false;
+            }
+            if (bgEqual && ci.backgroundRGB[j] != arr[i].backgroundRGB[j])
+            {
+                bgEqual = false;
+            }
+        }
+
+        if (fgEqual && bgEqual && ci.chara == arr[i].chara)
+        {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
 std::vector<bool> VideoTranscoder::compressFrame(CharInfo* currentFrame, CharInfo* prevFrame)
 {
+    const uint32_t arraySize = vidTWidth * vidTHeight; 
     std::vector<bool> result;
+
+    std::map<CharInfo, bool*> compressedVals;
+    std::vector<CharInfo> compressedCIs;
+
+    for (uint32_t index = 0; index < arraySize; index++)
+    {
+        int ciIndex = getCharInfoPosInArr(currentFrame[index], &compressedCIs[0], compressedCIs.size());
+        CharInfo currentCI;
+        if (ciIndex == -1)
+        {
+            bool* binMat = (bool*)malloc(arraySize*sizeof(bool));
+            for (int i = 0; i < arraySize; i++)
+            {
+                binMat[i] = 0;
+            }
+
+            compressedCIs.push_back(currentFrame[index]);
+            currentCI = currentFrame[index];
+            compressedVals.insert({currentFrame[index], binMat});
+        }
+        else
+        {
+            currentCI = compressedCIs[ciIndex];
+        }
+
+        compressedVals[currentCI][index] = 1;
+    }
+
     return result;
 }
 
