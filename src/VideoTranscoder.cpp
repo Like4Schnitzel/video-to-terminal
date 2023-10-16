@@ -67,7 +67,7 @@ void VideoTranscoder::transcodeFile()
         if (newProgress != progress)
         {
             progress = newProgress;
-            std::cout << progress << "\% done...    \r";
+            std::cout << "\33[2K\r" << progress << "\% done..." << std::flush;
         }
         frameIndex++;
 
@@ -87,10 +87,10 @@ void VideoTranscoder::transcodeFile()
     }
     free(previousFrameChars);
 
-    std::cout << "100\% done!     \n";
+    std::cout << "\33[2k\r" << "100\% done!\n" << std::flush;
 }
 
-std::pair<int*, bool> findBiggestRectangle(bool* bitmap, int bitCount, int rowLength)
+int* findBiggestRectangle(bool* bitmap, int bitCount, int rowLength)
 {
     int maxArea = 0;
     // -1 will be returned if nothing has been found
@@ -121,6 +121,7 @@ std::pair<int*, bool> findBiggestRectangle(bool* bitmap, int bitCount, int rowLe
                 if (VariousUtils::find(uniqueDepths, addedValsRow[j], 0, uniqueDepthsCount) == -1)
                 {
                     uniqueDepths[uniqueDepthsCount] = addedValsRow[j];
+                    uniqueDepthsCount++;
                 }
             }
         }
@@ -130,10 +131,9 @@ std::pair<int*, bool> findBiggestRectangle(bool* bitmap, int bitCount, int rowLe
         {
             int area = 0;
             int currentDepth = uniqueDepths[depthIndex];
-            int xpos1 = -1;
-            int ypos1, xpos2, ypos2;
+            int xpos1 = -1, ypos1, xpos2, ypos2 = i;
 
-            for (int j = 0; j < currentDepth; j++)
+            for (int j = 0; j < rowLength; j++)
             {
                 int colDepth = addedValsRow[j];
                 if (colDepth >= currentDepth)
@@ -146,10 +146,10 @@ std::pair<int*, bool> findBiggestRectangle(bool* bitmap, int bitCount, int rowLe
                     }
                     // coordinate pair 2 is at the bottom right
                     xpos2 = j;
-                    ypos2 = i;
+                    //ypos2 = i
 
                     // limit depths that are bigger than the one that's being checked
-                    if (currentDepth < colDepth)
+                    if (colDepth > currentDepth)
                     {
                         area += currentDepth;
                     }
@@ -175,24 +175,13 @@ std::pair<int*, bool> findBiggestRectangle(bool* bitmap, int bitCount, int rowLe
 
     free(addedValsRow);
 
-    bool isPosition = (maxXpos1 == maxXpos2 && maxYpos1 == maxYpos2);
-    int* corners;
-    if (isPosition)
-    {
-        corners = (int*)malloc(2*sizeof(int));
-        corners[0] = maxXpos1;
-        corners[1] = maxYpos1;
-    }
-    else
-    {
-        corners = (int*)malloc(4*sizeof(int));
-        corners[0] = maxXpos1;
-        corners[1] = maxYpos1;
-        corners[2] = maxXpos2;
-        corners[3] = maxYpos2;
-    }
+    int* corners = (int*)malloc(4*sizeof(int));
+    corners[0] = maxXpos1;
+    corners[1] = maxYpos1;
+    corners[2] = maxXpos2;
+    corners[3] = maxYpos2;
 
-    return std::make_pair(corners, isPosition);
+    return corners;
 }
 
 std::vector<bool> VideoTranscoder::compressFrame(CharInfo* currentFrame, CharInfo* prevFrame)
@@ -256,10 +245,67 @@ std::vector<bool> VideoTranscoder::compressFrame(CharInfo* currentFrame, CharInf
         }
         free(ciHashBytes);
 
-        // write end of frame (0b11)
+        int* rect = findBiggestRectangle(bitmap, arraySize*sizeof(bool), vidTWidth);
+        while(rect[0] != -1)
+        {
+            // write rectangle info to resulting bit vector
+            // true if the rectangle is just 1 element
+            if (rect[0] == rect[2] && rect[1] == rect[3])
+            {
+                // 0b01 is the code for position
+                result.push_back(0);
+                result.push_back(1);
+
+                for (int i = 0; i < 2; i++)
+                {
+                    char* numBytes = BinaryUtils::numToCharArray((uint16_t) rect[i]);
+                    bool* numBits = BinaryUtils::charArrayToBoolArray(numBytes, 2);
+                    VariousUtils::pushArrayToVector(numBits, &result, 16);
+                    free(numBits);
+                    free(numBytes);
+                }
+            }
+            else
+            {
+                // 0b00 is the code for rectangle
+                result.push_back(0);
+                result.push_back(0);
+
+                for (int i = 0; i < 4; i++)
+                {
+                    char* numBytes = BinaryUtils::numToCharArray((uint16_t) rect[i]);
+                    bool* numBits = BinaryUtils::charArrayToBoolArray(numBytes, 2);
+                    VariousUtils::pushArrayToVector(numBits, &result, 16);
+                    free(numBits);
+                    free(numBytes);
+                }
+            }
+
+            // clear rectangle from bitmap
+            // y coordinate
+            for (int i = rect[1]; i <= rect[3]; i++)
+            {
+                // x coordinate
+                for (int j = rect[0]; j <= rect[2]; j++)
+                {
+                    bitmap[i*vidTWidth+j] = 0;
+                }
+            }
+
+            free(rect);
+            rect = findBiggestRectangle(bitmap, arraySize*sizeof(bool), vidTWidth);
+        }
+        free(rect);
+
+        // 0b10 is the code for end of CI segment
         result.push_back(1);
-        result.push_back(1);
+        result.push_back(0);
+
+        free(bitmap);
     }
+
+    // replace last end of CI (0b10) with end of frame (0b11)
+    result[result.size()-1] = 1;
 
     return result;
 }
