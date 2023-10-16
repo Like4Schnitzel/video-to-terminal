@@ -129,10 +129,20 @@ std::vector<bool> VideoTranscoder::compressFrame(CharInfo* currentFrame, CharInf
         bool* bitmap = it->second;
         // append CI bits
         char* ciHashBytes = BinaryUtils::numToCharArray(ciHash);
-        bool* ciHashBits = BinaryUtils::charArrayToBoolArray(ciHashBytes, sizeof(CharInfo));
-        VariousUtils::pushArrayToVector(ciHashBits, &result, sizeof(CharInfo)*8);
-        free(ciHashBits);
+        for (int i = 0; i < sizeof(CharInfo); i++) // start at the second byte, since CIs only have 7 but ulongs have 8
+        {
+            char c = ciHashBytes[i+1];
+            for (int j = 0; j < 8; j++)
+            {
+                bool bit = (bool)((c >> (7-j)) & 1);
+                result.push_back(bit);
+            }
+        }
         free(ciHashBytes);
+
+        // write end of frame (0b11)
+        result.push_back(1);
+        result.push_back(1);
     }
 
     return result;
