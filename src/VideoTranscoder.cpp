@@ -90,12 +90,118 @@ void VideoTranscoder::transcodeFile()
     std::cout << "100\% done!     \n";
 }
 
+std::pair<int*, bool> findBiggestRectangle(bool* bitmap, int bitCount, int rowLength)
+{
+    int maxArea = 0;
+    // -1 will be returned if nothing has been found
+    int maxXpos1 = -1, maxYpos1, maxXpos2, maxYpos2; // coordinate pairs for the corners of the rectangle
+
+    int* addedValsRow = (int*)malloc(rowLength*sizeof(int));
+    for (int i = 0; i < rowLength; i++)
+    {
+        addedValsRow[i] = 0;
+    }
+
+    const int rows = bitCount / rowLength;
+    for (int i = 0; i < rows; i++)
+    {
+        int* uniqueDepths = (int*)malloc(rowLength*sizeof(int));
+        int uniqueDepthsCount = 0;
+
+        // overlay values with above rows
+        for (int j = 0; j < rowLength; j++)
+        {
+            if (bitmap[i*rowLength+j] == 0)
+            {
+                addedValsRow[j] = 0;
+            }
+            else
+            {
+                addedValsRow[j]++;
+                if (VariousUtils::find(uniqueDepths, addedValsRow[j], 0, uniqueDepthsCount) == -1)
+                {
+                    uniqueDepths[uniqueDepthsCount] = addedValsRow[j];
+                }
+            }
+        }
+
+        // find biggest rectangle
+        for (int depthIndex = 0; depthIndex < uniqueDepthsCount; depthIndex++)
+        {
+            int area = 0;
+            int currentDepth = uniqueDepths[depthIndex];
+            int xpos1 = -1;
+            int ypos1, xpos2, ypos2;
+
+            for (int j = 0; j < currentDepth; j++)
+            {
+                int colDepth = addedValsRow[j];
+                if (colDepth >= currentDepth)
+                {
+                    // coordinate pair 1 is at the top left
+                    if (xpos1 == -1)
+                    {
+                        xpos1 = j;
+                        ypos1 = i - (colDepth - 1);
+                    }
+                    // coordinate pair 2 is at the bottom right
+                    xpos2 = j;
+                    ypos2 = i;
+
+                    // limit depths that are bigger than the one that's being checked
+                    if (currentDepth < colDepth)
+                    {
+                        area += currentDepth;
+                    }
+                    else
+                    {
+                        area += colDepth;
+                    }
+                }
+            }
+
+            if (area > maxArea)
+            {
+                maxArea = area;
+                maxXpos1 = xpos1;
+                maxYpos1 = ypos1;
+                maxXpos2 = xpos2;
+                maxYpos2 = ypos2;
+            }
+        }
+
+        free(uniqueDepths);
+    }
+
+    free(addedValsRow);
+
+    bool isPosition = (maxXpos1 == maxXpos2 && maxYpos1 == maxYpos2);
+    int* corners;
+    if (isPosition)
+    {
+        corners = (int*)malloc(2*sizeof(int));
+        corners[0] = maxXpos1;
+        corners[1] = maxYpos1;
+    }
+    else
+    {
+        corners = (int*)malloc(4*sizeof(int));
+        corners[0] = maxXpos1;
+        corners[1] = maxYpos1;
+        corners[2] = maxXpos2;
+        corners[3] = maxYpos2;
+    }
+
+    return std::make_pair(corners, isPosition);
+}
+
 std::vector<bool> VideoTranscoder::compressFrame(CharInfo* currentFrame, CharInfo* prevFrame)
 {
+    const bool prevFrameExists = (prevFrame != nullptr);
     const uint32_t arraySize = vidTWidth * vidTHeight; 
     std::vector<bool> result;
 
-    std::map<ulong, bool*> compressedVals;
+    std::map<ulong, bool*> bitmaps;
 
     // making bitmaps of all CharInfos
     for (uint32_t index = 0; index < arraySize; index++)
@@ -104,7 +210,6 @@ std::vector<bool> VideoTranscoder::compressFrame(CharInfo* currentFrame, CharInf
         ulong currentCIHash = BinaryUtils::charArrayToUint(ciBytes, sizeof(CharInfo));
         free(ciBytes);
 
-        bool prevFrameExists = (prevFrame != nullptr);
         ulong prevCIHash;
         if (prevFrameExists)
         {
@@ -117,7 +222,7 @@ std::vector<bool> VideoTranscoder::compressFrame(CharInfo* currentFrame, CharInf
         if (!prevFrameExists || currentCIHash != prevCIHash)
         {
             // if new charinfo, create bitmap
-            if (compressedVals.count(currentCIHash) == 0)
+            if (bitmaps.count(currentCIHash) == 0)
             {
                 bool* binMat = (bool*)malloc(arraySize*sizeof(bool));
                 for (int i = 0; i < arraySize; i++)
@@ -125,24 +230,24 @@ std::vector<bool> VideoTranscoder::compressFrame(CharInfo* currentFrame, CharInf
                     binMat[i] = 0;
                 }
                 
-                compressedVals.insert({currentCIHash, binMat});
+                bitmaps.insert({currentCIHash, binMat});
             }
 
             // mark occurence
-            compressedVals[currentCIHash][index] = 1;
+            bitmaps[currentCIHash][index] = 1;
         }
     }
 
     // now compress the bitmaps
-    for (std::map<ulong, bool*>::iterator it = compressedVals.begin(); it != compressedVals.end(); it++)
+    for (std::map<ulong, bool*>::iterator it = bitmaps.begin(); it != bitmaps.end(); it++)
     {
         ulong ciHash = it->first;
         bool* bitmap = it->second;
         // append CI bits
         char* ciHashBytes = BinaryUtils::numToCharArray(ciHash);
-        for (int i = 0; i < sizeof(CharInfo); i++) // start at the second byte, since CIs only have 7 but ulongs have 8
+        for (int i = 1; i <= sizeof(CharInfo); i++) // start at the second byte, since CIs only have 7 but ulongs have 8
         {
-            char c = ciHashBytes[i+1];
+            char c = ciHashBytes[i];
             for (int j = 0; j < 8; j++)
             {
                 bool bit = (bool)((c >> (7-j)) & 1);
