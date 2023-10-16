@@ -73,9 +73,20 @@ void VideoTranscoder::transcodeFile()
 
         CharInfo* frameChars = transcodeFrame();
         std::vector<bool> frameBits = compressFrame(frameChars, previousFrameChars);
+        // pad bits to full byte
+        while (frameBits.size() % 8 != 0)
+        {
+            frameBits.push_back(0);
+        }
+        char* frameBytes = BinaryUtils::bitArrayToCharArray(frameBits, frameBits.size());
+        BinaryUtils::writeToFile(vtdiFilePath, frameBytes, frameBits.size()/8, true);
+        free(frameBytes);
+
         free(previousFrameChars);
         previousFrameChars = frameChars;
     }
+    free(previousFrameChars);
+
     std::cout << "100\% done!     \n";
 }
 
