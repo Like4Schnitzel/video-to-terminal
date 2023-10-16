@@ -105,3 +105,17 @@ char* BinaryUtils::charInfoToCharArray(const CharInfo ci)
 
     return result;
 }
+
+bool* BinaryUtils::charArrayToBoolArray(const char* input, const int inputSize)
+{
+    bool* result = (bool*)malloc(inputSize*sizeof(char));
+    for (int i = 0; i < inputSize; i++)
+    {
+        char c = input[i];
+        for (int j = 0; j < 8; j++)
+        {
+            result[8*i+j] = (c >> (7-j)) & 0b1;
+        }
+    }
+    return result;
+}

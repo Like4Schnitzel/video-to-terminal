@@ -73,36 +73,10 @@ void VideoTranscoder::transcodeFile()
 
         CharInfo* frameChars = transcodeFrame();
         std::vector<bool> frameBits = compressFrame(frameChars, previousFrameChars);
-        free(frameChars);
+        free(previousFrameChars);
+        previousFrameChars = frameChars;
     }
     std::cout << "100\% done!     \n";
-}
-
-int getCharInfoPosInArr(CharInfo ci, CharInfo* arr, int length)
-{
-    for (int i = 0; i < length; i++)
-    {
-        bool fgEqual = true;
-        bool bgEqual = true;
-        for (int j = 0; j < 3; j++)
-        {
-            if (fgEqual && ci.foregroundRGB[j] != arr[i].foregroundRGB[j])
-            {
-                fgEqual = false;
-            }
-            if (bgEqual && ci.backgroundRGB[j] != arr[i].backgroundRGB[j])
-            {
-                bgEqual = false;
-            }
-        }
-
-        if (fgEqual && bgEqual && ci.chara == arr[i].chara)
-        {
-            return i;
-        }
-    }
-
-    return -1;
 }
 
 std::vector<bool> VideoTranscoder::compressFrame(CharInfo* currentFrame, CharInfo* prevFrame)
@@ -110,31 +84,55 @@ std::vector<bool> VideoTranscoder::compressFrame(CharInfo* currentFrame, CharInf
     const uint32_t arraySize = vidTWidth * vidTHeight; 
     std::vector<bool> result;
 
-    std::map<CharInfo, bool*> compressedVals;
-    std::vector<CharInfo> compressedCIs;
+    std::map<ulong, bool*> compressedVals;
 
+    // making bitmaps of all CharInfos
     for (uint32_t index = 0; index < arraySize; index++)
     {
-        int ciIndex = getCharInfoPosInArr(currentFrame[index], &compressedCIs[0], compressedCIs.size());
-        CharInfo currentCI;
-        if (ciIndex == -1)
+        char* ciBytes = BinaryUtils::charInfoToCharArray(currentFrame[index]);
+        ulong currentCIHash = BinaryUtils::charArrayToUint(ciBytes, sizeof(CharInfo));
+        free(ciBytes);
+
+        bool prevFrameExists = (prevFrame != nullptr);
+        ulong prevCIHash;
+        if (prevFrameExists)
         {
-            bool* binMat = (bool*)malloc(arraySize*sizeof(bool));
-            for (int i = 0; i < arraySize; i++)
+            ciBytes = BinaryUtils::charInfoToCharArray(prevFrame[index]);
+            prevCIHash = BinaryUtils::charArrayToUint(ciBytes, sizeof(CharInfo));
+            free(ciBytes);
+        }
+
+        // only proceed if the CI has changed from the last frame
+        if (!prevFrameExists || currentCIHash != prevCIHash)
+        {
+            // if new charinfo, create bitmap
+            if (compressedVals.count(currentCIHash) == 0)
             {
-                binMat[i] = 0;
+                bool* binMat = (bool*)malloc(arraySize*sizeof(bool));
+                for (int i = 0; i < arraySize; i++)
+                {
+                    binMat[i] = 0;
+                }
+                
+                compressedVals.insert({currentCIHash, binMat});
             }
 
-            compressedCIs.push_back(currentFrame[index]);
-            currentCI = currentFrame[index];
-            compressedVals.insert({currentFrame[index], binMat});
+            // mark occurence
+            compressedVals[currentCIHash][index] = 1;
         }
-        else
-        {
-            currentCI = compressedCIs[ciIndex];
-        }
+    }
 
-        compressedVals[currentCI][index] = 1;
+    // now compress the bitmaps
+    for (std::map<ulong, bool*>::iterator it = compressedVals.begin(); it != compressedVals.end(); it++)
+    {
+        ulong ciHash = it->first;
+        bool* bitmap = it->second;
+        // append CI bits
+        char* ciHashBytes = BinaryUtils::numToCharArray(ciHash);
+        bool* ciHashBits = BinaryUtils::charArrayToBoolArray(ciHashBytes, sizeof(CharInfo));
+        VariousUtils::pushArrayToVector(ciHashBits, &result, sizeof(CharInfo)*8);
+        free(ciHashBits);
+        free(ciHashBytes);
     }
 
     return result;

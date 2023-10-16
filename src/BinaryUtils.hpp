@@ -71,4 +71,6 @@ class BinaryUtils {
         static float charArrayToFloat(const char* arr, const int len);
 
         static char* charInfoToCharArray(const CharInfo ci);
+
+        static bool* charArrayToBoolArray(const char* input, const int inputSize);
 };

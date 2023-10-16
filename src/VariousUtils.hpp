@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <vector>
 
 class VariousUtils {
     public:
@@ -25,4 +26,26 @@ class VariousUtils {
 
         static int* getTerminalDimensions();
         static char toLower(char c);
+        
+        template <typename T>
+        static int find(const T* inputArr, const T searchFor, const int indexStart, const int size)
+        {
+            for (int i = 0; i < size; i++)
+            {
+                if (inputArr[i] == searchFor)
+                {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        template <typename T>
+        static void pushArrayToVector(const T* inputArr, std::vector<T>* vec, const int arraySize)
+        {
+            for (int i = 0; i < arraySize; i++)
+            {
+                (*vec).push_back(inputArr[i]);
+            }
+        }
 };
