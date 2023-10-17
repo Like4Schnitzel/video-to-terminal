@@ -63,11 +63,11 @@ void VideoTranscoder::transcodeFile()
     for (vidCap>>frame; !frame.empty(); vidCap>>frame)
     {
         // progress update
-        int newProgress = (int)((double) frameIndex / vidFrames * 10000) / 100.;  // round to 4 digits
+        double newProgress = (int)((double) frameIndex / vidFrames * 10000) / 100.;  // round to 4 digits
         if (newProgress != progress)
         {
             progress = newProgress;
-            std::cout << "\33[2K\r" << progress << "\% done..." << std::flush;
+            std::cout << std::fixed << std::setprecision(2) << "\33[2K\r" << progress << "\% done..." << std::flush;
         }
         frameIndex++;
 
