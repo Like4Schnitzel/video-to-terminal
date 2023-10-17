@@ -227,6 +227,16 @@ std::vector<bool> VideoTranscoder::compressFrame(CharInfo* currentFrame, CharInf
         }
     }
 
+    bool newInfo = bitmaps.size() > 0;
+    if (!newInfo)
+    {
+        result.push_back(1);    // marks a frame being the same as the previous one
+    }
+    else
+    {
+        result.push_back(0);    // marks new info
+    }
+
     // now compress the bitmaps
     for (std::map<ulong, bool*>::iterator it = bitmaps.begin(); it != bitmaps.end(); it++)
     {
@@ -305,7 +315,10 @@ std::vector<bool> VideoTranscoder::compressFrame(CharInfo* currentFrame, CharInf
     }
 
     // replace last end of CI (0b10) with end of frame (0b11)
-    result[result.size()-1] = 1;
+    if (newInfo)
+    {
+        result[result.size()-1] = 1;
+    }
 
     return result;
 }

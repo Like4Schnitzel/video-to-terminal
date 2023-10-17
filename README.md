@@ -21,5 +21,8 @@ Every frame is compressed to simply contain the bytes for a CharInfo, followed b
 - 01 if a single position is following; The position is given by 2 bytes for x and y respectively.
 - 10 for the end of the CharInfo; New CharInfoBytes follow this.
 - 11 for the end of the frame. \
-  after 11 there will be up to 7 0-bits for padding.
+  after 11 there can be:
+  - 0, marking the next frame containing new information.
+  - 1, marking the next frame being the same as the current one. 
+  after 111/110 there will be up to 7 0-bits for padding.
 Areas that haven't changed from the last frame won't be listed.
