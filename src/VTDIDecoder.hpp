@@ -6,13 +6,15 @@
 #include "CharInfoStruct.hpp"
 #include "VariousUtils.hpp"
 #include "BinaryUtils.hpp"
+#include "BitStream.hpp"
 
 class VTDIDecoder {
     private:
         int staticByteSize;
         std::string vtdiPath;
         std::ifstream vtdiFile;
-        CharInfo** currentFrame;
+        BitStream inBits;
+        CharInfo* currentFrame;
         uint32_t frameCount;
         uint16_t vidWidth;
         uint16_t vidHeight;
@@ -26,6 +28,7 @@ class VTDIDecoder {
         VTDIDecoder(std::string path);
         void getStaticInfo();
         void playVideo();
+        void readNextFrame();
 
         int getVersion();
         uint32_t getFrameCount();

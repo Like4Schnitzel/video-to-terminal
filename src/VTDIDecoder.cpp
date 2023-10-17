@@ -97,6 +97,8 @@ void VTDIDecoder::playVideo()
     // move past the static bytes
     vtdiFile.seekg(staticByteSize);
 
+    this->inBits = BitStream(&vtdiFile, 5); // 5 byte buffer since we never need to read more than 4 bytes at once
+
     if (this->version == 0)
     {
         throw std::runtime_error("It seems static info hasn't been initialized yet. Try running VTDIDecoder.getStaticInfo()");
@@ -115,8 +117,111 @@ void VTDIDecoder::playVideo()
         throw std::runtime_error(errorMessage.str());
     }
 
+    for (uint32_t i = 0; i < this->frameCount; i++)
+    {
+        readNextFrame();
+    }
+
     vtdiFile.close();
     vtdiFile.clear();
+}
+
+void VTDIDecoder::readNextFrame()
+{
+    bool* startBit = inBits.readBits(1);
+    if (startBit[0] == 1) return;   // frame hasn't changed from the last one, continue to next frame
+    free(startBit);
+
+    bool* endMarker;
+    do
+    {
+        bool* byteBits;
+        char* bytes;
+        CharInfo current;
+        for (int i = 0; i < 3; i++)
+        {
+            byteBits = inBits.readBits(8);
+            bytes = BinaryUtils::bitArrayToCharArray(byteBits, 8);
+            current.foregroundRGB[i] = bytes[0];
+            free(bytes);
+            free(byteBits);
+        }
+        for (int i = 0; i < 3; i++)
+        {
+            byteBits = inBits.readBits(8);
+            bytes = BinaryUtils::bitArrayToCharArray(byteBits, 8);
+            current.backgroundRGB[i] = bytes[0];
+            free(bytes);
+            free(byteBits);
+        }
+        byteBits = inBits.readBits(8);
+        bytes = BinaryUtils::bitArrayToCharArray(byteBits, 8);
+        current.chara = bytes[0];
+        free(bytes);
+        free(byteBits);
+
+        do
+        {
+            free(endMarker);
+            endMarker = inBits.readBits(2);
+
+            if (endMarker[0] == 0)
+            {
+                if (endMarker[1] == 0)  // rectangle
+                {
+                    int* corners = (int*)malloc(4*sizeof(int));
+
+                    for (int i = 0; i < 4; i++)
+                    {
+                        byteBits = inBits.readBits(16);
+                        bytes = BinaryUtils::bitArrayToCharArray(byteBits, 16);
+                        corners[i] = BinaryUtils::charArrayToUint(bytes, 16);
+                        free(byteBits);
+                        free(bytes);
+                    }
+
+                    free(corners);
+
+                    for (int x = corners[0]; x < corners[2]; x++)
+                    {
+                        for (int y = corners[1]; y < corners[3]; y++)
+                        {
+                            int matIndex = y*vidWidth+x;
+                            for (int i = 0; i < 3; i++)
+                            {
+                                currentFrame[matIndex].foregroundRGB[i] = current.foregroundRGB[i];
+                                currentFrame[matIndex].backgroundRGB[i] = current.backgroundRGB[i];
+                            }
+                            currentFrame[matIndex].chara = current.chara;
+                        }
+                    }
+                }
+                else    // position
+                {
+                    int* corners = (int*)malloc(2*sizeof(int));
+
+                    for (int i = 0; i < 2; i++)
+                    {
+                        byteBits = inBits.readBits(16);
+                        bytes = BinaryUtils::bitArrayToCharArray(byteBits, 16);
+                        corners[i] = BinaryUtils::charArrayToUint(bytes, 16);
+                        free(byteBits);
+                        free(bytes);
+                    }
+
+                    int matIndex = corners[1]*vidWidth+corners[0];
+                    for (int i = 0; i < 3; i++)
+                    {
+                        currentFrame[matIndex].foregroundRGB[i] = current.foregroundRGB[i];
+                        currentFrame[matIndex].backgroundRGB[i] = current.backgroundRGB[i];
+                    }
+                    currentFrame[matIndex].chara = current.chara;
+                }
+            }
+        } while(endMarker[0] == 0); // 00 for rect, 01 for pos, 10 for end of CI
+
+    } while(endMarker[1] == 0);    // 11 marks the end of the frame
+    free(endMarker);
 }
 
 int VTDIDecoder::getVersion()
