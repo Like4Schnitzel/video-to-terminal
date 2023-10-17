@@ -235,88 +235,85 @@ std::vector<bool> VideoTranscoder::compressFrame(CharInfo* currentFrame, CharInf
     else
     {
         result.push_back(0);    // marks new info
-    }
 
-    // now compress the bitmaps
-    for (std::map<ulong, bool*>::iterator it = bitmaps.begin(); it != bitmaps.end(); it++)
-    {
-        ulong ciHash = it->first;
-        bool* bitmap = it->second;
-        // append CI bits
-        char* ciHashBytes = BinaryUtils::numToCharArray(ciHash);
-        for (int i = 1; i <= sizeof(CharInfo); i++) // start at the second byte, since CIs only have 7 but ulongs have 8
+        // now compress the bitmaps
+        for (std::map<ulong, bool*>::iterator it = bitmaps.begin(); it != bitmaps.end(); it++)
         {
-            char c = ciHashBytes[i];
-            for (int j = 0; j < 8; j++)
+            ulong ciHash = it->first;
+            bool* bitmap = it->second;
+            // append CI bits
+            char* ciHashBytes = BinaryUtils::numToCharArray(ciHash);
+            for (int i = 1; i <= sizeof(CharInfo); i++) // start at the second byte, since CIs only have 7 but ulongs have 8
             {
-                bool bit = (bool)((c >> (7-j)) & 1);
-                result.push_back(bit);
-            }
-        }
-        free(ciHashBytes);
-
-        int* rect = findBiggestRectangle(bitmap, arraySize*sizeof(bool), vidTWidth);
-        while(rect[0] != -1)
-        {
-            // write rectangle info to resulting bit vector
-            // true if the rectangle is just 1 element
-            if (rect[0] == rect[2] && rect[1] == rect[3])
-            {
-                // 0b01 is the code for position
-                result.push_back(0);
-                result.push_back(1);
-
-                for (int i = 0; i < 2; i++)
+                char c = ciHashBytes[i];
+                for (int j = 0; j < 8; j++)
                 {
-                    char* numBytes = BinaryUtils::numToCharArray((uint16_t) rect[i]);
-                    bool* numBits = BinaryUtils::charArrayToBoolArray(numBytes, 2);
-                    VariousUtils::pushArrayToVector(numBits, &result, 16);
-                    free(numBits);
-                    free(numBytes);
+                    bool bit = (bool)((c >> (7-j)) & 1);
+                    result.push_back(bit);
                 }
             }
-            else
+            free(ciHashBytes);
+
+            int* rect = findBiggestRectangle(bitmap, arraySize*sizeof(bool), vidTWidth);
+            while(rect[0] != -1)
             {
-                // 0b00 is the code for rectangle
-                result.push_back(0);
-                result.push_back(0);
-
-                for (int i = 0; i < 4; i++)
+                // write rectangle info to resulting bit vector
+                // true if the rectangle is just 1 element
+                if (rect[0] == rect[2] && rect[1] == rect[3])
                 {
-                    char* numBytes = BinaryUtils::numToCharArray((uint16_t) rect[i]);
-                    bool* numBits = BinaryUtils::charArrayToBoolArray(numBytes, 2);
-                    VariousUtils::pushArrayToVector(numBits, &result, 16);
-                    free(numBits);
-                    free(numBytes);
-                }
-            }
+                    // 0b01 is the code for position
+                    result.push_back(0);
+                    result.push_back(1);
 
-            // clear rectangle from bitmap
-            // y coordinate
-            for (int i = rect[1]; i <= rect[3]; i++)
-            {
-                // x coordinate
-                for (int j = rect[0]; j <= rect[2]; j++)
+                    for (int i = 0; i < 2; i++)
+                    {
+                        char* numBytes = BinaryUtils::numToCharArray((uint16_t) rect[i]);
+                        bool* numBits = BinaryUtils::charArrayToBoolArray(numBytes, 2);
+                        VariousUtils::pushArrayToVector(numBits, &result, 16);
+                        free(numBits);
+                        free(numBytes);
+                    }
+                }
+                else
                 {
-                    bitmap[i*vidTWidth+j] = 0;
-                }
-            }
+                    // 0b00 is the code for rectangle
+                    result.push_back(0);
+                    result.push_back(0);
 
+                    for (int i = 0; i < 4; i++)
+                    {
+                        char* numBytes = BinaryUtils::numToCharArray((uint16_t) rect[i]);
+                        bool* numBits = BinaryUtils::charArrayToBoolArray(numBytes, 2);
+                        VariousUtils::pushArrayToVector(numBits, &result, 16);
+                        free(numBits);
+                        free(numBytes);
+                    }
+                }
+
+                // clear rectangle from bitmap
+                // y coordinate
+                for (int i = rect[1]; i <= rect[3]; i++)
+                {
+                    // x coordinate
+                    for (int j = rect[0]; j <= rect[2]; j++)
+                    {
+                        bitmap[i*vidTWidth+j] = 0;
+                    }
+                }
+
+                free(rect);
+                rect = findBiggestRectangle(bitmap, arraySize*sizeof(bool), vidTWidth);
+            }
             free(rect);
-            rect = findBiggestRectangle(bitmap, arraySize*sizeof(bool), vidTWidth);
+
+            // 0b10 is the code for end of CI segment
+            result.push_back(1);
+            result.push_back(0);
+
+            free(bitmap);
         }
-        free(rect);
 
-        // 0b10 is the code for end of CI segment
-        result.push_back(1);
-        result.push_back(0);
-
-        free(bitmap);
-    }
-
-    // replace last end of CI (0b10) with end of frame (0b11)
-    if (newInfo)
-    {
+        // replace last end of CI (0b10) with end of frame (0b11)
         result[result.size()-1] = 1;
     }
 
