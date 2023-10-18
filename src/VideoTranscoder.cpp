@@ -405,6 +405,8 @@ CharInfo* VideoTranscoder::transcodeFrame()
                     frameInfo[charIndex].backgroundRGB[i] = best.backgroundRGB[i];
                 }
                 frameInfo[charIndex].chara = best.chara;
+
+                charIndex++;
             }
         }
     }
