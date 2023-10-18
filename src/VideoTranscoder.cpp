@@ -320,88 +320,58 @@ std::vector<bool> VideoTranscoder::compressFrame(CharInfo* currentFrame, CharInf
     return result;
 }
 
-cv::Vec3b getAverageRGB(cv::Mat img)
+int getColorDiff(cv::Mat dom1, cv::Mat dom2)
 {
-    const int imageHeight = img.size().height;
-    const int imageWidth = img.size().width;
-    const int totalPixels = imageHeight * imageWidth;
-
-    //std::cout << "imageHeight: " << imageHeight << "\nimageWidth: " << imageWidth << "\n";
-    cv::Vec3b avrgRGB = {0, 0, 0};
-    ulong totalRGB[3] = {0, 0, 0};
-
-    if (imageHeight > 0 && imageWidth > 0)
-    {
-        //cv::imshow("frame", img);
-        for (int i = 0; i < imageHeight; i++)
-        {
-            for (int j = 0; j < imageWidth; j++)
-            {
-                cv::Vec3b pixelBGRValues = img.at<cv::Vec3b>(cv::Point(i, j));
-                //std::cout << "pixelBGRValues: " << (int)pixelBGRValues[0] << " " << (int)pixelBGRValues[1] << " " << (int)pixelBGRValues[2] << "\n";
-                for (int k = 0; k < 3; k++)
-                {
-                    totalRGB[2-k] += pixelBGRValues[k];
-                }
-            }
-        }
-
-        for (int i = 0; i < 3; i++)
-        {
-            avrgRGB[i] = totalRGB[i] / totalPixels;
-        }
-
-        //std::cout << "Average RGB: " << (int)avrgRGB[0] << " " << (int)avrgRGB[1] << " " << (int)avrgRGB[2] << "\n";
-        //cv::waitKey(0);
-    }
-
-    return avrgRGB;
-}
-
-int getRGBDiff(cv::Vec3b v1, cv::Vec3b v2)
-{
-    cv::Vec3b lab1;
-    cv::cvtColor(v1, lab1, cv::COLOR_RGB2Lab);
-    cv::Vec3b lab2;
-    cv::cvtColor(v2, lab2, cv::COLOR_RGB2Lab);
-
-    return pow((lab1[0] / (255./100.)) - (lab2[0] / (255./100.)), 2) + 
-           pow((lab1[1] - 128) - (lab2[1] - 128), 2) + 
-           pow((lab1[2] - 128) - (lab2[2] - 128), 2);
+    return pow((dom1.data[0] / (255./100.)) - (dom2.data[0] / (255./100.)), 2) + 
+           pow((dom1.data[1] - 128) - (dom2.data[1] - 128), 2) + 
+           pow((dom1.data[2] - 128) - (dom2.data[2] - 128), 2);
 }
 
 CharInfo findBestBlockCharacter(cv::Mat img)
 {
     CharInfo minDiffCharInfo;
-    int minDiff = getRGBDiff(cv::Vec3b(0, 0, 0), cv::Vec3b(255, 255, 255)) + 1;
+    int minDiff = -1;
     const int imageHeight = img.size().height;
     const int imageWidth = img.size().width;
     int currentOption;
-    cv::Mat foreground;
-    cv::Mat background;
-    // skip upper half since lower half can be used
+    cv::Mat fgBGR;
+    cv::Mat bgBGR;
+    cv::Mat fgLab;
+    cv::Mat bgLab;
+    cv::Mat fgLabFlt;
+    cv::Mat bgLabFlt;
+    cv::Mat fgDomClr;
+    cv::Mat bgDomClr;
+    cv::TermCriteria criteria = cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::MAX_ITER, 10, 1.0);
+    cv::Mat indices;
+
+    // skip upper half (0) since lower half can be used
     // loop through the lower eights
     const double eigthHeight = (double)imageHeight / 8;
-    //std::cout << "eightHeight: " << eigthHeight << "\n";
     double currentHeight = imageHeight;
-    //cv::imshow("bigger frame", img);
     for (currentOption = 1; currentOption < 8; currentOption++)
     {
-        //std::cout << "currentOption: " << currentOption << "\ncurrentHeight: " << currentHeight << "\n";
         currentHeight -= eigthHeight;
-        foreground = img(cv::Rect(0, (int)currentHeight, imageWidth, imageHeight-(int)currentHeight));
-        //std::cout << "foreground dimensions: " << foreground.size().width << "x" << foreground.size().height << "\n";
-        background = img(cv::Rect(0, 0, imageWidth, (int)currentHeight));
-        //std::cout << "background dimensions: " << background.size().width << "x" << background.size().height << "\n";
-        cv::Vec3b avgForegroundRGB = getAverageRGB(foreground);
-        cv::Vec3b avgBackgroundRGB = getAverageRGB(background);
+        
+        fgBGR = img(cv::Rect(0, (int)currentHeight, imageWidth, imageHeight-(int)currentHeight));
+        cv::cvtColor(fgBGR, fgLab, cv::COLOR_BGR2Lab);
+        fgLab.convertTo(fgLabFlt, CV_32FC1);
+        cv::kmeans(fgLabFlt, 1, indices, criteria, 10, cv::KMEANS_RANDOM_CENTERS, fgDomClr);
 
-        int totalRGBDiff = getRGBDiff(avgForegroundRGB, avgBackgroundRGB);
-        if (totalRGBDiff < minDiff)
+        bgBGR = img(cv::Rect(0, 0, imageWidth, (int)currentHeight));
+        cv::cvtColor(bgBGR, bgLab, cv::COLOR_BGR2Lab);
+        bgLab.convertTo(bgLabFlt, CV_32FC1);
+        cv::kmeans(bgLabFlt, 1, indices, criteria, 10, cv::KMEANS_RANDOM_CENTERS, bgDomClr);
+
+        int colorDiff = getColorDiff(fgDomClr, bgDomClr);
+        if (minDiff == -1 || colorDiff < minDiff)
         {
-            minDiff = totalRGBDiff;
-            minDiffCharInfo.foregroundRGB = avgForegroundRGB;
-            minDiffCharInfo.backgroundRGB = avgBackgroundRGB;
+            minDiff = colorDiff;
+            for (int i = 0; i < 3; i++)
+            {
+                minDiffCharInfo.foregroundRGB[i] = fgDomClr.data[i];
+                minDiffCharInfo.backgroundRGB[i] = bgDomClr.data[i];
+            }
             minDiffCharInfo.chara = currentOption;
         }
     }
