@@ -336,12 +336,16 @@ CharInfo findBestBlockCharacter(cv::Mat img)
     int currentOption;
     cv::Mat fgBGR;
     cv::Mat bgBGR;
+    cv::Mat fgBGRFlt;
+    cv::Mat bgBGRFlt;
+    cv::Mat fgDomBGRClr;
+    cv::Mat bgDomBGRClr;
     cv::Mat fgLab;
     cv::Mat bgLab;
     cv::Mat fgLabFlt;
     cv::Mat bgLabFlt;
-    cv::Mat fgDomClr;
-    cv::Mat bgDomClr;
+    cv::Mat fgDomLabClr;
+    cv::Mat bgDomLabClr;
     cv::TermCriteria criteria = cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::MAX_ITER, 10, 1.0);
     cv::Mat indices;
 
@@ -356,21 +360,29 @@ CharInfo findBestBlockCharacter(cv::Mat img)
         fgBGR = img(cv::Rect(0, (int)currentHeight, imageWidth, imageHeight-(int)currentHeight));
         cv::cvtColor(fgBGR, fgLab, cv::COLOR_BGR2Lab);
         fgLab.convertTo(fgLabFlt, CV_32FC1);
-        cv::kmeans(fgLabFlt, 1, indices, criteria, 10, cv::KMEANS_RANDOM_CENTERS, fgDomClr);
+        cv::kmeans(fgLabFlt, 1, indices, criteria, 10, cv::KMEANS_RANDOM_CENTERS, fgDomLabClr);
 
         bgBGR = img(cv::Rect(0, 0, imageWidth, (int)currentHeight));
         cv::cvtColor(bgBGR, bgLab, cv::COLOR_BGR2Lab);
         bgLab.convertTo(bgLabFlt, CV_32FC1);
-        cv::kmeans(bgLabFlt, 1, indices, criteria, 10, cv::KMEANS_RANDOM_CENTERS, bgDomClr);
+        cv::kmeans(bgLabFlt, 1, indices, criteria, 10, cv::KMEANS_RANDOM_CENTERS, bgDomLabClr);
 
-        int colorDiff = getColorDiff(fgDomClr, bgDomClr);
+        int colorDiff = getColorDiff(fgDomLabClr, bgDomLabClr);
         if (maxDiff == -1 || colorDiff > maxDiff)
         {
+            // Lab is great for detecting human perceivable difference in color
+            // but for video displaying in the terminal I need RGB values
+            fgBGR.convertTo(fgBGRFlt, CV_32FC1);
+            bgBGR.convertTo(bgBGRFlt, CV_32FC1);
+            cv::kmeans(fgBGRFlt, 1, indices, criteria, 10, cv::KMEANS_RANDOM_CENTERS, fgDomBGRClr);
+            cv::kmeans(bgBGRFlt, 1, indices, criteria, 10, cv::KMEANS_RANDOM_CENTERS, fgDomBGRClr);
+
             maxDiff = colorDiff;
             for (int i = 0; i < 3; i++)
             {
-                maxDiffCharInfo.foregroundRGB[i] = fgDomClr.data[i];
-                maxDiffCharInfo.backgroundRGB[i] = bgDomClr.data[i];
+                // turn around BGR so RGB gets saved instead
+                maxDiffCharInfo.foregroundRGB[i] = fgDomBGRClr.data[2-i];
+                maxDiffCharInfo.backgroundRGB[i] = bgDomBGRClr.data[2-i];
             }
             maxDiffCharInfo.chara = currentOption;
         }
