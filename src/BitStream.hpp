@@ -17,4 +17,6 @@ class BitStream{
         BitStream(std::ifstream* inFile, int bufferSize);
         ~BitStream();
         bool* readBits(int n);
+
+        int getIndex();
 };

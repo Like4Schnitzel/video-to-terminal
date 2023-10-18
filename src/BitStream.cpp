@@ -62,3 +62,8 @@ bool* BitStream::readBits(int n)
 
     return result;
 }
+
+int BitStream::getIndex()
+{
+    return this->index;
+}
