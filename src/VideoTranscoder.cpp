@@ -360,13 +360,20 @@ cv::Vec3b getAverageRGB(cv::Mat img)
 
 int getRGBDiff(cv::Vec3b v1, cv::Vec3b v2)
 {
-    return (int) sqrt(pow(v1[0]-v2[0], 2) + pow(v1[1]-v2[1], 2) + pow(v1[2]-v2[2], 2));
+    cv::Vec3b lab1;
+    cv::cvtColor(v1, lab1, cv::COLOR_RGB2Lab);
+    cv::Vec3b lab2;
+    cv::cvtColor(v2, lab2, cv::COLOR_RGB2Lab);
+
+    return pow((lab1[0] / (255./100.)) - (lab2[0] / (255./100.)), 2) + 
+           pow((lab1[1] - 128) - (lab2[1] - 128), 2) + 
+           pow((lab1[2] - 128) - (lab2[2] - 128), 2);
 }
 
 CharInfo findBestBlockCharacter(cv::Mat img)
 {
     CharInfo minDiffCharInfo;
-    int minDiff = 257;
+    int minDiff = getRGBDiff(cv::Vec3b(0, 0, 0), cv::Vec3b(255, 255, 255)) + 1;
     const int imageHeight = img.size().height;
     const int imageWidth = img.size().width;
     int currentOption;
