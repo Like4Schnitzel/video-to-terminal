@@ -427,7 +427,14 @@ CharInfo* VideoTranscoder::transcodeFrame()
             for (double x = 0; x+widthPixelsPerChar < vidWidth; x += widthPixelsPerChar)
             {
                 cv::Mat framePart = this->frame(cv::Rect((int)x, (int)y, (int)widthPixelsPerChar, (int)heightPixelsPerChar));
-                frameInfo[charIndex] = findBestBlockCharacter(framePart);
+                CharInfo best = findBestBlockCharacter(framePart);
+                
+                for (int i = 0; i < 3; i++)
+                {
+                    frameInfo[charIndex].foregroundRGB[i] = best.foregroundRGB[i];
+                    frameInfo[charIndex].backgroundRGB[i] = best.backgroundRGB[i];
+                }
+                frameInfo[charIndex].chara = best.chara;
             }
         }
     }
