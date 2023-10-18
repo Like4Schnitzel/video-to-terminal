@@ -329,8 +329,8 @@ int getColorDiff(cv::Mat dom1, cv::Mat dom2)
 
 CharInfo findBestBlockCharacter(cv::Mat img)
 {
-    CharInfo minDiffCharInfo;
-    int minDiff = -1;
+    CharInfo maxDiffCharInfo;
+    int maxDiff = -1;
     const int imageHeight = img.size().height;
     const int imageWidth = img.size().width;
     int currentOption;
@@ -364,19 +364,19 @@ CharInfo findBestBlockCharacter(cv::Mat img)
         cv::kmeans(bgLabFlt, 1, indices, criteria, 10, cv::KMEANS_RANDOM_CENTERS, bgDomClr);
 
         int colorDiff = getColorDiff(fgDomClr, bgDomClr);
-        if (minDiff == -1 || colorDiff < minDiff)
+        if (maxDiff == -1 || colorDiff > maxDiff)
         {
-            minDiff = colorDiff;
+            maxDiff = colorDiff;
             for (int i = 0; i < 3; i++)
             {
-                minDiffCharInfo.foregroundRGB[i] = fgDomClr.data[i];
-                minDiffCharInfo.backgroundRGB[i] = bgDomClr.data[i];
+                maxDiffCharInfo.foregroundRGB[i] = fgDomClr.data[i];
+                maxDiffCharInfo.backgroundRGB[i] = bgDomClr.data[i];
             }
-            minDiffCharInfo.chara = currentOption;
+            maxDiffCharInfo.chara = currentOption;
         }
     }
 
-    return minDiffCharInfo;
+    return maxDiffCharInfo;
 }
 
 CharInfo* VideoTranscoder::transcodeFrame()
