@@ -1,7 +1,6 @@
 #include "VideoTranscoder.hpp"
 #include "VTDIDecoder.hpp"
 #include "VariousUtils.hpp"
-#include <map>
 
 using namespace std;
 
