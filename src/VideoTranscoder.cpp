@@ -375,7 +375,7 @@ CharInfo findBestBlockCharacter(cv::Mat img)
             fgBGR.convertTo(fgBGRFlt, CV_32FC1);
             bgBGR.convertTo(bgBGRFlt, CV_32FC1);
             cv::kmeans(fgBGRFlt, 1, indices, criteria, 10, cv::KMEANS_RANDOM_CENTERS, fgDomBGRClr);
-            cv::kmeans(bgBGRFlt, 1, indices, criteria, 10, cv::KMEANS_RANDOM_CENTERS, fgDomBGRClr);
+            cv::kmeans(bgBGRFlt, 1, indices, criteria, 10, cv::KMEANS_RANDOM_CENTERS, bgDomBGRClr);
 
             maxDiff = colorDiff;
             for (int i = 0; i < 3; i++)
