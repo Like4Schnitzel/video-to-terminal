@@ -78,7 +78,7 @@ void VideoTranscoder::transcodeFile()
         {
             frameBits.push_back(0);
         }
-        char* frameBytes = BinaryUtils::bitArrayToCharArray(frameBits, frameBits.size());
+        char* frameBytes = BinaryUtils::bitArrayToByteArray(frameBits, frameBits.size());
         BinaryUtils::writeToFile(vtdiFilePath, frameBytes, frameBits.size()/8, true);
         free(frameBytes);
 
@@ -195,15 +195,15 @@ std::vector<bool> VideoTranscoder::compressFrame(CharInfo* currentFrame, CharInf
     // making bitmaps of all CharInfos
     for (uint32_t index = 0; index < arraySize; index++)
     {
-        char* ciBytes = BinaryUtils::charInfoToCharArray(currentFrame[index]);
-        ulong currentCIHash = BinaryUtils::charArrayToUint(ciBytes, sizeof(CharInfo));
+        char* ciBytes = BinaryUtils::charInfoToByteArray(currentFrame[index]);
+        ulong currentCIHash = BinaryUtils::byteArrayToUint(ciBytes, sizeof(CharInfo));
         free(ciBytes);
 
         ulong prevCIHash;
         if (prevFrameExists)
         {
-            ciBytes = BinaryUtils::charInfoToCharArray(prevFrame[index]);
-            prevCIHash = BinaryUtils::charArrayToUint(ciBytes, sizeof(CharInfo));
+            ciBytes = BinaryUtils::charInfoToByteArray(prevFrame[index]);
+            prevCIHash = BinaryUtils::byteArrayToUint(ciBytes, sizeof(CharInfo));
             free(ciBytes);
         }
 
@@ -268,7 +268,7 @@ std::vector<bool> VideoTranscoder::compressFrame(CharInfo* currentFrame, CharInf
                     for (int i = 0; i < 2; i++)
                     {
                         char* numBytes = BinaryUtils::numToCharArray((uint16_t) rect[i]);
-                        bool* numBits = BinaryUtils::charArrayToBoolArray(numBytes, 2);
+                        bool* numBits = BinaryUtils::byteArrayToBitArray(numBytes, 2);
                         VariousUtils::pushArrayToVector(numBits, &result, 16);
                         free(numBits);
                         free(numBytes);
@@ -283,7 +283,7 @@ std::vector<bool> VideoTranscoder::compressFrame(CharInfo* currentFrame, CharInf
                     for (int i = 0; i < 4; i++)
                     {
                         char* numBytes = BinaryUtils::numToCharArray((uint16_t) rect[i]);
-                        bool* numBits = BinaryUtils::charArrayToBoolArray(numBytes, 2);
+                        bool* numBits = BinaryUtils::byteArrayToBitArray(numBytes, 2);
                         VariousUtils::pushArrayToVector(numBits, &result, 16);
                         free(numBits);
                         free(numBytes);

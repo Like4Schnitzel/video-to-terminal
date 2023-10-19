@@ -58,7 +58,7 @@ char* BinaryUtils::numToCharArray(const float num)
     return numToCharArray(data.output);
 }
 
-ulong BinaryUtils::charArrayToUint(const char* arr, const int len)
+ulong BinaryUtils::byteArrayToUint(const Byte* arr, const int len)
 {
     ulong num = 0;
     int markiplier = 1;
@@ -72,7 +72,7 @@ ulong BinaryUtils::charArrayToUint(const char* arr, const int len)
     return num;
 }
 
-float BinaryUtils::charArrayToFloat(const char* arr, const int len)
+float BinaryUtils::byteArrayToFloat(const Byte* arr, const int len)
 {
     if (len != 4)
     {
@@ -83,13 +83,13 @@ float BinaryUtils::charArrayToFloat(const char* arr, const int len)
         unsigned int x;
         float f;
     } temp;
-    temp.x = charArrayToUint(arr, len);
+    temp.x = byteArrayToUint(arr, len);
     return temp.f;
 }
 
-char* BinaryUtils::charInfoToCharArray(const CharInfo ci)
+Byte* BinaryUtils::charInfoToByteArray(const CharInfo ci)
 {
-    char* result = (char*)malloc(sizeof(CharInfo));
+    Byte* result = (Byte*)malloc(sizeof(CharInfo));
     int index = 0;
 
     for (cv::Vec3b vec : {ci.foregroundRGB, ci.backgroundRGB})
@@ -106,7 +106,7 @@ char* BinaryUtils::charInfoToCharArray(const CharInfo ci)
     return result;
 }
 
-bool* BinaryUtils::charArrayToBoolArray(const char* input, const int inputSize)
+bool* BinaryUtils::byteArrayToBitArray(const Byte* input, const int inputSize)
 {
     bool* result = (bool*)malloc(inputSize*sizeof(char));
     for (int i = 0; i < inputSize; i++)

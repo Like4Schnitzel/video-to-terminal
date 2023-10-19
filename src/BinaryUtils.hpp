@@ -14,7 +14,7 @@
 class BinaryUtils {
     public:
         template <typename T>
-        static char* bitArrayToCharArray(T bits, ulong len)
+        static Byte* bitArrayToByteArray(T bits, ulong len)
         {
             if (len % 8 != 0)
             {
@@ -22,11 +22,11 @@ class BinaryUtils {
             }
 
             ulong byteSize = len / CHAR_BIT;
-            char* output = (char*)malloc(byteSize);
+            Byte* output = (Byte*)malloc(byteSize);
             for (ulong i = 0; i < byteSize; i++)
             {
                 output[i] = 0;
-                // write bits to char
+                // write bits to byte
                 for (int j = 0; j < 8; j++)
                 {
                     output[i] = output[i] << 1 | bits[i*8 + j];   //push already written bits to the left by one, then write 0 or 1 on the very right
@@ -66,11 +66,11 @@ class BinaryUtils {
             return arr;
         }
 
-        static ulong charArrayToUint(const char* arr, const int len);
+        static ulong byteArrayToUint(const Byte* arr, const int len);
 
-        static float charArrayToFloat(const char* arr, const int len);
+        static float byteArrayToFloat(const Byte* arr, const int len);
 
-        static char* charInfoToCharArray(const CharInfo ci);
+        static Byte* charInfoToByteArray(const CharInfo ci);
 
-        static bool* charArrayToBoolArray(const char* input, const int inputSize);
+        static bool* byteArrayToBitArray(const Byte* input, const int inputSize);
 };

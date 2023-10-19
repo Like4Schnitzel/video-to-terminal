@@ -42,7 +42,7 @@ void BitStream::readFileBytesToBuffer(int n)
     free(readBytes);
 
     free(bits);
-    bits = BinaryUtils::charArrayToBoolArray(bytes, bufferSize);
+    bits = BinaryUtils::byteArrayToBitArray(bytes, bufferSize);
 }
 
 bool* BitStream::readBits(int n)
