@@ -87,7 +87,7 @@ void VideoTranscoder::transcodeFile()
     }
     free(previousFrameChars);
 
-    std::cout << "\33[2k\r" << "100\% done!\n" << std::flush;
+    std::cout << "\33[2k\r" << "100\% done!    \n" << std::flush;
 }
 
 int* findBiggestRectangle(bool* bitmap, int bitCount, int rowLength)
