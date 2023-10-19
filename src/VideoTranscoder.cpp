@@ -405,8 +405,10 @@ CharInfo* VideoTranscoder::transcodeFrame()
         //std::cout << "frame dimensions: " << frame.size().width << "x" << frame.size().height << "\n";
         for (double y = 0; y < vidHeight; y += heightPixelsPerChar)
         {
+            if (y + heightPixelsPerChar > vidHeight) y = vidHeight - heightPixelsPerChar;
             for (double x = 0; x < vidWidth; x += widthPixelsPerChar)
             {
+                if (x + widthPixelsPerChar > vidWidth) x = vidWidth - widthPixelsPerChar;
                 cv::Mat framePart = this->frame(cv::Rect((int)x, (int)y, (int)widthPixelsPerChar, (int)heightPixelsPerChar));
                 CharInfo best = findBestBlockCharacter(framePart);
                 
