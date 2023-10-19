@@ -50,14 +50,14 @@ class BinaryUtils {
 
         static void writeToFile(const std::string fileName, char* bytes, const ulong byteSize, const bool append, const bool freeArr = false);
 
-        static char* numToCharArray(const float);
+        static Byte* numToByteArray(const float);
 
         template <typename uints>
-        static char* numToCharArray(uints num)
+        static Byte* numToByteArray(uints num)
         {
             const int byteSize = sizeof(num);
 
-            char* arr = (char*)malloc(byteSize);
+            Byte* arr = (Byte*)malloc(byteSize);
             for (int i = byteSize-1; i >= 0; i--)
             {
                 arr[i] = num % 256;

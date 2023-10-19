@@ -47,7 +47,7 @@ void BinaryUtils::writeToFile(const std::string fileName, char* bytes, const ulo
     }
 }
 
-char* BinaryUtils::numToCharArray(const float num)
+Byte* BinaryUtils::numToByteArray(const float num)
 {
     union
     {
@@ -55,7 +55,7 @@ char* BinaryUtils::numToCharArray(const float num)
         int output;
     } data;
     data.input = num;
-    return numToCharArray(data.output);
+    return numToByteArray(data.output);
 }
 
 ulong BinaryUtils::byteArrayToUint(const Byte* arr, const int len)
