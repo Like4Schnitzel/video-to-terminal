@@ -13,7 +13,7 @@ BitStream::BitStream(std::ifstream* inF, int buf)
 {
     this->inFile = inF;
     this->bufferSize = buf;
-    this->bytes = (char*)malloc(buf*sizeof(char));
+    this->bytes = (Byte*)malloc(buf*sizeof(Byte));
     this->bits = (bool*)malloc(8*buf*sizeof(bool));
     this->index = 0;
 

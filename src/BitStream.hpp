@@ -6,7 +6,7 @@
 class BitStream{
     private:
         std::ifstream* inFile;
-        char* bytes;
+        Byte* bytes;
         bool* bits;
         int index;
         int bufferSize;
