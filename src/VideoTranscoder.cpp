@@ -52,7 +52,6 @@ void VideoTranscoder::transcodeFile()
 
     // settings constants for video byte writing
     const int totalTerminalChars = vidTWidth * vidTHeight;
-    const uint32_t totalFrameBytes = (vidTWidth * vidTHeight) * sizeof(CharInfo);
     CharInfo* previousFrameChars = nullptr;
 
     uint32_t frameBytesIndex = 0;
@@ -404,9 +403,9 @@ CharInfo* VideoTranscoder::transcodeFrame()
 
         //cv::imshow("biggest image", frame);
         //std::cout << "frame dimensions: " << frame.size().width << "x" << frame.size().height << "\n";
-        for (double y = 0; y+heightPixelsPerChar < vidHeight; y += heightPixelsPerChar)
+        for (double y = 0; y < vidHeight; y += heightPixelsPerChar)
         {
-            for (double x = 0; x+widthPixelsPerChar < vidWidth; x += widthPixelsPerChar)
+            for (double x = 0; x < vidWidth; x += widthPixelsPerChar)
             {
                 cv::Mat framePart = this->frame(cv::Rect((int)x, (int)y, (int)widthPixelsPerChar, (int)heightPixelsPerChar));
                 CharInfo best = findBestBlockCharacter(framePart);
