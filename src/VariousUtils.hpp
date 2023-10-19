@@ -48,4 +48,6 @@ class VariousUtils {
                 (*vec).push_back(inputArr[i]);
             }
         }
+
+        static std::string numToUnicodeBlockChar(int num);
 };

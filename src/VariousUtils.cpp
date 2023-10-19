@@ -84,3 +84,12 @@ char VariousUtils::toLower(char c)
         return c;
     }
 }
+
+std::string VariousUtils::numToUnicodeBlockChar(int i)
+{
+    char buf[3];
+    buf[0] = 0xe2;
+    buf[1] = 0x96;
+    buf[2] = 0x80 + i;
+    return std::string(reinterpret_cast<char*>(buf), 3);
+}
