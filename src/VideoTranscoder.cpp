@@ -361,7 +361,7 @@ CharInfo findBestBlockCharacter(cv::Mat img)
         fgLab.convertTo(fgLabFlt, CV_32FC1);
         cv::kmeans(fgLabFlt, 1, indices, criteria, 10, cv::KMEANS_RANDOM_CENTERS, fgDomLabClr);
 
-        bgBGR = img(cv::Rect(0, 0, imageWidth, (int)currentHeight));
+        bgBGR = img(cv::Rect(0, 0, imageWidth, imageHeight-(int)currentHeight));
         cv::cvtColor(bgBGR, bgLab, cv::COLOR_BGR2Lab);
         bgLab.convertTo(bgLabFlt, CV_32FC1);
         cv::kmeans(bgLabFlt, 1, indices, criteria, 10, cv::KMEANS_RANDOM_CENTERS, bgDomLabClr);
@@ -411,7 +411,7 @@ CharInfo* VideoTranscoder::transcodeFrame()
                 if (x + widthPixelsPerChar > vidWidth) x = vidWidth - widthPixelsPerChar;
                 cv::Mat framePart = this->frame(cv::Rect((int)x, (int)y, (int)widthPixelsPerChar, (int)heightPixelsPerChar));
                 CharInfo best = findBestBlockCharacter(framePart);
-                
+
                 for (int i = 0; i < 3; i++)
                 {
                     frameInfo[charIndex].foregroundRGB[i] = best.foregroundRGB[i];
