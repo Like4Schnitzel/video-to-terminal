@@ -13,7 +13,6 @@ class VTDIDecoder {
         int staticByteSize;
         std::string vtdiPath;
         std::ifstream vtdiFile;
-        BitStream inBits;
         CharInfo* currentFrame;
         uint32_t frameCount;
         uint16_t vidWidth;
@@ -28,7 +27,7 @@ class VTDIDecoder {
         VTDIDecoder(std::string path);
         void getStaticInfo();
         void playVideo();
-        void readNextFrame();
+        void readAndDisplayNextFrame(BitStream inBits);
 
         int getVersion();
         uint32_t getFrameCount();
