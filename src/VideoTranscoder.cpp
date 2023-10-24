@@ -52,6 +52,7 @@ void VideoTranscoder::transcodeFile()
 
     // settings constants for video byte writing
     const int totalTerminalChars = vidTWidth * vidTHeight;
+    CharInfo* frameChars;
     CharInfo* previousFrameChars = nullptr;
 
     uint32_t frameBytesIndex = 0;
@@ -70,7 +71,7 @@ void VideoTranscoder::transcodeFile()
         }
         frameIndex++;
 
-        CharInfo* frameChars = transcodeFrame();
+        frameChars = transcodeFrame();
         std::vector<bool> frameBits = compressFrame(frameChars, previousFrameChars);
         // pad bits to full byte
         while (frameBits.size() % 8 != 0)
@@ -355,7 +356,7 @@ CharInfo findBestBlockCharacter(cv::Mat img)
     for (currentOption = 1; currentOption < 8; currentOption++)
     {
         currentHeight -= eigthHeight;
-        
+
         fgBGR = img(cv::Rect(0, (int)currentHeight, imageWidth, imageHeight-(int)currentHeight));
         cv::cvtColor(fgBGR, fgLab, cv::COLOR_BGR2Lab);
         fgLab.convertTo(fgLabFlt, CV_32FC1);
