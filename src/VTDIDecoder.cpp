@@ -117,7 +117,7 @@ void VTDIDecoder::playVideo()
         throw std::runtime_error(errorMessage.str());
     }
 
-    //printf("\x1B[2J"); // clear screen
+    std::cout << "\x1B[2J"; // clear screen
     for (uint32_t i = 0; i < this->frameCount; i++)
     {
         readAndDisplayNextFrame(inBits);
@@ -130,7 +130,12 @@ void VTDIDecoder::playVideo()
 void VTDIDecoder::readAndDisplayNextFrame(BitStream inBits)
 {
     bool* startBit = inBits.readBits(1);
-    if (startBit[0] == 1) return;   // frame hasn't changed from the last one, continue to next frame
+    if (startBit[0] == 1)   // frame hasn't changed from the last one, continue to next frame
+    {
+        free(startBit);
+        free(inBits.readBits(7));   // go through padded bits
+        return;
+    }
     free(startBit);
 
     bool* endMarker = nullptr;
@@ -171,7 +176,6 @@ void VTDIDecoder::readAndDisplayNextFrame(BitStream inBits)
         current.chara = bytes[0];
         free(bytes);
         free(byteBits);
-
 
         do
         {
