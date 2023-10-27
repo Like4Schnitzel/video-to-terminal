@@ -197,8 +197,6 @@ void VTDIDecoder::readAndDisplayNextFrame(BitStream inBits)
                         free(bytes);
                     }
 
-                    free(corners);
-
                     std::string setCursorPos = "\x1B[";
                     setCursorPos += corners[1];
                     setCursorPos += ";";
@@ -224,6 +222,8 @@ void VTDIDecoder::readAndDisplayNextFrame(BitStream inBits)
                         }
                         std::cout << "\x1B[u\x1B[1B";
                     }
+
+                    free(corners);
                 }
                 else    // position
                 {
