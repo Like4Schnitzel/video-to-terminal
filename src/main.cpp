@@ -20,9 +20,22 @@ int main(int argc, char** argv)
         cin >> videoPath;
     }
 
-    const std::string vtdiFilePath = videoPath.substr(0, VariousUtils::rfind(videoPath, '.')) + ".vtdi";
-    if (!VariousUtils::fileExists(vtdiFilePath))
+    const int fileEndingStart = VariousUtils::rfind(videoPath, '.');
+    const string fileEnding = videoPath.substr(fileEndingStart);
+    if (fileEnding != ".vtdi")
     {
+        const string vtdiFilePath = videoPath.substr(0, VariousUtils::rfind(videoPath, '.')) + ".vtdi";
+        if (VariousUtils::fileExists(vtdiFilePath))
+        {
+            char option;
+            cout << vtdiFilePath << " already exists. It will be overwritten if you continue. Continue anyways? [y/N] ";
+            cin >> option;
+            if (VariousUtils::toLower(option) != 'y')
+            {
+                return 0;
+            }
+        }
+
         if (argc > 2)
         {
             tWidth = VariousUtils::stringToInt(argv[2]);
@@ -46,16 +59,19 @@ int main(int argc, char** argv)
         trans.transcodeFile();
     }
 
-    VTDIDecoder player = VTDIDecoder(vtdiFilePath);
-    player.getStaticInfo();
+    else
+    {
+        VTDIDecoder player = VTDIDecoder(videoPath);
+        player.getStaticInfo();
 
-    std::cout << "VTDI Info:\n";
-    std::cout << "Version: " << player.getVersion() << "\n";
-    std::cout << "Frame count: " << player.getFrameCount() << "\n";
-    std::cout << "FPS: " << player.getFPS() << "\n";
-    std::cout << "Video dimensions: " << player.getVidWidth() << "x" << player.getVidHeight() << "\n";
+        std::cout << "VTDI Info:\n";
+        std::cout << "Version: " << player.getVersion() << "\n";
+        std::cout << "Frame count: " << player.getFrameCount() << "\n";
+        std::cout << "FPS: " << player.getFPS() << "\n";
+        std::cout << "Video dimensions: " << player.getVidWidth() << "x" << player.getVidHeight() << "\n";
 
-    player.playVideo();
+        player.playVideo();
+    }
 
     return 0;
 }
