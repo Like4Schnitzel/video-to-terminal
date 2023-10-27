@@ -3,6 +3,8 @@
 #include <opencv2/opencv.hpp>
 #include <fstream>
 #include <iostream>
+#include <chrono>
+#include <thread>
 #include "CharInfoStruct.hpp"
 #include "VariousUtils.hpp"
 #include "BinaryUtils.hpp"

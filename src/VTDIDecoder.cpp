@@ -123,12 +123,15 @@ void VTDIDecoder::playVideo()
     }
 
     this->currentFrame = (CharInfo*)malloc(terminalWidth*terminalHeight*sizeof(CharInfo));
+    const int nanoSecondsPerFrame = 1000000000/this->FPS;
 
     std::cout << "\x1B[2J\x1B[H"; // clear screen and move to 0,0
     std::cout << "\x1B[s";  // save cursor position
     for (uint32_t i = 0; i < this->frameCount; i++)
     {
+        auto startTime = std::chrono::system_clock::now();
         readAndDisplayNextFrame(inBits);
+        std::this_thread::sleep_until(startTime + std::chrono::nanoseconds(nanoSecondsPerFrame));
     }
     // move cursor below the video
     std::cout << "\x1B[H" << "\x1B[" + std::to_string(vidHeight+1) + "B";
