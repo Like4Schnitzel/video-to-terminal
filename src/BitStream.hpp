@@ -10,6 +10,7 @@ class BitStream{
         bool* bits;
         int index;
         int bufferSize;
+        int bitBufferSize;
 
         void readFileBytesToBuffer(int n);
     public:
