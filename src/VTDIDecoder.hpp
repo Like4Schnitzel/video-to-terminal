@@ -25,6 +25,7 @@ class VTDIDecoder {
         ulong compressedSize;
     public:
         VTDIDecoder(std::string path);
+        ~VTDIDecoder();
         void getStaticInfo();
         void playVideo();
         void readAndDisplayNextFrame(BitStream& inBits);

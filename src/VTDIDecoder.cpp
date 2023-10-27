@@ -15,6 +15,11 @@ VTDIDecoder::VTDIDecoder(std::string path)
     vtdiPath = path;
 }
 
+VTDIDecoder::~VTDIDecoder()
+{
+    free(this->currentFrame);
+}
+
 template <typename T>
 T applyAssign(T num, int* index, Byte*& sib)
 {
@@ -116,6 +121,8 @@ void VTDIDecoder::playVideo()
         ") isn't big enough to display the video (" << vidWidth << "x" << vidHeight <<  ").";
         throw std::runtime_error(errorMessage.str());
     }
+
+    this->currentFrame = (CharInfo*)malloc(terminalWidth*terminalHeight*sizeof(CharInfo));
 
     std::cout << "\x1B[2J"; // clear screen
     for (uint32_t i = 0; i < this->frameCount; i++)
