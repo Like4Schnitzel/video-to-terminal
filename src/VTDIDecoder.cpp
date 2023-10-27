@@ -125,16 +125,16 @@ void VTDIDecoder::playVideo()
     this->currentFrame = (CharInfo*)malloc(terminalWidth*terminalHeight*sizeof(CharInfo));
     const int nanoSecondsPerFrame = 1000000000/this->FPS;
 
-    std::cout << "\x1B[2J\x1B[H"; // clear screen and move to 0,0
-    std::cout << "\x1B[s";  // save cursor position
+    std::cout << "\x1B[2J\x1B[H"    // clear screen and move to 0,0
+              << "\x1B[s";          // save cursor position
     for (uint32_t i = 0; i < this->frameCount; i++)
     {
         auto startTime = std::chrono::system_clock::now();
         readAndDisplayNextFrame(inBits);
         std::this_thread::sleep_until(startTime + std::chrono::nanoseconds(nanoSecondsPerFrame));
     }
-    // move cursor below the video
-    std::cout << "\x1B[H" << "\x1B[" + std::to_string(vidHeight+1) + "B";
+    std::cout << "\x1B[H" << "\x1B[" + std::to_string(vidHeight+1) + "B"    // move cursor below the video
+              << "\x1B[0m";
 
     vtdiFile.close();
     vtdiFile.clear();
@@ -154,7 +154,7 @@ void VTDIDecoder::readAndDisplayNextFrame(BitStream& inBits)
     bool* endMarker = nullptr;
     do
     {
-        std::string ansiColorCodeSetter = "\x1B[38;2;";
+        std::string fgColorSetter = "\x1B[38;2";
 
         bool* byteBits;
         Byte* bytes;
@@ -164,25 +164,26 @@ void VTDIDecoder::readAndDisplayNextFrame(BitStream& inBits)
             byteBits = inBits.readBits(8);
             bytes = BinaryUtils::bitArrayToByteArray(byteBits, 8);
             current.foregroundRGB[i] = bytes[0];
-            ansiColorCodeSetter += std::to_string((int)(bytes[0]));
-            ansiColorCodeSetter += ";";
+            fgColorSetter += ";";
+            fgColorSetter += std::to_string((int)bytes[0]);
             free(bytes);
             free(byteBits);
         }
-        ansiColorCodeSetter += "m\x1B[48;2;";
+        fgColorSetter += "m";
 
+        std::string bgColorSetter = "\x1B[48;2";
         for (int i = 0; i < 3; i++)
         {
             byteBits = inBits.readBits(8);
             bytes = BinaryUtils::bitArrayToByteArray(byteBits, 8);
             current.backgroundRGB[i] = bytes[0];
-            ansiColorCodeSetter += std::to_string((int)(bytes[0]));
-            ansiColorCodeSetter += ";";
+            bgColorSetter += ";";
+            bgColorSetter += std::to_string((int)bytes[0]);
             free(bytes);
             free(byteBits);
         }
-        ansiColorCodeSetter += "m";
-        std::cout << ansiColorCodeSetter;
+        bgColorSetter += "m";
+        std::cout << fgColorSetter << bgColorSetter;
 
         byteBits = inBits.readBits(8);
         bytes = BinaryUtils::bitArrayToByteArray(byteBits, 8);
@@ -259,7 +260,7 @@ void VTDIDecoder::readAndDisplayNextFrame(BitStream& inBits)
             }
         } while(endMarker[0] == 0); // 00 for rect, 01 for pos, 10 for end of CI
 
-    } while(endMarker[1] == 0);    // 11 marks the end of the frame
+    } while(endMarker[1] == 0); // 11 marks the end of the frame
     free(endMarker);
 
     // go through padding bits
