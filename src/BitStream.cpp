@@ -28,7 +28,7 @@ BitStream::~BitStream()
 
 void BitStream::readFileBytesToBuffer(int n)
 {
-    for (int i = 0; i < n - bufferSize; i++)
+    for (int i = 0; i < bufferSize - n; i++)
     {
         bytes[i] = bytes[i+n];
     }
@@ -51,7 +51,8 @@ bool* BitStream::readBits(int n)
 
     for (int i = 0; i < n; i++)
     {
-        result[i] = bits[index++];
+        result[i] = bits[index];
+        index++;
     }
 
     if (index > 7)
