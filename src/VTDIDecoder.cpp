@@ -169,7 +169,7 @@ void VTDIDecoder::readAndDisplayNextFrame(BitStream& inBits)
             free(byteBits);
         }
         ansiColorCodeSetter += "m";
-        //std::cout << ansiColorCodeSetter;
+        std::cout << ansiColorCodeSetter;
 
         byteBits = inBits.readBits(8);
         bytes = BinaryUtils::bitArrayToByteArray(byteBits, 8);
@@ -204,7 +204,7 @@ void VTDIDecoder::readAndDisplayNextFrame(BitStream& inBits)
                     setCursorPos += "f";
                     std::cout << setCursorPos;
 
-                    for (int y = corners[3]; y < corners[1]; y++)
+                    for (int y = corners[1]; y < corners[3]; y++)
                     {
                         std::cout << "\x1B[s";
                         for (int x = corners[0]; x < corners[2]; x++)
