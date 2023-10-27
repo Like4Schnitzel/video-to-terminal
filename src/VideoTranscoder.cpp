@@ -399,8 +399,8 @@ CharInfo* VideoTranscoder::transcodeFrame()
     // downscale
     if (vidWidth >= vidTWidth)
     {
-        const double widthPixelsPerChar = vidWidth / vidTWidth;
-        const double heightPixelsPerChar = vidHeight / vidTHeight;
+        const double widthPixelsPerChar = (double) vidWidth / vidTWidth;
+        const double heightPixelsPerChar = (double) vidHeight / vidTHeight;
 
         //cv::imshow("biggest image", frame);
         //std::cout << "frame dimensions: " << frame.size().width << "x" << frame.size().height << "\n";
