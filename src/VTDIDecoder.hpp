@@ -27,7 +27,7 @@ class VTDIDecoder {
         VTDIDecoder(std::string path);
         void getStaticInfo();
         void playVideo();
-        void readAndDisplayNextFrame(BitStream inBits);
+        void readAndDisplayNextFrame(BitStream& inBits);
 
         int getVersion();
         uint32_t getFrameCount();

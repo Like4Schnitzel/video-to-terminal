@@ -127,7 +127,7 @@ void VTDIDecoder::playVideo()
     vtdiFile.clear();
 }
 
-void VTDIDecoder::readAndDisplayNextFrame(BitStream inBits)
+void VTDIDecoder::readAndDisplayNextFrame(BitStream& inBits)
 {
     bool* startBit = inBits.readBits(1);
     if (startBit[0] == 1)   // frame hasn't changed from the last one, continue to next frame
