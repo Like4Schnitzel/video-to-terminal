@@ -41,6 +41,8 @@ void VideoTranscoder::transcodeFile()
     const std::string vtdiFilePath = vidPath.substr(0, VariousUtils::rfind(vidPath, '.')) + ".vtdi";
     const uint16_t versionNumber = 1;   // change if updates to the file format are made
 
+    // reset output file just in case
+    BinaryUtils::writeToFile(vtdiFilePath, (char*)nullptr, 0, false);
     // write all the pre-video information to the file
     auto args = std::make_tuple(
         uint8_t(86), uint8_t(84), uint8_t(68), uint8_t(73), versionNumber, vidFrames, vidFPS, vidTWidth, vidTHeight
