@@ -192,7 +192,7 @@ void VTDIDecoder::readAndDisplayNextFrame(BitStream inBits)
                     {
                         byteBits = inBits.readBits(16);
                         bytes = BinaryUtils::bitArrayToByteArray(byteBits, 16);
-                        corners[i] = BinaryUtils::byteArrayToUint(bytes, 16);
+                        corners[i] = BinaryUtils::byteArrayToUint(bytes, 2);
                         free(byteBits);
                         free(bytes);
                     }
@@ -233,7 +233,7 @@ void VTDIDecoder::readAndDisplayNextFrame(BitStream inBits)
                     {
                         byteBits = inBits.readBits(16);
                         bytes = BinaryUtils::bitArrayToByteArray(byteBits, 16);
-                        corners[i] = BinaryUtils::byteArrayToUint(bytes, 16);
+                        corners[i] = BinaryUtils::byteArrayToUint(bytes, 2);
                         free(byteBits);
                         free(bytes);
                     }
