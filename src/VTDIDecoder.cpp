@@ -124,11 +124,14 @@ void VTDIDecoder::playVideo()
 
     this->currentFrame = (CharInfo*)malloc(terminalWidth*terminalHeight*sizeof(CharInfo));
 
-    std::cout << "\x1B[2J"; // clear screen
+    std::cout << "\x1B[2J\x1B[H"; // clear screen and move to 0,0
+    std::cout << "\x1B[s";  // save cursor position
     for (uint32_t i = 0; i < this->frameCount; i++)
     {
         readAndDisplayNextFrame(inBits);
     }
+    // move cursor below the video
+    std::cout << "\x1B[H" << "\x1B[" + std::to_string(vidHeight+1) + "B";
 
     vtdiFile.close();
     vtdiFile.clear();
@@ -204,17 +207,13 @@ void VTDIDecoder::readAndDisplayNextFrame(BitStream& inBits)
                         free(bytes);
                     }
 
-                    std::string setCursorPos = "\x1B[";
-                    setCursorPos += corners[1];
-                    setCursorPos += ";";
-                    setCursorPos += corners[0];
-                    setCursorPos += "f";
-                    std::cout << setCursorPos;
+                    std::cout << "\x1B[u"   // move cursor to top left
+                              << "\x1B[" + std::to_string(corners[1]) + "B"    // move cursor down
+                              << "\x1B[" + std::to_string(corners[0]) + "C";   // move cursor right
 
-                    for (int y = corners[1]; y < corners[3]; y++)
+                    for (int y = corners[1]; y <= corners[3]; y++)
                     {
-                        std::cout << "\x1B[s";
-                        for (int x = corners[0]; x < corners[2]; x++)
+                        for (int x = corners[0]; x <= corners[2]; x++)
                         {
                             int matIndex = y*vidWidth+x;
                             for (int i = 0; i < 3; i++)
@@ -227,7 +226,8 @@ void VTDIDecoder::readAndDisplayNextFrame(BitStream& inBits)
                             std::string c = VariousUtils::numToUnicodeBlockChar(current.chara);
                             std::cout << c;
                         }
-                        std::cout << "\x1B[u\x1B[1B";
+                        std::cout << "\x1B[" + std::to_string(corners[2]-corners[0]+1) + "D"    // move cursor left
+                                  << "\x1B[1B"; // move cursor down one line
                     }
 
                     free(corners);
