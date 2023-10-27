@@ -18,7 +18,7 @@ void BinaryUtils::writeToFile(const std::string fileName, const std::vector<char
     {
         throw std::runtime_error("Cannot open file to write to.");
     }
-    file.write(&bytes[0], byteSize);
+    file.write(bytes.data(), byteSize);
     file.close();
 }
 
