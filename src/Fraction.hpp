@@ -8,7 +8,7 @@ class Fraction {
         int numerator;
     public:
         Fraction();
-        Fraction(int num, int denom);
+        Fraction(int denom, int num);
 
         Fraction operator+(Fraction right);
         void operator+=(Fraction right);
