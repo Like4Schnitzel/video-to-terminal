@@ -92,13 +92,16 @@ Byte* BinaryUtils::charInfoToByteArray(const CharInfo ci)
     Byte* result = (Byte*)malloc(sizeof(CharInfo));
     int index = 0;
 
-    for (cv::Vec3b vec : {ci.foregroundRGB, ci.backgroundRGB})
+    for (int i = 0; i < 3; i++)
     {
-        for (int i = 0; i < 3; i++)
-        {
-            result[index] = vec[i];
-            index++;
-        }
+        result[index] = ci.foregroundRGB[i];
+        index++;
+    }
+
+    for (int i = 0; i < 3; i++)
+    {
+        result[index] = ci.backgroundRGB[i];
+        index++;
     }
 
     result[index] = ci.chara;

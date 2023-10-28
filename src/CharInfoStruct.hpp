@@ -1,7 +1,7 @@
 #pragma once
 
 struct CharInfo {
-    cv::Vec3b foregroundRGB;
-    cv::Vec3b backgroundRGB;
+    unsigned char foregroundRGB[3];
+    unsigned char backgroundRGB[3];
     uint8_t chara;
 };
