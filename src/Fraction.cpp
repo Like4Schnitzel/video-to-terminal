@@ -2,7 +2,7 @@
 
 Fraction::Fraction() {};
 
-Fraction::Fraction(int denom, int num)
+Fraction::Fraction(int num, int denom)
 {
     assert(denom != 0);
 
