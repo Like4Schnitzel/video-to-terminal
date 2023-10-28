@@ -322,11 +322,11 @@ std::vector<bool> VideoTranscoder::compressFrame(CharInfo* currentFrame, CharInf
     return result;
 }
 
-int getColorDiff(cv::Mat dom1, cv::Mat dom2)
+int getColorDiff(cv::Vec3b col1, cv::Vec3b col2)
 {
-    return pow((dom1.data[0] / (255./100.)) - (dom2.data[0] / (255./100.)), 2) + 
-           pow((dom1.data[1] - 128) - (dom2.data[1] - 128), 2) + 
-           pow((dom1.data[2] - 128) - (dom2.data[2] - 128), 2);
+    return pow(col1[0] - col2[0], 2) + 
+           pow(col1[1] - col2[1], 2) + 
+           pow(col1[2] - col2[2], 2);
 }
 
 cv::Vec3b getAverageColor(cv::Mat img)
@@ -369,20 +369,7 @@ CharInfo findBestBlockCharacter(cv::Mat img)
     const int imageHeight = img.size().height;
     const int imageWidth = img.size().width;
     int currentOption;
-    cv::Mat fgBGR;
-    cv::Mat bgBGR;
-    cv::Mat fgBGRFlt;
-    cv::Mat bgBGRFlt;
-    cv::Mat fgDomBGRClr;
-    cv::Mat bgDomBGRClr;
-    cv::Mat fgLab;
-    cv::Mat bgLab;
-    cv::Mat fgLabFlt;
-    cv::Mat bgLabFlt;
-    cv::Mat fgDomLabClr;
-    cv::Mat bgDomLabClr;
-    cv::TermCriteria criteria = cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::MAX_ITER, 10, 1.0);
-    cv::Mat indices;
+    cv::Mat fgBGR, bgBGR;
 
     // skip upper half (0) since lower half can be used
     // loop through the lower eights
@@ -393,31 +380,20 @@ CharInfo findBestBlockCharacter(cv::Mat img)
         currentHeight -= eigthHeight;
 
         fgBGR = img(cv::Rect(0, (int)currentHeight, imageWidth, imageHeight-(int)currentHeight));
-        cv::cvtColor(fgBGR, fgLab, cv::COLOR_BGR2Lab);
-        fgLab.convertTo(fgLabFlt, CV_32FC1);
-        cv::kmeans(fgLabFlt, 1, indices, criteria, 10, cv::KMEANS_RANDOM_CENTERS, fgDomLabClr);
+        cv::Vec3b avrgFgRGB = getAverageColor(fgBGR);
 
         bgBGR = img(cv::Rect(0, 0, imageWidth, imageHeight-(int)currentHeight));
-        cv::cvtColor(bgBGR, bgLab, cv::COLOR_BGR2Lab);
-        bgLab.convertTo(bgLabFlt, CV_32FC1);
-        cv::kmeans(bgLabFlt, 1, indices, criteria, 10, cv::KMEANS_RANDOM_CENTERS, bgDomLabClr);
+        cv::Vec3b avrgBgRGB = getAverageColor(bgBGR);
 
-        int colorDiff = getColorDiff(fgDomLabClr, bgDomLabClr);
-        if (maxDiff == -1 || colorDiff > maxDiff)
+        int colorDiff = getColorDiff(avrgFgRGB, avrgBgRGB);
+        if (colorDiff > maxDiff)
         {
-            // Lab is great for detecting human perceivable difference in color
-            // but for video displaying in the terminal I need RGB values
-            fgBGR.convertTo(fgBGRFlt, CV_32FC1);
-            bgBGR.convertTo(bgBGRFlt, CV_32FC1);
-            cv::kmeans(fgBGRFlt, 1, indices, criteria, 10, cv::KMEANS_RANDOM_CENTERS, fgDomBGRClr);
-            cv::kmeans(bgBGRFlt, 1, indices, criteria, 10, cv::KMEANS_RANDOM_CENTERS, bgDomBGRClr);
-
             maxDiff = colorDiff;
             for (int i = 0; i < 3; i++)
             {
                 // turn around BGR so RGB gets saved instead
-                maxDiffCharInfo.foregroundRGB[i] = fgDomBGRClr.data[2-i];
-                maxDiffCharInfo.backgroundRGB[i] = bgDomBGRClr.data[2-i];
+                maxDiffCharInfo.foregroundRGB[i] = avrgFgRGB[i];
+                maxDiffCharInfo.backgroundRGB[i] = avrgBgRGB[i];
             }
             maxDiffCharInfo.chara = currentOption;
         }
