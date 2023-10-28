@@ -183,7 +183,6 @@ void VTDIDecoder::readAndDisplayNextFrame(BitStream& inBits)
             free(byteBits);
         }
         bgColorSetter += "m";
-        std::cout << fgColorSetter << bgColorSetter;
 
         byteBits = inBits.readBits(8);
         bytes = BinaryUtils::bitArrayToByteArray(byteBits, 8);
@@ -217,6 +216,7 @@ void VTDIDecoder::readAndDisplayNextFrame(BitStream& inBits)
 
                     for (int y = corners[1]; y <= corners[3]; y++)
                     {
+                        std::cout << fgColorSetter << bgColorSetter;
                         for (int x = corners[0]; x <= corners[2]; x++)
                         {
                             int matIndex = y*vidWidth+x;
