@@ -401,24 +401,22 @@ CharInfo* VideoTranscoder::transcodeFrame()
     // downscale
     if (vidWidth >= vidTWidth)
     {
-        const double widthPixelsPerChar = (double) vidWidth / vidTWidth;
-        const double heightPixelsPerChar = (double) vidHeight / vidTHeight;
+        const int widthPixelsPerChar = vidWidth / vidTWidth;
+        const int heightPixelsPerChar = vidHeight / vidTHeight;
 
-        //cv::imshow("biggest image", frame);
-        //std::cout << "frame dimensions: " << frame.size().width << "x" << frame.size().height << "\n";
-        for (double y = 0; y < vidHeight; y += heightPixelsPerChar)
+        for (int i = 0; i < vidTHeight; i++)
         {
-            if (y + heightPixelsPerChar > vidHeight) y = vidHeight - heightPixelsPerChar;
-            for (double x = 0; x < vidWidth; x += widthPixelsPerChar)
+            int y = heightPixelsPerChar * i;
+            for (int j = 0; j < vidTWidth; j++)
             {
-                if (x + widthPixelsPerChar > vidWidth) x = vidWidth - widthPixelsPerChar;
+                int x = widthPixelsPerChar * j;
                 cv::Mat framePart = this->frame(cv::Rect((int)x, (int)y, (int)widthPixelsPerChar, (int)heightPixelsPerChar));
                 CharInfo best = findBestBlockCharacter(framePart);
 
-                for (int i = 0; i < 3; i++)
+                for (int k = 0; k < 3; k++)
                 {
-                    frameInfo[charIndex].foregroundRGB[i] = best.foregroundRGB[i];
-                    frameInfo[charIndex].backgroundRGB[i] = best.backgroundRGB[i];
+                    frameInfo[charIndex].foregroundRGB[k] = best.foregroundRGB[k];
+                    frameInfo[charIndex].backgroundRGB[k] = best.backgroundRGB[k];
                 }
                 frameInfo[charIndex].chara = best.chara;
 
@@ -428,7 +426,7 @@ CharInfo* VideoTranscoder::transcodeFrame()
     }
     else
     {
-        std::cout << "downscaling\n";
+        std::cout << "upscaling\n";
     }
 
     return frameInfo;
