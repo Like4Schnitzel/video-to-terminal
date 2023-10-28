@@ -329,6 +329,39 @@ int getColorDiff(cv::Mat dom1, cv::Mat dom2)
            pow((dom1.data[2] - 128) - (dom2.data[2] - 128), 2);
 }
 
+cv::Vec3b getAverageColor(cv::Mat img)
+{
+    long sums[3] = {0, 0, 0};
+
+    for (int i = 0; i < img.cols; i++)
+    {
+        for (int j = 0; j < img.rows; j++)
+        {
+            cv::Vec3b bgrVals = img.at<cv::Vec3b>(cv::Point(i, j));
+
+            for (int k = 0; k < 3; k++)
+            {
+                sums[k] += bgrVals[k];
+            }
+        }
+    }
+
+    // turn bgr into rgb
+    long temp = sums[0];
+    sums[0] = sums[2];
+    sums[2] = temp;
+
+    const int totalPixels = img.cols*img.rows;
+    for (int i = 0; i < 3; i++)
+    {
+        sums[i] /= totalPixels;
+    }
+    
+    cv::Vec3b averages = {(uchar)sums[0], (uchar)sums[1], (uchar)sums[2]};
+
+    return averages;
+}
+
 CharInfo findBestBlockCharacter(cv::Mat img)
 {
     CharInfo maxDiffCharInfo;
