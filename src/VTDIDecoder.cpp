@@ -129,8 +129,7 @@ void VTDIDecoder::playVideo()
     for (uint32_t i = 0; i < this->frameCount; i++)
     {
         auto startTime = std::chrono::system_clock::now();
-        readAndDisplayNextFrame(inBits, false);
-        displayCurrentFrame();
+        readAndDisplayNextFrame(inBits, true);
         std::this_thread::sleep_until(startTime + std::chrono::nanoseconds(nanoSecondsPerFrame));
     }
     std::cout << "\x1B[H" << "\x1B[" + std::to_string(vidHeight+1) + "B"    // move cursor below the video
@@ -290,6 +289,15 @@ void VTDIDecoder::readAndDisplayNextFrame(BitStream& inBits, bool display)
                         currentFrame[matIndex].backgroundRGB[i] = current.backgroundRGB[i];
                     }
                     currentFrame[matIndex].chara = current.chara;
+
+                    if (display)
+                    {
+                        std::cout << "\x1B[H"   // move cursor to top left
+                                  << "\x1B[" + std::to_string(corners[1]) + "B"    // move cursor down
+                                  << "\x1B[" + std::to_string(corners[0]) + "C"    // move cursor right
+                                  << fgColorSetter << bgColorSetter
+                                  << VariousUtils::numToUnicodeBlockChar(current.chara);
+                    }
                 }
             }
         } while(endMarker[0] == 0); // 00 for rect, 01 for pos, 10 for end of CI
