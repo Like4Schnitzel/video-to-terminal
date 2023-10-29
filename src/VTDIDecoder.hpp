@@ -30,6 +30,7 @@ class VTDIDecoder {
         void getStaticInfo();
         void playVideo();
         void readAndDisplayNextFrame(BitStream& inBits);
+        void displayCurrentFrame();
 
         int getVersion();
         uint32_t getFrameCount();
