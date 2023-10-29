@@ -125,12 +125,11 @@ void VTDIDecoder::playVideo()
     this->currentFrame = (CharInfo*)malloc(terminalWidth*terminalHeight*sizeof(CharInfo));
     const int nanoSecondsPerFrame = 1000000000/this->FPS;
 
-    std::cout << "\x1B[2J\x1B[H"    // clear screen and move to 0,0
-              << "\x1B[s";          // save cursor position
+    std::cout << "\x1B[2J\x1B[H";    // clear screen and move to 0,0
     for (uint32_t i = 0; i < this->frameCount; i++)
     {
         auto startTime = std::chrono::system_clock::now();
-        readAndDisplayNextFrame(inBits);
+        readAndDisplayNextFrame(inBits, false);
         displayCurrentFrame();
         std::this_thread::sleep_until(startTime + std::chrono::nanoseconds(nanoSecondsPerFrame));
     }
@@ -165,7 +164,7 @@ void VTDIDecoder::displayCurrentFrame()
     }
 }
 
-void VTDIDecoder::readAndDisplayNextFrame(BitStream& inBits)
+void VTDIDecoder::readAndDisplayNextFrame(BitStream& inBits, bool display)
 {
     bool* startBit = inBits.readBits(1);
     if (startBit[0] == 1)   // frame hasn't changed from the last one, continue to next frame
@@ -235,13 +234,17 @@ void VTDIDecoder::readAndDisplayNextFrame(BitStream& inBits)
                         free(bytes);
                     }
 
-                    // std::cout << "\x1B[u"   // move cursor to top left
-                    //           << "\x1B[" + std::to_string(corners[1]) + "B"    // move cursor down
-                    //           << "\x1B[" + std::to_string(corners[0]) + "C";   // move cursor right
+                    std::string moveRight = "\x1B[" + std::to_string(corners[0]) + "C";
+                    if (display)
+                    {
+                        std::cout << "\x1B[H"   // move cursor to top left
+                                  << "\x1B[" + std::to_string(corners[1]) + "B"    // move cursor down
+                                  << moveRight;
+                    }
 
                     for (int y = corners[1]; y <= corners[3]; y++)
                     {
-                        // std::cout << fgColorSetter << bgColorSetter;
+                        std::cout << fgColorSetter << bgColorSetter;
                         for (int x = corners[0]; x <= corners[2]; x++)
                         {
                             int matIndex = y*vidWidth+x;
@@ -252,11 +255,17 @@ void VTDIDecoder::readAndDisplayNextFrame(BitStream& inBits)
                             }
                             currentFrame[matIndex].chara = current.chara;
 
-                            std::string c = VariousUtils::numToUnicodeBlockChar(current.chara);
-                            // std::cout << c;
+                            if (display)
+                            {
+                                std::cout << VariousUtils::numToUnicodeBlockChar(current.chara);
+                            }
                         }
-                        // std::cout << "\x1B[" + std::to_string(corners[2]-corners[0]+1) + "D"    // move cursor left
-                        //           << "\x1B[1B"; // move cursor down one line
+                        if (display)
+                        {
+                            std::cout << "\x1B[0m"  // unset color
+                                      << "\x1B[E"   // move cursor to start of next line
+                                      << moveRight;
+                        }
                     }
 
                     free(corners);

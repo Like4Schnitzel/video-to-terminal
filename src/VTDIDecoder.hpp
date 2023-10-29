@@ -29,7 +29,7 @@ class VTDIDecoder {
         ~VTDIDecoder();
         void getStaticInfo();
         void playVideo();
-        void readAndDisplayNextFrame(BitStream& inBits);
+        void readAndDisplayNextFrame(BitStream& inBits, bool display=true);
         void displayCurrentFrame();
 
         int getVersion();
