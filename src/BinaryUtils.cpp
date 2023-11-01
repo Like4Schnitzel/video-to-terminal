@@ -61,7 +61,7 @@ Byte* BinaryUtils::numToByteArray(const float num)
 ulong BinaryUtils::byteArrayToUint(const Byte* arr, const int len)
 {
     ulong num = 0;
-    int markiplier = 1;
+    ulong markiplier = 1;
 
     for (int i = 0; i < len; i++)
     {
