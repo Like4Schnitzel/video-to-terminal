@@ -385,7 +385,7 @@ CharInfo findBestBlockCharacter(cv::Mat img)
         bgBGR = img(cv::Rect(0, 0, imageWidth, imageHeight-(int)currentHeight));
         cv::Vec3b avrgBgRGB = getAverageColor(bgBGR);
 
-        int colorDiff = getColorDiff(avrgFgRGB, avrgBgRGB);
+        int colorDiff = getColorDiff(avrgFgRGB, avrgBgRGB);    
         if (colorDiff > maxDiff)
         {
             maxDiff = colorDiff;
@@ -396,6 +396,12 @@ CharInfo findBestBlockCharacter(cv::Mat img)
                 maxDiffCharInfo.backgroundRGB[i] = avrgBgRGB[i];
             }
             maxDiffCharInfo.chara = currentOption;
+
+            // no need to keep checking if the whole img is one color
+            if (colorDiff == 0)
+            {
+                return maxDiffCharInfo;
+            }
         }
     }
 
