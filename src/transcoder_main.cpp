@@ -1,5 +1,4 @@
 #include "VideoTranscoder.hpp"
-#include "VTDIDecoder.hpp"
 #include "VariousUtils.hpp"
 
 using namespace std;
@@ -57,20 +56,6 @@ int main(int argc, char** argv)
 
         VideoTranscoder trans = VideoTranscoder(videoPath, tWidth, tHeight);
         trans.transcodeFile();
-    }
-
-    else
-    {
-        VTDIDecoder player = VTDIDecoder(videoPath);
-        player.getStaticInfo();
-
-        std::cout << "VTDI Info:\n";
-        std::cout << "Version: " << player.getVersion() << "\n";
-        std::cout << "Frame count: " << player.getFrameCount() << "\n";
-        std::cout << "FPS: " << player.getFPS() << "\n";
-        std::cout << "Video dimensions: " << player.getVidWidth() << "x" << player.getVidHeight() << "\n";
-
-        player.playVideo();
     }
 
     return 0;
