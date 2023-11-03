@@ -45,7 +45,7 @@ int main(int argc, char** argv)
         const string vtdiFilePath = videoPath.substr(0, VariousUtils::rfind(videoPath, '.')) + ".vtdi";
         if (VariousUtils::fileExists(vtdiFilePath))
         {
-            if ((cliArgs.count("--skip") > 0 && cliArgs["--skip"] != "-y"))
+            if (cliArgs.count("--skip") == 0)
             {
                 char option;
                 cout << vtdiFilePath << " already exists. It will be overwritten if you continue. Continue anyways? [y/N] ";
@@ -54,6 +54,10 @@ int main(int argc, char** argv)
                 {
                     return 0;
                 }
+            }
+            else if (cliArgs["--skip"] != "-y" && cliArgs["--skip"] != "-Y")
+            {
+                return 0;
             }
         }
 
