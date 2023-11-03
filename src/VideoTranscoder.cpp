@@ -369,21 +369,22 @@ CharInfo findBestBlockCharacter(cv::Mat img)
     const int imageHeight = img.size().height;
     const int imageWidth = img.size().width;
     int currentOption;
-    cv::Mat fgBGR, bgBGR;
+    cv::Mat fgRect, bgRect;
 
     // skip upper half (0) since lower half can be used
     // loop through the lower eights
-    const double eigthHeight = (double)imageHeight / 8;
-    double currentHeight = imageHeight;
-    for (currentOption = 1; currentOption < 8; currentOption++)
+    const int eigthHeight = imageHeight / 8;
+    int currentHeight = imageHeight;
+    // don't need to check full block since it'll just go with fg=bg at check 1
+    for (currentOption = 1; currentOption < 7; currentOption++)
     {
         currentHeight -= eigthHeight;
 
-        fgBGR = img(cv::Rect(0, (int)currentHeight, imageWidth, imageHeight-(int)currentHeight));
-        cv::Vec3b avrgFgRGB = getAverageColor(fgBGR);
+        fgRect = img(cv::Rect(0, currentHeight, imageWidth, imageHeight-currentHeight));
+        cv::Vec3b avrgFgRGB = getAverageColor(fgRect);
 
-        bgBGR = img(cv::Rect(0, 0, imageWidth, imageHeight-(int)currentHeight));
-        cv::Vec3b avrgBgRGB = getAverageColor(bgBGR);
+        bgRect = img(cv::Rect(0, 0, imageWidth, currentHeight));
+        cv::Vec3b avrgBgRGB = getAverageColor(bgRect);
 
         int colorDiff = getColorDiff(avrgFgRGB, avrgBgRGB);    
         if (colorDiff > maxDiff)
