@@ -1,3 +1,4 @@
+#include <map>
 #include "VideoTranscoder.hpp"
 #include "VariousUtils.hpp"
 
@@ -9,13 +10,31 @@ int main(int argc, char** argv)
     uint16_t tWidth;
     uint16_t tHeight;
     uint32_t memoryCap;
-    if (argc > 1)
+
+    map<string, string> cliArgs;
+
+    for (int i = 1; i < argc; i++)
     {
-        videoPath = argv[1];
+        if (strcmp(argv[i], "-y") == 0 || strcmp(argv[i], "-n") == 0 || strcmp(argv[i], "-Y") == 0 || strcmp(argv[i], "-N") == 0)
+        {
+            cout << "got into --skip with " << argv[i] << "\n";
+            cliArgs.insert({"--skip", argv[i]});
+        }
+        else
+        {
+            std::cout << argv[i] << argv[i+1] << "\n";
+            cliArgs.insert({argv[i], argv[i+1]});
+            i++;
+        }
+    }
+
+    if (cliArgs.count("--path") > 0)
+    {
+        videoPath = cliArgs["--path"];
     }
     else 
     {
-        cout << "Please enter the path to the video you want to play: ";
+        cout << "Please enter the path to the video you want to transcode: ";
         cin >> videoPath;
     }
 
@@ -26,27 +45,30 @@ int main(int argc, char** argv)
         const string vtdiFilePath = videoPath.substr(0, VariousUtils::rfind(videoPath, '.')) + ".vtdi";
         if (VariousUtils::fileExists(vtdiFilePath))
         {
-            char option;
-            cout << vtdiFilePath << " already exists. It will be overwritten if you continue. Continue anyways? [y/N] ";
-            cin >> option;
-            if (VariousUtils::toLower(option) != 'y')
+            if ((cliArgs.count("--skip") > 0 && cliArgs["--skip"] != "-y"))
             {
-                return 0;
+                char option;
+                cout << vtdiFilePath << " already exists. It will be overwritten if you continue. Continue anyways? [y/N] ";
+                cin >> option;
+                if (VariousUtils::toLower(option) != 'y')
+                {
+                    return 0;
+                }
             }
         }
 
-        if (argc > 2)
+        if (cliArgs.count("--width") > 0)
         {
-            tWidth = VariousUtils::stringToInt(argv[2]);
+            tWidth = VariousUtils::stringToInt(cliArgs["--width"]);
         }
         else
         {
             cout << "Please enter a 16 bit unsigned int for the terminal width: ";
             cin >> tWidth;
         }
-        if (argc > 3)
+        if (cliArgs.count("--height") > 0)
         {
-            tHeight = VariousUtils::stringToInt(argv[3]);
+            tHeight = VariousUtils::stringToInt(cliArgs["--height"]);
         }
         else
         {
