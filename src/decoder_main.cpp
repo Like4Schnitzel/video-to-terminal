@@ -4,6 +4,7 @@ using namespace std;
 
 int main(int argc, char** argv)
 {
+    bool loop = false;
     string videoPath;
     if (argc > 1)
     {
@@ -13,6 +14,10 @@ int main(int argc, char** argv)
     {
         cout << "Please enter the path to the video you want to play: ";
         cin >> videoPath;
+    }
+    if (argc > 2 && strcmp(argv[2], "--loop") == 0)
+    {
+        loop = true;
     }
 
     VTDIDecoder player = VTDIDecoder(videoPath);
@@ -24,7 +29,10 @@ int main(int argc, char** argv)
     std::cout << "FPS: " << player.getFPS() << "\n";
     std::cout << "Video dimensions: " << player.getVidWidth() << "x" << player.getVidHeight() << "\n";
 
-    player.playVideo();
+    do
+    {
+        player.playVideo();
+    } while (loop);
 
     return 0;
 }
