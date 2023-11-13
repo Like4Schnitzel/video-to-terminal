@@ -2,9 +2,10 @@
 #include "BinaryUtils.hpp"
 #include "VariousUtils.hpp"
 
-VideoTranscoder::VideoTranscoder(const std::string path, const uint16_t terminalWidth, const uint16_t terminalHeight)
+VideoTranscoder::VideoTranscoder(const std::string path, const std::string vtdiPath, const uint16_t terminalWidth, const uint16_t terminalHeight)
 {
     vidPath = path;
+    this->vtdiPath = vtdiPath;
     std::cout << "Attempting to open \"" << path << "\".\n";
     vidCap.open(vidPath);
     if (!vidCap.isOpened())
@@ -38,18 +39,17 @@ cv::Mat VideoTranscoder::getFrame()
 
 void VideoTranscoder::transcodeFile()
 {
-    const std::string vtdiFilePath = vidPath.substr(0, VariousUtils::rfind(vidPath, '.')) + ".vtdi";
     const uint16_t versionNumber = 1;   // change if updates to the file format are made
 
     // reset output file just in case
-    BinaryUtils::writeToFile(vtdiFilePath, (char*)nullptr, 0, false);
+    BinaryUtils::writeToFile(vtdiPath, (char*)nullptr, 0, false);
     // write all the pre-video information to the file
     auto args = std::make_tuple(
         uint8_t(86), uint8_t(84), uint8_t(68), uint8_t(73), versionNumber, vidFrames, vidFPS, vidTWidth, vidTHeight
     );
     std::apply([&](auto... args)
     {
-        (..., BinaryUtils::writeToFile(vtdiFilePath, (char*)BinaryUtils::numToByteArray(args), sizeof(args), true, true));
+        (..., BinaryUtils::writeToFile(vtdiPath, (char*)BinaryUtils::numToByteArray(args), sizeof(args), true, true));
     }, args);
 
     // settings constants for video byte writing
@@ -81,7 +81,7 @@ void VideoTranscoder::transcodeFile()
             frameBits.push_back(0);
         }
         Byte* frameBytes = BinaryUtils::bitArrayToByteArray(frameBits, frameBits.size());
-        BinaryUtils::writeToFile(vtdiFilePath, (char*)frameBytes, frameBits.size()/8, true);
+        BinaryUtils::writeToFile(vtdiPath, (char*)frameBytes, frameBits.size()/8, true);
         free(frameBytes);
 
         free(previousFrameChars);

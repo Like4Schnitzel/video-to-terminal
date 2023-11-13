@@ -17,12 +17,10 @@ int main(int argc, char** argv)
     {
         if (strcmp(argv[i], "-y") == 0 || strcmp(argv[i], "-n") == 0 || strcmp(argv[i], "-Y") == 0 || strcmp(argv[i], "-N") == 0)
         {
-            cout << "got into --skip with " << argv[i] << "\n";
             cliArgs.insert({"--skip", argv[i]});
         }
         else
         {
-            std::cout << argv[i] << argv[i+1] << "\n";
             cliArgs.insert({argv[i], argv[i+1]});
             i++;
         }
@@ -42,7 +40,16 @@ int main(int argc, char** argv)
     const string fileEnding = videoPath.substr(fileEndingStart);
     if (fileEnding != ".vtdi")
     {
-        const string vtdiFilePath = videoPath.substr(0, VariousUtils::rfind(videoPath, '.')) + ".vtdi";
+        string vtdiFilePath;
+        if (cliArgs.count("--vtdi-path") > 0)
+        {
+            vtdiFilePath = cliArgs["--vtdi-path"];
+        }
+        else
+        {
+            vtdiFilePath = videoPath.substr(0, VariousUtils::rfind(videoPath, '.')) + ".vtdi";
+        }
+
         if (VariousUtils::fileExists(vtdiFilePath))
         {
             if (cliArgs.count("--skip") == 0)
@@ -57,6 +64,7 @@ int main(int argc, char** argv)
             }
             else if (cliArgs["--skip"] != "-y" && cliArgs["--skip"] != "-Y")
             {
+                cout << vtdiFilePath << " already exists. Exiting.\n";
                 return 0;
             }
         }
@@ -80,7 +88,7 @@ int main(int argc, char** argv)
             cin >> tHeight;
         }
 
-        VideoTranscoder trans = VideoTranscoder(videoPath, tWidth, tHeight);
+        VideoTranscoder trans = VideoTranscoder(videoPath, vtdiFilePath, tWidth, tHeight);
         trans.transcodeFile();
     }
 

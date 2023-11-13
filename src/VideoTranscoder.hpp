@@ -14,6 +14,7 @@ class VideoTranscoder
         cv::Mat frame;
         cv::VideoCapture vidCap;
         std::string vidPath;
+        std::string vtdiPath;
         uint16_t vidHeight;
         uint16_t vidWidth;
         uint32_t vidFrames;
@@ -21,7 +22,7 @@ class VideoTranscoder
         uint16_t vidTWidth;
         float vidFPS;
     public:
-        VideoTranscoder(const std::string path, const uint16_t terminalWidth, const uint16_t terminalHeight);
+        VideoTranscoder(const std::string path, const std::string vtdiPath, const uint16_t terminalWidth, const uint16_t terminalHeight);
         ~VideoTranscoder();
         cv::Mat getFrame();
         void transcodeFile();
