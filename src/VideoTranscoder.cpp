@@ -373,17 +373,17 @@ CharInfo findBestBlockCharacter(cv::Mat img)
 
     // skip upper half (0) since lower half can be used
     // loop through the lower eights
-    const int eigthHeight = imageHeight / 8;
-    int currentHeight = imageHeight;
+    const double eigthHeight = imageHeight / 8.0;
+    double currentHeight = imageHeight;
     // don't need to check full block since it'll just go with fg=bg at check 1
     for (currentOption = 1; currentOption < 7; currentOption++)
     {
         currentHeight -= eigthHeight;
 
-        fgRect = img(cv::Rect(0, currentHeight, imageWidth, imageHeight-currentHeight));
+        fgRect = img(cv::Rect(0, round(currentHeight), imageWidth, imageHeight-round(currentHeight)));
         cv::Vec3b avrgFgRGB = getAverageColor(fgRect);
 
-        bgRect = img(cv::Rect(0, 0, imageWidth, currentHeight));
+        bgRect = img(cv::Rect(0, 0, imageWidth, round(currentHeight)));
         cv::Vec3b avrgBgRGB = getAverageColor(bgRect);
 
         int colorDiff = getColorDiff(avrgFgRGB, avrgBgRGB);    
