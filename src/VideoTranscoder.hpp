@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <math.h>
+#include <thread>
 #include "CharInfoStruct.hpp"
 
 class VideoTranscoder 

@@ -411,19 +411,13 @@ CharInfo findBestBlockCharacter(cv::Mat img)
 
 CharInfo* VideoTranscoder::transcodeFrame()
 {
-    CharInfo* frameInfo = (CharInfo*)malloc(sizeof(CharInfo) * vidTHeight * vidTWidth);
-    int charIndex = 0;
-
-    const int widthPixelsPerChar = vidWidth / vidTWidth;
-    const int heightPixelsPerChar = vidHeight / vidTHeight;
-
-    for (int i = 0; i < vidTHeight; i++)
+    auto transcodeRow = [](VideoTranscoder* thisRef, int i, int heightPixelsPerChar, int widthPixelsPerChar, CharInfo* frameInfo, int charIndex)
     {
         int y = heightPixelsPerChar * i;
-        for (int j = 0; j < vidTWidth; j++)
+        for (int j = 0; j < thisRef->vidTWidth; j++)
         {
             int x = widthPixelsPerChar * j;
-            cv::Mat framePart = this->frame(cv::Rect((int)x, (int)y, (int)widthPixelsPerChar, (int)heightPixelsPerChar));
+            cv::Mat framePart = thisRef->frame(cv::Rect((int)x, (int)y, (int)widthPixelsPerChar, (int)heightPixelsPerChar));
             CharInfo best = findBestBlockCharacter(framePart);
 
             for (int k = 0; k < 3; k++)
@@ -435,6 +429,24 @@ CharInfo* VideoTranscoder::transcodeFrame()
 
             charIndex++;
         }
+    };
+
+    CharInfo* frameInfo = (CharInfo*)malloc(sizeof(CharInfo) * vidTHeight * vidTWidth);
+    int charIndex = 0;
+
+    const int widthPixelsPerChar = vidWidth / vidTWidth;
+    const int heightPixelsPerChar = vidHeight / vidTHeight;
+
+    std::vector<std::thread> threads;
+    for (int i = 0; i < vidTHeight; i++)
+    {
+        threads.emplace_back(std::thread(transcodeRow, this, i, heightPixelsPerChar, widthPixelsPerChar, frameInfo, charIndex));
+    }
+
+    // wait for all threads to finish
+    for (auto& thread : threads)
+    {
+        thread.join();
     }
 
     return frameInfo;
