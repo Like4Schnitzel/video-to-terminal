@@ -61,12 +61,10 @@ Byte* BinaryUtils::numToByteArray(const float num)
 ulong BinaryUtils::byteArrayToUint(const Byte* arr, const int len)
 {
     ulong num = 0;
-    ulong markiplier = 1;
 
     for (int i = 0; i < len; i++)
     {
-        num += (uint8_t) arr[len-i-1] * markiplier;    // going from right to left
-        markiplier *= 256;
+        num |= (ulong) arr[i] << ((len-i-1)*8);    // going from right to left
     }
 
     return num;
