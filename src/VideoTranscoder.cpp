@@ -311,7 +311,7 @@ std::vector<bool> VideoTranscoder::compressFrame(CharInfo* currentFrame, CharInf
         };
 
         std::vector<std::thread> threads;
-        std::vector<std::vector<bool>> threadResults;
+        std::vector<bool>* threadResults = new std::vector<bool>[bitmaps.size()];
 
         result.push_back(0);    // marks new info
 
@@ -321,8 +321,7 @@ std::vector<bool> VideoTranscoder::compressFrame(CharInfo* currentFrame, CharInf
             ulong ciHash = it->first;
             bool* bitmap = it->second;
 
-            threadResults.emplace_back(std::vector<bool>());
-            threads.emplace_back(std::thread(compressCI, std::ref(threadResults.back()), ciHash, bitmap, vidTWidth, arraySize));
+            threads.emplace_back(std::thread(compressCI, std::ref(threadResults[threads.size()]), ciHash, bitmap, vidTWidth, arraySize));
         }
 
         // wait for all threads to finish
@@ -334,6 +333,8 @@ std::vector<bool> VideoTranscoder::compressFrame(CharInfo* currentFrame, CharInf
                 result.push_back(bit);
             }
         }
+
+        delete[] threadResults;
 
         // replace last end of CI (0b10) with end of frame (0b11)
         result[result.size()-1] = 1;
