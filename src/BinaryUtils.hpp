@@ -58,10 +58,9 @@ class BinaryUtils {
             const int byteSize = sizeof(num);
 
             Byte* arr = (Byte*)malloc(byteSize);
-            for (int i = byteSize-1; i >= 0; i--)
+            for (int i = 0; i < byteSize; i++)
             {
-                arr[i] = num % 256;
-                num /= 256;
+                arr[i] = num >> ((byteSize-i-1) * 8) & 0xFF;
             }
             return arr;
         }
