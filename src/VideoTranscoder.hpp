@@ -7,6 +7,7 @@
 #include <iostream>
 #include <math.h>
 #include <thread>
+#include <future>
 #include "CharInfoStruct.hpp"
 
 class VideoTranscoder 

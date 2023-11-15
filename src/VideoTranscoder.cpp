@@ -236,13 +236,8 @@ std::vector<bool> VideoTranscoder::compressFrame(CharInfo* currentFrame, CharInf
     }
     else
     {
-        result.push_back(0);    // marks new info
-
-        // now compress the bitmaps
-        for (std::map<ulong, bool*>::iterator it = bitmaps.begin(); it != bitmaps.end(); it++)
+        auto compressCI = [](std::vector<bool>& compressedBits, ulong ciHash, bool* bitmap, int vidTWidth, int arraySize)
         {
-            ulong ciHash = it->first;
-            bool* bitmap = it->second;
             // append CI bits
             Byte* ciHashBytes = BinaryUtils::numToByteArray(ciHash);
             for (int i = 1; i <= sizeof(CharInfo); i++) // start at the second byte, since CIs only have 7 but ulongs have 8
@@ -251,7 +246,7 @@ std::vector<bool> VideoTranscoder::compressFrame(CharInfo* currentFrame, CharInf
                 for (int j = 0; j < 8; j++)
                 {
                     bool bit = (bool)((c >> (7-j)) & 1);
-                    result.push_back(bit);
+                    compressedBits.push_back(bit);
                 }
             }
             free(ciHashBytes);
@@ -264,14 +259,14 @@ std::vector<bool> VideoTranscoder::compressFrame(CharInfo* currentFrame, CharInf
                 if (rect[0] == rect[2] && rect[1] == rect[3])
                 {
                     // 0b01 is the code for position
-                    result.push_back(0);
-                    result.push_back(1);
+                    compressedBits.push_back(0);
+                    compressedBits.push_back(1);
 
                     for (int i = 0; i < 2; i++)
                     {
                         Byte* numBytes = BinaryUtils::numToByteArray((uint16_t) rect[i]);
                         bool* numBits = BinaryUtils::byteArrayToBitArray(numBytes, 2);
-                        VariousUtils::pushArrayToVector(numBits, &result, 16);
+                        VariousUtils::pushArrayToVector(numBits, &compressedBits, 16);
                         free(numBits);
                         free(numBytes);
                     }
@@ -279,14 +274,14 @@ std::vector<bool> VideoTranscoder::compressFrame(CharInfo* currentFrame, CharInf
                 else
                 {
                     // 0b00 is the code for rectangle
-                    result.push_back(0);
-                    result.push_back(0);
+                    compressedBits.push_back(0);
+                    compressedBits.push_back(0);
 
                     for (int i = 0; i < 4; i++)
                     {
                         Byte* numBytes = BinaryUtils::numToByteArray((uint16_t) rect[i]);
                         bool* numBits = BinaryUtils::byteArrayToBitArray(numBytes, 2);
-                        VariousUtils::pushArrayToVector(numBits, &result, 16);
+                        VariousUtils::pushArrayToVector(numBits, &compressedBits, 16);
                         free(numBits);
                         free(numBytes);
                     }
@@ -309,10 +304,35 @@ std::vector<bool> VideoTranscoder::compressFrame(CharInfo* currentFrame, CharInf
             free(rect);
 
             // 0b10 is the code for end of CI segment
-            result.push_back(1);
-            result.push_back(0);
+            compressedBits.push_back(1);
+            compressedBits.push_back(0);
 
             free(bitmap);
+        };
+
+        std::vector<std::thread> threads;
+        std::vector<std::vector<bool>> threadResults;
+
+        result.push_back(0);    // marks new info
+
+        // now compress the bitmaps
+        for (std::map<ulong, bool*>::iterator it = bitmaps.begin(); it != bitmaps.end(); it++)
+        {
+            ulong ciHash = it->first;
+            bool* bitmap = it->second;
+
+            threadResults.emplace_back(std::vector<bool>());
+            threads.emplace_back(std::thread(compressCI, std::ref(threadResults.back()), ciHash, bitmap, vidTWidth, arraySize));
+        }
+
+        // wait for all threads to finish
+        for (int i = 0; i < threads.size(); i++)
+        {
+            threads[i].join();
+            for (bool bit : threadResults[i])
+            {
+                result.push_back(bit);
+            }
         }
 
         // replace last end of CI (0b10) with end of frame (0b11)
