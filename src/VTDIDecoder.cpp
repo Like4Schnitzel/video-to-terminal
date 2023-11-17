@@ -80,7 +80,7 @@ void VTDIDecoder::getStaticInfo()
     }
 
     const int remainingBytes = staticByteSize - 6;
-    staticInfoBytes = (Byte*)malloc(remainingBytes);
+    realloc(staticInfoBytes, remainingBytes);
     vtdiFile.read((char*)staticInfoBytes, remainingBytes);
     index = 0;
 
