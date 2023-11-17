@@ -11,6 +11,7 @@ class SmartPtr {
     public:
         SmartPtr();
         SmartPtr(const int s);
+        SmartPtr(const T* arr, const int s);
         ~SmartPtr();
 
         void resize(const int s);

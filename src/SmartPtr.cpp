@@ -15,6 +15,13 @@ SmartPtr<T>::SmartPtr(const int s)
 }
 
 template <typename T>
+SmartPtr<T>::SmartPtr(const T* arr, int s)
+{
+    ptr = arr;
+    size = s;
+}
+
+template <typename T>
 SmartPtr<T>::~SmartPtr()
 {
     free(ptr);

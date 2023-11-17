@@ -9,6 +9,7 @@
 #include <thread>
 #include <future>
 #include "CharInfoStruct.hpp"
+#include "SmartPtr.hpp"
 
 class VideoTranscoder 
 {
@@ -28,6 +29,6 @@ class VideoTranscoder
         ~VideoTranscoder();
         cv::Mat getFrame();
         void transcodeFile();
-        CharInfo* transcodeFrame();
-        std::vector<bool> compressFrame(CharInfo* currentFrame, CharInfo* prevFrame);
+        SmartPtr<CharInfo> transcodeFrame();
+        std::vector<bool> compressFrame(SmartPtr<CharInfo> currentFrame, SmartPtr<CharInfo> prevFrame);
 };

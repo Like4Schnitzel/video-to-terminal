@@ -49,13 +49,13 @@ void VideoTranscoder::transcodeFile()
     );
     std::apply([&](auto... args)
     {
-        (..., BinaryUtils::writeToFile(vtdiPath, (char*)BinaryUtils::numToByteArray(args), sizeof(args), true, true));
+        (..., BinaryUtils::writeToFile(vtdiPath, (char*)BinaryUtils::numToByteArray(args).data(), sizeof(args), true));
     }, args);
 
     // settings constants for video byte writing
     const int totalTerminalChars = vidTWidth * vidTHeight;
-    CharInfo* frameChars;
-    CharInfo* previousFrameChars = nullptr;
+    SmartPtr<CharInfo> frameChars;
+    SmartPtr<CharInfo> previousFrameChars;
 
     uint32_t frameBytesIndex = 0;
     int frameIndex = 0;
@@ -80,49 +80,56 @@ void VideoTranscoder::transcodeFile()
         {
             frameBits.push_back(0);
         }
-        Byte* frameBytes = BinaryUtils::bitArrayToByteArray(frameBits, frameBits.size());
-        BinaryUtils::writeToFile(vtdiPath, (char*)frameBytes, frameBits.size()/8, true);
-        free(frameBytes);
 
-        free(previousFrameChars);
+        SmartPtr<Byte> frameBytes = SmartPtr<Byte>(frameBits.size() / 8);
+        for(int i = 0; i < frameBytes.getSize(); i++)
+        {
+            Byte b = 0;
+            for (int j = 0; j < 8; j++)
+            {
+                b |= frameBits[i*8+j] << (7-j);
+            }
+            frameBytes.set(i, b);
+        }
+
+        BinaryUtils::writeToFile(vtdiPath, (char*)frameBytes.data(), frameBits.size()/8, true);
         previousFrameChars = frameChars;
     }
-    free(previousFrameChars);
 
     std::cout << "\33[2k\r" << "100\% done!    \n" << std::flush;
 }
 
-int* findBiggestRectangle(bool* bitmap, int bitCount, int rowLength)
+SmartPtr<int> findBiggestRectangle(SmartPtr<bool> bitmap, int bitCount, int rowLength)
 {
     int maxArea = 0;
     // -1 will be returned if nothing has been found
     int maxXpos1 = -1, maxYpos1, maxXpos2, maxYpos2; // coordinate pairs for the corners of the rectangle
 
-    int* addedValsRow = (int*)malloc(rowLength*sizeof(int));
+    SmartPtr<int> addedValsRow = SmartPtr<int>(rowLength);
     for (int i = 0; i < rowLength; i++)
     {
-        addedValsRow[i] = 0;
+        addedValsRow.set(i, 0);
     }
 
     const int rows = bitCount / rowLength;
     for (int i = 0; i < rows; i++)
     {
-        int* uniqueDepths = (int*)malloc(rowLength*sizeof(int));
+        SmartPtr<int> uniqueDepths = SmartPtr<int>(rowLength);
         int uniqueDepthsCount = 0;
 
         // overlay values with above rows
         for (int j = 0; j < rowLength; j++)
         {
-            if (bitmap[i*rowLength+j] == 0)
+            if (bitmap.get(i*rowLength+j) == 0)
             {
-                addedValsRow[j] = 0;
+                addedValsRow.set(j, 0);
             }
             else
             {
-                addedValsRow[j]++;
-                if (VariousUtils::find(uniqueDepths, addedValsRow[j], 0, uniqueDepthsCount) == -1)
+                addedValsRow.set(j, addedValsRow.get(j)+1);
+                if (VariousUtils::find(uniqueDepths, addedValsRow.get(j), 0) == -1)
                 {
-                    uniqueDepths[uniqueDepthsCount] = addedValsRow[j];
+                    uniqueDepths.set(uniqueDepthsCount, addedValsRow.get(j));
                     uniqueDepthsCount++;
                 }
             }
@@ -132,12 +139,12 @@ int* findBiggestRectangle(bool* bitmap, int bitCount, int rowLength)
         for (int depthIndex = 0; depthIndex < uniqueDepthsCount; depthIndex++)
         {
             int area = 0;
-            int currentDepth = uniqueDepths[depthIndex];
+            int currentDepth = uniqueDepths.get(depthIndex);
             int xpos1 = -1, ypos1, xpos2, ypos2 = i;
 
             for (int j = 0; j < rowLength; j++)
             {
-                int colDepth = addedValsRow[j];
+                int colDepth = addedValsRow.get(j);
                 if (colDepth >= currentDepth)
                 {
                     // coordinate pair 1 is at the top left
@@ -171,42 +178,36 @@ int* findBiggestRectangle(bool* bitmap, int bitCount, int rowLength)
                 maxYpos2 = ypos2;
             }
         }
-
-        free(uniqueDepths);
     }
 
-    free(addedValsRow);
-
-    int* corners = (int*)malloc(4*sizeof(int));
-    corners[0] = maxXpos1;
-    corners[1] = maxYpos1;
-    corners[2] = maxXpos2;
-    corners[3] = maxYpos2;
+    SmartPtr<int> corners = SmartPtr<int>(4);
+    corners.set(0, maxXpos1);
+    corners.set(1, maxYpos1);
+    corners.set(2, maxXpos2);
+    corners.set(3, maxYpos2);
 
     return corners;
 }
 
-std::vector<bool> VideoTranscoder::compressFrame(CharInfo* currentFrame, CharInfo* prevFrame)
+std::vector<bool> VideoTranscoder::compressFrame(SmartPtr<CharInfo> currentFrame, SmartPtr<CharInfo> prevFrame)
 {
-    const bool prevFrameExists = (prevFrame != nullptr);
+    const bool prevFrameExists = (prevFrame.data() != nullptr);
     const uint32_t arraySize = vidTWidth * vidTHeight; 
     std::vector<bool> result;
 
-    std::map<ulong, bool*> bitmaps;
+    std::map<ulong, SmartPtr<bool>> bitmaps;
 
     // making bitmaps of all CharInfos
     for (uint32_t index = 0; index < arraySize; index++)
     {
-        Byte* ciBytes = BinaryUtils::charInfoToByteArray(currentFrame[index]);
-        ulong currentCIHash = BinaryUtils::byteArrayToUint(ciBytes, sizeof(CharInfo));
-        free(ciBytes);
+        SmartPtr<Byte> ciBytes = BinaryUtils::charInfoToByteArray(currentFrame.get(index));
+        ulong currentCIHash = BinaryUtils::byteArrayToUint(ciBytes);
 
         ulong prevCIHash;
         if (prevFrameExists)
         {
-            ciBytes = BinaryUtils::charInfoToByteArray(prevFrame[index]);
-            prevCIHash = BinaryUtils::byteArrayToUint(ciBytes, sizeof(CharInfo));
-            free(ciBytes);
+            ciBytes = BinaryUtils::charInfoToByteArray(prevFrame.get(index));
+            prevCIHash = BinaryUtils::byteArrayToUint(ciBytes);
         }
 
         // only proceed if the CI has changed from the last frame
@@ -215,17 +216,17 @@ std::vector<bool> VideoTranscoder::compressFrame(CharInfo* currentFrame, CharInf
             // if new charinfo, create bitmap
             if (bitmaps.count(currentCIHash) == 0)
             {
-                bool* binMat = (bool*)malloc(arraySize*sizeof(bool));
+                SmartPtr<bool> binMat = SmartPtr<bool>(arraySize);
                 for (int i = 0; i < arraySize; i++)
                 {
-                    binMat[i] = 0;
+                    binMat.set(i, 0);
                 }
                 
                 bitmaps.insert({currentCIHash, binMat});
             }
 
             // mark occurence
-            bitmaps[currentCIHash][index] = 1;
+            bitmaps[currentCIHash].set(index, 1);
         }
     }
 
@@ -236,27 +237,26 @@ std::vector<bool> VideoTranscoder::compressFrame(CharInfo* currentFrame, CharInf
     }
     else
     {
-        auto compressCI = [](std::vector<bool>& compressedBits, ulong ciHash, bool* bitmap, int vidTWidth, int arraySize)
+        auto compressCI = [](std::vector<bool>& compressedBits, ulong ciHash, SmartPtr<bool> bitmap, int vidTWidth, int arraySize)
         {
             // append CI bits
-            Byte* ciHashBytes = BinaryUtils::numToByteArray(ciHash);
+            SmartPtr<Byte> ciHashBytes = BinaryUtils::numToByteArray(ciHash);
             for (int i = 1; i <= sizeof(CharInfo); i++) // start at the second byte, since CIs only have 7 but ulongs have 8
             {
-                char c = ciHashBytes[i];
+                char c = ciHashBytes.get(i);
                 for (int j = 0; j < 8; j++)
                 {
                     bool bit = (bool)((c >> (7-j)) & 1);
                     compressedBits.push_back(bit);
                 }
             }
-            free(ciHashBytes);
 
-            int* rect = findBiggestRectangle(bitmap, arraySize*sizeof(bool), vidTWidth);
-            while(rect[0] != -1)
+            SmartPtr<int> rect = findBiggestRectangle(bitmap, arraySize*sizeof(bool), vidTWidth);
+            while(rect.get(0) != -1)
             {
                 // write rectangle info to resulting bit vector
                 // true if the rectangle is just 1 element
-                if (rect[0] == rect[2] && rect[1] == rect[3])
+                if (rect.get(0) == rect.get(2) && rect.get(1) == rect.get(3))
                 {
                     // 0b01 is the code for position
                     compressedBits.push_back(0);
@@ -264,11 +264,12 @@ std::vector<bool> VideoTranscoder::compressFrame(CharInfo* currentFrame, CharInf
 
                     for (int i = 0; i < 2; i++)
                     {
-                        Byte* numBytes = BinaryUtils::numToByteArray((uint16_t) rect[i]);
-                        bool* numBits = BinaryUtils::byteArrayToBitArray(numBytes, 2);
-                        VariousUtils::pushArrayToVector(numBits, &compressedBits, 16);
-                        free(numBits);
-                        free(numBytes);
+                        VariousUtils::pushArrayToVector(
+                            BinaryUtils::byteArrayToBitArray(
+                                BinaryUtils::numToByteArray((uint16_t) rect.get(i))
+                            ),
+                            &compressedBits
+                        );
                     }
                 }
                 else
@@ -279,35 +280,32 @@ std::vector<bool> VideoTranscoder::compressFrame(CharInfo* currentFrame, CharInf
 
                     for (int i = 0; i < 4; i++)
                     {
-                        Byte* numBytes = BinaryUtils::numToByteArray((uint16_t) rect[i]);
-                        bool* numBits = BinaryUtils::byteArrayToBitArray(numBytes, 2);
-                        VariousUtils::pushArrayToVector(numBits, &compressedBits, 16);
-                        free(numBits);
-                        free(numBytes);
+                        VariousUtils::pushArrayToVector(
+                            BinaryUtils::byteArrayToBitArray(
+                                BinaryUtils::numToByteArray((uint16_t) rect.get(i))
+                            ),
+                            &compressedBits
+                        );
                     }
                 }
 
                 // clear rectangle from bitmap
                 // y coordinate
-                for (int i = rect[1]; i <= rect[3]; i++)
+                for (int i = rect.get(1); i <= rect.get(3); i++)
                 {
                     // x coordinate
-                    for (int j = rect[0]; j <= rect[2]; j++)
+                    for (int j = rect.get(0); j <= rect.get(2); j++)
                     {
-                        bitmap[i*vidTWidth+j] = 0;
+                        bitmap.set(i*vidTWidth+j, 0);
                     }
                 }
 
-                free(rect);
                 rect = findBiggestRectangle(bitmap, arraySize*sizeof(bool), vidTWidth);
             }
-            free(rect);
 
             // 0b10 is the code for end of CI segment
             compressedBits.push_back(1);
             compressedBits.push_back(0);
-
-            free(bitmap);
         };
 
         std::vector<std::thread> threads;
@@ -316,10 +314,10 @@ std::vector<bool> VideoTranscoder::compressFrame(CharInfo* currentFrame, CharInf
         result.push_back(0);    // marks new info
 
         // now compress the bitmaps
-        for (std::map<ulong, bool*>::iterator it = bitmaps.begin(); it != bitmaps.end(); it++)
+        for (std::map<ulong, SmartPtr<bool>>::iterator it = bitmaps.begin(); it != bitmaps.end(); it++)
         {
             ulong ciHash = it->first;
-            bool* bitmap = it->second;
+            SmartPtr<bool> bitmap = it->second;
 
             threads.emplace_back(std::thread(compressCI, std::ref(threadResults[threads.size()]), ciHash, bitmap, vidTWidth, arraySize));
         }
@@ -432,9 +430,9 @@ CharInfo findBestBlockCharacter(cv::Mat img)
     return maxDiffCharInfo;
 }
 
-CharInfo* VideoTranscoder::transcodeFrame()
+SmartPtr<CharInfo> VideoTranscoder::transcodeFrame()
 {
-    auto transcodeRow = [](int vidTWidth, cv::Mat frame, int i, int heightPixelsPerChar, int widthPixelsPerChar, CharInfo* frameInfo, int charIndex)
+    auto transcodeRow = [](int vidTWidth, cv::Mat frame, int i, int heightPixelsPerChar, int widthPixelsPerChar, SmartPtr<CharInfo> frameInfo, int charIndex)
     {
         int y = heightPixelsPerChar * i;
         for (int j = 0; j < vidTWidth; j++)
@@ -443,18 +441,19 @@ CharInfo* VideoTranscoder::transcodeFrame()
             cv::Mat framePart = frame(cv::Rect((int)x, (int)y, (int)widthPixelsPerChar, (int)heightPixelsPerChar));
             CharInfo best = findBestBlockCharacter(framePart);
 
+            CharInfo ci = frameInfo.get(charIndex);
             for (int k = 0; k < 3; k++)
             {
-                frameInfo[charIndex].foregroundRGB[k] = best.foregroundRGB[k];
-                frameInfo[charIndex].backgroundRGB[k] = best.backgroundRGB[k];
+                ci.foregroundRGB[k] = best.foregroundRGB[k];
+                ci.backgroundRGB[k] = best.backgroundRGB[k];
             }
-            frameInfo[charIndex].chara = best.chara;
+            ci.chara = best.chara;
 
             charIndex++;
         }
     };
 
-    CharInfo* frameInfo = (CharInfo*)malloc(sizeof(CharInfo) * vidTHeight * vidTWidth);
+    SmartPtr<CharInfo> frameInfo = SmartPtr<CharInfo>(vidTHeight * vidTWidth);
     int charIndex = 0;
 
     const int widthPixelsPerChar = vidWidth / vidTWidth;

@@ -29,7 +29,7 @@ class VariousUtils {
         static char toLower(char c);
         
         template <typename T>
-        static int find(const SmartPtr<T> inputArr, const T searchFor, const int indexStart)
+        static int find(SmartPtr<T> inputArr, const T searchFor, const int indexStart)
         {
             for (int i = 0; i < inputArr.getSize(); i++)
             {
@@ -42,7 +42,7 @@ class VariousUtils {
         }
 
         template <typename T>
-        static void pushArrayToVector(const SmartPtr<T> inputArr, std::vector<T>* vec)
+        static void pushArrayToVector(SmartPtr<T> inputArr, std::vector<T>* vec)
         {
             for (int i = 0; i < inputArr.getSize(); i++)
             {
