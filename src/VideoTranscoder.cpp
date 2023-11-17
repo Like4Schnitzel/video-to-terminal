@@ -461,7 +461,7 @@ CharInfo* VideoTranscoder::transcodeFrame()
     std::vector<std::thread> threads;
     for (int i = 0; i < vidTHeight; i++)
     {
-        threads.emplace_back(std::thread(transcodeRow, vidTWidth, frame, i, heightPixelsPerChar, widthPixelsPerChar, frameInfo, charIndex));
+        threads.emplace_back(transcodeRow, vidTWidth, frame, i, heightPixelsPerChar, widthPixelsPerChar, frameInfo, charIndex);
         charIndex += vidTWidth;
     }
 
