@@ -402,9 +402,11 @@ CharInfo findBestBlockCharacter(cv::Mat img)
         currentHeight -= eigthHeight;
 
         fgRect = img(cv::Rect(0, round(currentHeight), imageWidth, imageHeight-round(currentHeight)));
+        if (fgRect.rows == 0) continue;
         cv::Vec3b avrgFgRGB = getAverageColor(fgRect);
 
         bgRect = img(cv::Rect(0, 0, imageWidth, round(currentHeight)));
+        if (bgRect.rows == 0) continue;
         cv::Vec3b avrgBgRGB = getAverageColor(bgRect);
 
         int colorDiff = getColorDiff(avrgFgRGB, avrgBgRGB);    
