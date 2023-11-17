@@ -1,28 +1,28 @@
 #include "BinaryUtils.hpp"
 
-void BinaryUtils::writeToFile(const std::string fileName, const std::vector<char> bytes, const bool append)
+SmartPtr<Byte> BinaryUtils::bitArrayToByteArray(SmartPtr<bool> bits)
 {
-    const ulong byteSize = bytes.size()/CHAR_BIT;
-
-    std::ofstream file;
-    if (append)
+    if (bits.getSize() % 8 != 0)
     {
-        file.open(fileName, std::ios_base::app | std::ios::binary);
-    }
-    else
-    {
-        file.open(fileName, std::ios::out | std::ios::binary);
+        throw std::logic_error("Bits are not divisible by 8.");
     }
 
-    if (!file.good())
+    ulong byteSize = bits.getSize() / CHAR_BIT;
+    SmartPtr<Byte> output = SmartPtr<Byte>(byteSize);
+    for (ulong i = 0; i < byteSize; i++)
     {
-        throw std::runtime_error("Cannot open file to write to.");
+        output.set(i, 0);
+        // write bits to byte
+        for (int j = 0; j < 8; j++)
+        {
+            output.set(i, output.get(i) << 1 | bits.get(i*8+j));   //push already written bits to the left by one, then write 0 or 1 on the very right
+        }
     }
-    file.write(bytes.data(), byteSize);
-    file.close();
+
+    return output;
 }
 
-void BinaryUtils::writeToFile(const std::string fileName, char* bytes, const ulong byteSize, const bool append, const bool freeArr)
+void BinaryUtils::writeToFile(const std::string fileName, const char* bytes, const ulong byteSize, const bool append)
 {
     std::ofstream file;
     if (append)
@@ -40,14 +40,9 @@ void BinaryUtils::writeToFile(const std::string fileName, char* bytes, const ulo
     }
     file.write(bytes, byteSize);
     file.close();
-
-    if (freeArr)
-    {
-        free(bytes);
-    }
 }
 
-Byte* BinaryUtils::numToByteArray(const float num)
+SmartPtr<Byte> BinaryUtils::numToByteArray(const float num)
 {
     union
     {
@@ -58,21 +53,21 @@ Byte* BinaryUtils::numToByteArray(const float num)
     return numToByteArray(data.output);
 }
 
-ulong BinaryUtils::byteArrayToUint(const Byte* arr, const int len)
+ulong BinaryUtils::byteArrayToUint(SmartPtr<Byte> arr)
 {
     ulong num = 0;
 
-    for (int i = 0; i < len; i++)
+    for (int i = 0; i < arr.getSize(); i++)
     {
-        num |= (ulong) arr[i] << ((len-i-1)*8);    // going from right to left
+        num |= (ulong) arr.get(i) << ((arr.getSize()-i-1)*8);    // going from right to left
     }
 
     return num;
 }
 
-float BinaryUtils::byteArrayToFloat(const Byte* arr, const int len)
+float BinaryUtils::byteArrayToFloat(SmartPtr<Byte> arr)
 {
-    if (len != 4)
+    if (arr.getSize() != 4)
     {
         std::logic_error("Can only convert char arrays of length 4 to float.");
     }
@@ -81,41 +76,41 @@ float BinaryUtils::byteArrayToFloat(const Byte* arr, const int len)
         unsigned int x;
         float f;
     } temp;
-    temp.x = byteArrayToUint(arr, len);
+    temp.x = byteArrayToUint(arr);
     return temp.f;
 }
 
-Byte* BinaryUtils::charInfoToByteArray(const CharInfo ci)
+SmartPtr<Byte> BinaryUtils::charInfoToByteArray(const CharInfo ci)
 {
-    Byte* result = (Byte*)malloc(sizeof(CharInfo));
+    SmartPtr<Byte> result = SmartPtr<Byte>(sizeof(CharInfo));
     int index = 0;
 
     for (int i = 0; i < 3; i++)
     {
-        result[index] = ci.foregroundRGB[i];
+        result.set(index, ci.foregroundRGB[i]);
         index++;
     }
 
     for (int i = 0; i < 3; i++)
     {
-        result[index] = ci.backgroundRGB[i];
+        result.set(index, ci.backgroundRGB[i]);
         index++;
     }
 
-    result[index] = ci.chara;
+    result.set(index, ci.chara);
 
     return result;
 }
 
-bool* BinaryUtils::byteArrayToBitArray(const Byte* input, const int inputSize)
+SmartPtr<bool> BinaryUtils::byteArrayToBitArray(SmartPtr<Byte> input)
 {
-    bool* result = (bool*)malloc(inputSize*sizeof(char));
-    for (int i = 0; i < inputSize; i++)
+    SmartPtr<bool> result = SmartPtr<bool>(input.getSize()*sizeof(char));
+    for (int i = 0; i < input.getSize(); i++)
     {
-        char c = input[i];
+        char c = input.get(i);
         for (int j = 0; j < 8; j++)
         {
-            result[8*i+j] = (c >> (7-j)) & 0b1;
+            result.set(8*i+j, (c >> (7-j)) & 0b1);
         }
     }
     return result;

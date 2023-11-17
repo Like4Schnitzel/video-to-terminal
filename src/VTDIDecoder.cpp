@@ -21,25 +21,24 @@ VTDIDecoder::~VTDIDecoder()
 }
 
 template <typename T>
-T applyAssign(T num, int* index, Byte*& sib)
+T applyAssign(T num, int* index, SmartPtr<Byte>& sib)
 {
     float comparisonTool;
 
     int bytes = sizeof(T);
     int oldIndex = *index;
     *index += bytes;
-    Byte* sub = VariousUtils::subArray(sib, oldIndex, *index);
+    SmartPtr<Byte> sub = VariousUtils::subArray(sib, oldIndex, *index);
     T result;
     if (typeid(T) == typeid(comparisonTool))
     {
-        result = BinaryUtils::byteArrayToFloat(sub, bytes);
+        result = BinaryUtils::byteArrayToFloat(sub);
     }
     else
     {
-        result = (T)BinaryUtils::byteArrayToUint(sub, bytes);
+        result = (T)BinaryUtils::byteArrayToUint(sub);
     }
 
-    free(sub);
     return result;
 }
 
@@ -48,14 +47,14 @@ void VTDIDecoder::getStaticInfo()
     // these are taken from the spec
     const int expectedSig[] = {86, 84, 68, 73};
 
-    Byte* staticInfoBytes = (Byte*)malloc(6);
+    SmartPtr<Byte> staticInfoBytes = SmartPtr<Byte>(6);
     vtdiFile.open(vtdiPath);
-    vtdiFile.read((char*)staticInfoBytes, 6);
+    vtdiFile.read((char*)staticInfoBytes.data(), 6);
     int index;
 
     for (index = 0; index < 4; index++)
     {
-        if (staticInfoBytes[index] != expectedSig[index])
+        if (staticInfoBytes.get(index) != expectedSig[index])
         {
             throw std::runtime_error("File signature does not match expected signature.");
         }
@@ -80,8 +79,8 @@ void VTDIDecoder::getStaticInfo()
     }
 
     const int remainingBytes = staticByteSize - 6;
-    staticInfoBytes = (Byte*)realloc(staticInfoBytes, remainingBytes);
-    vtdiFile.read((char*)staticInfoBytes, remainingBytes);
+    staticInfoBytes = SmartPtr<Byte>(remainingBytes);
+    vtdiFile.read((char*)staticInfoBytes.data(), remainingBytes);
     index = 0;
 
     auto args = std::make_tuple(
@@ -91,7 +90,6 @@ void VTDIDecoder::getStaticInfo()
         (..., (*args = applyAssign(*args, &index, staticInfoBytes)));
     }, args);
 
-    free(staticInfoBytes);
     vtdiFile.close();
     vtdiFile.clear();
 }
@@ -109,10 +107,9 @@ void VTDIDecoder::playVideo()
         throw std::runtime_error("It seems static info hasn't been initialized yet. Try running VTDIDecoder.getStaticInfo()");
     }
 
-    int* terminalDimensions = VariousUtils::getTerminalDimensions();
-    this->terminalWidth = terminalDimensions[0];
-    this->terminalHeight = terminalDimensions[1];
-    free(terminalDimensions);
+    SmartPtr<int> terminalDimensions = VariousUtils::getTerminalDimensions();
+    this->terminalWidth = terminalDimensions.get(0);
+    this->terminalHeight = terminalDimensions.get(1);
 
     if (terminalWidth < vidWidth || terminalHeight < vidHeight)
     {
@@ -165,86 +162,68 @@ void VTDIDecoder::displayCurrentFrame()
 
 void VTDIDecoder::readAndDisplayNextFrame(BitStream& inBits, bool display)
 {
-    bool* startBit = inBits.readBits(1);
-    if (startBit[0] == 1)   // frame hasn't changed from the last one, continue to next frame
+    SmartPtr<bool> startBit = inBits.readBits(1);
+    if (startBit.get(0) == 1)   // frame hasn't changed from the last one, continue to next frame
     {
-        free(startBit);
-        free(inBits.readBits(7));   // go through padded bits
         return;
     }
-    free(startBit);
 
-    bool* endMarker = nullptr;
+    SmartPtr<bool> endMarker;
     do
     {
         std::string fgColorSetter = "\x1B[38;2";
 
-        bool* byteBits;
-        Byte* bytes;
         CharInfo current;
         for (int i = 0; i < 3; i++)
         {
-            byteBits = inBits.readBits(8);
-            bytes = BinaryUtils::bitArrayToByteArray(byteBits, 8);
-            current.foregroundRGB[i] = bytes[0];
-            fgColorSetter += ";";
-            fgColorSetter += std::to_string((int)bytes[0]);
-            free(bytes);
-            free(byteBits);
+            int byteNum = BinaryUtils::bitArrayToByteArray(inBits.readBits(8)).get(0);
+            current.foregroundRGB[i] = byteNum;
+            fgColorSetter += ";" + std::to_string(byteNum);
         }
         fgColorSetter += "m";
 
         std::string bgColorSetter = "\x1B[48;2";
         for (int i = 0; i < 3; i++)
         {
-            byteBits = inBits.readBits(8);
-            bytes = BinaryUtils::bitArrayToByteArray(byteBits, 8);
-            current.backgroundRGB[i] = bytes[0];
-            bgColorSetter += ";";
-            bgColorSetter += std::to_string((int)bytes[0]);
-            free(bytes);
-            free(byteBits);
+            int byteNum = BinaryUtils::bitArrayToByteArray(inBits.readBits(8)).get(0);
+            current.backgroundRGB[i] = byteNum;
+            bgColorSetter += ";" + std::to_string(byteNum);
         }
         bgColorSetter += "m";
 
-        byteBits = inBits.readBits(8);
-        bytes = BinaryUtils::bitArrayToByteArray(byteBits, 8);
-        current.chara = bytes[0];
-        free(bytes);
-        free(byteBits);
+        current.chara = BinaryUtils::bitArrayToByteArray(inBits.readBits(8)).get(0);
 
         do
         {
-            free(endMarker);
             endMarker = inBits.readBits(2);
 
-            if (endMarker[0] == 0)
+            if (endMarker.get(0) == 0)
             {
-                if (endMarker[1] == 0)  // rectangle
+                if (endMarker.get(1) == 0)  // rectangle
                 {
-                    int* corners = (int*)malloc(4*sizeof(int));
+                    SmartPtr<int> corners = SmartPtr<int>(4);
 
                     for (int i = 0; i < 4; i++)
                     {
-                        byteBits = inBits.readBits(16);
-                        bytes = BinaryUtils::bitArrayToByteArray(byteBits, 16);
-                        corners[i] = BinaryUtils::byteArrayToUint(bytes, 2);
-                        free(byteBits);
-                        free(bytes);
+                        corners.set(i, BinaryUtils::byteArrayToUint(
+                            BinaryUtils::bitArrayToByteArray(
+                                inBits.readBits(16)
+                            )
+                        ));
                     }
 
-                    std::string moveRight = "\x1B[" + std::to_string(corners[0]) + "C";
+                    std::string moveRight = "\x1B[" + std::to_string(corners.get(0)) + "C";
                     if (display)
                     {
                         std::cout << "\x1B[H"   // move cursor to top left
-                                  << "\x1B[" + std::to_string(corners[1]) + "B"    // move cursor down
+                                  << "\x1B[" + std::to_string(corners.get(1)) + "B"    // move cursor down
                                   << moveRight;
                     }
 
-                    for (int y = corners[1]; y <= corners[3]; y++)
+                    for (int y = corners.get(1); y <= corners.get(3); y++)
                     {
                         std::cout << fgColorSetter << bgColorSetter;
-                        for (int x = corners[0]; x <= corners[2]; x++)
+                        for (int x = corners.get(0); x <= corners.get(2); x++)
                         {
                             int matIndex = y*vidWidth+x;
                             for (int i = 0; i < 3; i++)
@@ -266,8 +245,6 @@ void VTDIDecoder::readAndDisplayNextFrame(BitStream& inBits, bool display)
                                       << moveRight;
                         }
                     }
-
-                    free(corners);
                 }
                 else    // position
                 {
@@ -275,11 +252,11 @@ void VTDIDecoder::readAndDisplayNextFrame(BitStream& inBits, bool display)
 
                     for (int i = 0; i < 2; i++)
                     {
-                        byteBits = inBits.readBits(16);
-                        bytes = BinaryUtils::bitArrayToByteArray(byteBits, 16);
-                        corners[i] = BinaryUtils::byteArrayToUint(bytes, 2);
-                        free(byteBits);
-                        free(bytes);
+                        corners[i] = BinaryUtils::byteArrayToUint(
+                            BinaryUtils::bitArrayToByteArray(
+                                inBits.readBits(16)
+                            )
+                        );
                     }
 
                     int matIndex = corners[1]*vidWidth+corners[0];
@@ -300,16 +277,15 @@ void VTDIDecoder::readAndDisplayNextFrame(BitStream& inBits, bool display)
                     }
                 }
             }
-        } while(endMarker[0] == 0); // 00 for rect, 01 for pos, 10 for end of CI
+        } while(endMarker.get(0) == 0); // 00 for rect, 01 for pos, 10 for end of CI
 
-    } while(endMarker[1] == 0); // 11 marks the end of the frame
-    free(endMarker);
+    } while(endMarker.get(1) == 0); // 11 marks the end of the frame
 
     // go through padding bits
     int bitStreamIndex = inBits.getIndex();
     if (bitStreamIndex > 0)
     {
-        free(inBits.readBits(8-bitStreamIndex));
+        inBits.readBits(8-bitStreamIndex);
     }
 }
 

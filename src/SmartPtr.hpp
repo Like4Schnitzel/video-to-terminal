@@ -1,6 +1,7 @@
 #pragma once
 
 #include <assert.h>
+#include <stdlib.h>
 
 template <typename T>
 class SmartPtr {
@@ -13,7 +14,9 @@ class SmartPtr {
         ~SmartPtr();
 
         void resize(const int s);
-        void set(const T val, const int position);
-        T get(const int position);
+        void set(const int position, const T val);
+        const T get(const int position);
+        const int getSize();
         const T* data();
+        T* unsafeData();
 };

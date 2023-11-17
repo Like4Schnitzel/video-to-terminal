@@ -1,4 +1,5 @@
 #include "VTDIDecoder.hpp"
+#include <string.h>
 
 using namespace std;
 

@@ -41,7 +41,7 @@ bool VariousUtils::fileExists(std::string fileName)
 #ifdef WIN32
 #include <windows.h>
 
-int* VariousUtils::getTerminalDimensions()
+SmartPtr<int> VariousUtils::getTerminalDimensions()
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     int columns, rows;
@@ -50,9 +50,9 @@ int* VariousUtils::getTerminalDimensions()
     columns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
     rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
 
-    int* dimensions = (int*)malloc(2*sizeof(int));
-    dimensions[0] = columns;
-    dimensions[1] = rows;
+    SmartPtr<int> dimensions = SmartPtr<int>(2);
+    dimensions.set(0, columns);
+    dimensions.set(1, rows);
 
     return dimensions;
 }
@@ -61,13 +61,13 @@ int* VariousUtils::getTerminalDimensions()
 #include <stdio.h>
 #include <unistd.h>
 
-int* VariousUtils::getTerminalDimensions()
+SmartPtr<int> VariousUtils::getTerminalDimensions()
 {
     struct winsize w;
     ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
-    int* dimensions = (int*)malloc(2*sizeof(int));
-    dimensions[0] = w.ws_col;
-    dimensions[1] = w.ws_row;
+    SmartPtr<int> dimensions = SmartPtr<int>(2);
+    dimensions.set(0, w.ws_col);
+    dimensions.set(1, w.ws_row);
 
     return dimensions;
 }

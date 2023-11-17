@@ -4,7 +4,7 @@ template <typename T>
 SmartPtr<T>::SmartPtr()
 {
     size = 0;
-    ptr = (T*) malloc(0);
+    ptr = (T*)malloc(0);
 }
 
 template <typename T>
@@ -29,7 +29,7 @@ void SmartPtr<T>::resize(const int s)
 }
 
 template <typename T>
-void SmartPtr<T>::set(const T val, const int position)
+void SmartPtr<T>::set(const int position, const T val)
 {
     assert(position >= 0 && position < size);
 
@@ -37,9 +37,27 @@ void SmartPtr<T>::set(const T val, const int position)
 }
 
 template <typename T>
-T SmartPtr<T>::get(const int position)
+const T SmartPtr<T>::get(const int position)
 {
     assert(position >= 0 && position < size);
 
     return ptr[position];
+}
+
+template <typename T>
+const int SmartPtr<T>::getSize()
+{
+    return size;
+}
+
+template <typename T>
+const T* SmartPtr<T>::data()
+{
+    return ptr;
+}
+
+template <typename T>
+T* SmartPtr<T>::unsafeData()
+{
+    return ptr;
 }
