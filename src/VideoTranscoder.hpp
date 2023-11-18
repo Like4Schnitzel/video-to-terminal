@@ -9,7 +9,8 @@
 #include <thread>
 #include <future>
 #include "CharInfoStruct.hpp"
-#include "SmartPtr.hpp"
+#include "BinaryUtils.hpp"
+#include "VariousUtils.hpp"
 
 class VideoTranscoder 
 {

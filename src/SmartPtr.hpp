@@ -2,6 +2,8 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <cstdint>
+#include "CharInfoStruct.hpp"
 
 template <typename T>
 class SmartPtr {
@@ -11,7 +13,7 @@ class SmartPtr {
     public:
         SmartPtr();
         SmartPtr(const int s);
-        SmartPtr(const T* arr, const int s);
+        SmartPtr(T* arr, const int s);
         ~SmartPtr();
 
         void resize(const int s);
@@ -21,3 +23,9 @@ class SmartPtr {
         const T* data();
         T* unsafeData();
 };
+
+template class SmartPtr<bool>;
+template class SmartPtr<unsigned char>;
+template class SmartPtr<int>;
+template class SmartPtr<char>;
+template class SmartPtr<CharInfo>;
