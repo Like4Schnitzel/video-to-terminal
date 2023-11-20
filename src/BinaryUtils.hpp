@@ -27,17 +27,17 @@ class BinaryUtils {
 
         static void writeToFile(const std::string fileName, const char* bytes, const ulong byteSize, const bool append);
 
-        static SmartPtr<Byte> numToByteArray(const float);
+        static auto numToByteArray(const float num);
 
         template <typename uints>
-        static SmartPtr<Byte> numToByteArray(uints num)
+        static auto numToByteArray(uints num)
         {
             const int byteSize = sizeof(num);
 
-            SmartPtr<Byte> arr = SmartPtr<Byte>(byteSize);
+            std::array<Byte, sizeof(uints)> arr;
             for (int i = 0; i < byteSize; i++)
             {
-                arr.set(i, num >> ((byteSize-i-1) * 8) & 0xFF);
+                arr[i] = num >> ((byteSize-i-1) * 8) & 0xFF;
             }
             return arr;
         }

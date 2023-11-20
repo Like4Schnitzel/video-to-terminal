@@ -44,7 +44,7 @@ void BinaryUtils::writeToFile(const std::string fileName, const char* bytes, con
     file.close();
 }
 
-SmartPtr<Byte> BinaryUtils::numToByteArray(const float num)
+auto BinaryUtils::numToByteArray(const float num)
 {
     union
     {
