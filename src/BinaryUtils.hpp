@@ -18,13 +18,11 @@ class BinaryUtils {
         static auto bitArrayToByteArray(const std::shared_ptr<bool> bits, const ulong bitlen);
 
         template <typename T>
-        static void pushArray(std::vector<T>* vec, const SmartPtr<T> arr)
+        static void pushArray(std::vector<T>* vec, const std::shared_ptr<T> arr, const ulong arrLen)
         {
-            for (ulong i = 0; i < arr.size; i++) {
-                (*vec).push_back(arr.get(i));
-                //std::cout << arr[i];
+            for (ulong i = 0; i < arrLen; i++) {
+                (*vec).push_back(arr.get()[i]);
             }
-            //std::cout << " pushed to vector.\nVector size is " << (*vec).size() << "\n";
         }
 
         static void writeToFile(const std::string fileName, const char* bytes, const ulong byteSize, const bool append);
