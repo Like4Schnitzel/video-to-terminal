@@ -104,15 +104,16 @@ auto BinaryUtils::charInfoToByteArray(const CharInfo ci)
     return result;
 }
 
-SmartPtr<bool> BinaryUtils::byteArrayToBitArray(SmartPtr<Byte> input)
+auto BinaryUtils::byteArrayToBitArray(std::shared_ptr<Byte> input, int inputLen)
 {
-    SmartPtr<bool> result = SmartPtr<bool>(input.getSize()*sizeof(char));
-    for (int i = 0; i < input.getSize(); i++)
+    std::vector<bool> result;
+    result.reserve(inputLen);
+    for (int i = 0; i < inputLen; i++)
     {
-        char c = input.get(i);
+        char c = input.get()[i];
         for (int j = 0; j < 8; j++)
         {
-            result.set(8*i+j, (c >> (7-j)) & 0b1);
+            result[8*i+j] = (c >> (7-j)) & 0b1;
         }
     }
     return result;
