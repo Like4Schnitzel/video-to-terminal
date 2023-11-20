@@ -1,21 +1,23 @@
 #include "BinaryUtils.hpp"
 
-SmartPtr<Byte> BinaryUtils::bitArrayToByteArray(SmartPtr<bool> bits)
+auto BinaryUtils::bitArrayToByteArray(std::shared_ptr<bool> bits, const ulong bitLen)
 {
-    if (bits.getSize() % 8 != 0)
+    if (bitLen % 8 != 0)
     {
         throw std::logic_error("Bits are not divisible by 8.");
     }
 
-    ulong byteSize = bits.getSize() / CHAR_BIT;
-    SmartPtr<Byte> output = SmartPtr<Byte>(byteSize);
+    const ulong byteSize = bitLen / CHAR_BIT;
+    std::vector<Byte> output;
+    output.resize(byteSize, 0);
+
     for (ulong i = 0; i < byteSize; i++)
     {
-        output.set(i, 0);
         // write bits to byte
         for (int j = 0; j < 8; j++)
         {
-            output.set(i, output.get(i) << 1 | bits.get(i*8+j));   //push already written bits to the left by one, then write 0 or 1 on the very right
+            // push already written bits to the left by one, then write 0 or 1 on the very right
+            output[i] = output[i] << 1 | bits.get()[i*8+j];
         }
     }
 

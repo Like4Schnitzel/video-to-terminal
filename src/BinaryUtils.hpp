@@ -9,12 +9,13 @@
 #include <bitset>
 #include <climits>
 #include <zlib.h>
+#include <memory>
+#include <array>
 #include "CharInfoStruct.hpp"
-#include "SmartPtr.hpp"
 
 class BinaryUtils {
     public:
-        static SmartPtr<Byte> bitArrayToByteArray(const SmartPtr<bool> bits);
+        static auto bitArrayToByteArray(const std::shared_ptr<bool> bits, const ulong bitlen);
 
         template <typename T>
         static void pushArray(std::vector<T>* vec, const SmartPtr<T> arr)
