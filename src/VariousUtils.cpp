@@ -41,7 +41,7 @@ bool VariousUtils::fileExists(std::string fileName)
 #ifdef WIN32
 #include <windows.h>
 
-SmartPtr<int> VariousUtils::getTerminalDimensions()
+auto VariousUtils::getTerminalDimensions()
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     int columns, rows;
@@ -50,9 +50,9 @@ SmartPtr<int> VariousUtils::getTerminalDimensions()
     columns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
     rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
 
-    SmartPtr<int> dimensions = SmartPtr<int>(2);
-    dimensions.set(0, columns);
-    dimensions.set(1, rows);
+    std::array<int, 2> dimensions;
+    dimensions[0] = columns;
+    dimensions[1] rows;
 
     return dimensions;
 }
@@ -61,13 +61,13 @@ SmartPtr<int> VariousUtils::getTerminalDimensions()
 #include <stdio.h>
 #include <unistd.h>
 
-SmartPtr<int> VariousUtils::getTerminalDimensions()
+auto VariousUtils::getTerminalDimensions()
 {
     struct winsize w;
     ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
-    SmartPtr<int> dimensions = SmartPtr<int>(2);
-    dimensions.set(0, w.ws_col);
-    dimensions.set(1, w.ws_row);
+    std::array<int, 2> dimensions;
+    dimensions[0] = w.ws_col;
+    dimensions[1] = w.ws_row;
 
     return dimensions;
 }
@@ -85,11 +85,11 @@ char VariousUtils::toLower(char c)
     }
 }
 
-std::string VariousUtils::numToUnicodeBlockChar(int i)
+std::string VariousUtils::numToUnicodeBlockChar(int num)
 {
     char buf[3];
     buf[0] = 0xe2;
     buf[1] = 0x96;
-    buf[2] = 0x80 + i;
+    buf[2] = 0x80 + num;
     return std::string(reinterpret_cast<char*>(buf), 3);
 }
