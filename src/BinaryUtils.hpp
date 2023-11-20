@@ -15,13 +15,13 @@
 
 class BinaryUtils {
     public:
-        static auto bitArrayToByteArray(const std::shared_ptr<bool> bits, const ulong bitlen);
+        static auto bitArrayToByteArray(const bool* bits, const ulong bitlen);
 
         template <typename T>
-        static void pushArray(std::vector<T>* vec, const std::shared_ptr<T> arr, const ulong arrLen)
+        static void pushArray(std::vector<T>* vec, const T* arr, const ulong arrLen)
         {
             for (ulong i = 0; i < arrLen; i++) {
-                (*vec).push_back(arr.get()[i]);
+                (*vec).push_back(arr[i]);
             }
         }
 
@@ -42,11 +42,11 @@ class BinaryUtils {
             return arr;
         }
 
-        static ulong byteArrayToUint(std::shared_ptr<Byte> arr, int arrLen);
+        static ulong byteArrayToUint(const Byte* arr, const int arrLen);
 
-        static float byteArrayToFloat(std::shared_ptr<Byte> arr, int arrLen);
+        static float byteArrayToFloat(const Byte* arr, const int arrLen);
 
         static auto charInfoToByteArray(const CharInfo ci);
 
-        static auto byteArrayToBitArray(std::shared_ptr<Byte> input, int inputLen);
+        static auto byteArrayToBitArray(const Byte* input, int inputLen);
 };

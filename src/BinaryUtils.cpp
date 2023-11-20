@@ -1,6 +1,6 @@
 #include "BinaryUtils.hpp"
 
-auto BinaryUtils::bitArrayToByteArray(std::shared_ptr<bool> bits, const ulong bitLen)
+auto BinaryUtils::bitArrayToByteArray(const bool* bits, const ulong bitLen)
 {
     if (bitLen % 8 != 0)
     {
@@ -17,7 +17,7 @@ auto BinaryUtils::bitArrayToByteArray(std::shared_ptr<bool> bits, const ulong bi
         for (int j = 0; j < 8; j++)
         {
             // push already written bits to the left by one, then write 0 or 1 on the very right
-            output[i] = output[i] << 1 | bits.get()[i*8+j];
+            output[i] = output[i] << 1 | bits[i*8+j];
         }
     }
 
@@ -55,19 +55,19 @@ auto BinaryUtils::numToByteArray(const float num)
     return numToByteArray(data.output);
 }
 
-ulong BinaryUtils::byteArrayToUint(std::shared_ptr<Byte> arr, int arrLen)
+ulong BinaryUtils::byteArrayToUint(const Byte* arr, const int arrLen)
 {
     ulong num = 0;
 
     for (int i = 0; i < arrLen; i++)
     {
-        num |= (ulong) arr.get()[i] << ((arrLen-i-1)*8);    // going from right to left
+        num |= (ulong) arr[i] << ((arrLen-i-1)*8);    // going from right to left
     }
 
     return num;
 }
 
-float BinaryUtils::byteArrayToFloat(std::shared_ptr<Byte> arr, int arrLen)
+float BinaryUtils::byteArrayToFloat(const Byte* arr, int arrLen)
 {
     if (arrLen != 4)
     {
@@ -104,13 +104,13 @@ auto BinaryUtils::charInfoToByteArray(const CharInfo ci)
     return result;
 }
 
-auto BinaryUtils::byteArrayToBitArray(std::shared_ptr<Byte> input, int inputLen)
+auto BinaryUtils::byteArrayToBitArray(const Byte* input, int inputLen)
 {
     std::vector<bool> result;
     result.reserve(inputLen);
     for (int i = 0; i < inputLen; i++)
     {
-        char c = input.get()[i];
+        char c = input[i];
         for (int j = 0; j < 8; j++)
         {
             result[8*i+j] = (c >> (7-j)) & 0b1;
