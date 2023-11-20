@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.9)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread" )
 project( Transcoder )
 project( Decoder )

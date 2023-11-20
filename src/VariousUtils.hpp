@@ -28,19 +28,6 @@ class VariousUtils {
 
         static auto getTerminalDimensions();
         static char toLower(char c);
-        
-        template <typename T>
-        static int find(const std::shared_ptr<T> inputArr, int inputArrLen, const T searchFor, const int indexStart)
-        {
-            for (int i = 0; i < inputArrLen; i++)
-            {
-                if (inputArr.get()[i] == searchFor)
-                {
-                    return i;
-                }
-            }
-            return -1;
-        }
 
         template <typename T>
         static void pushArrayToVector(std::shared_ptr<T> inputArr, int inputArrLen, std::vector<T>* vec)
