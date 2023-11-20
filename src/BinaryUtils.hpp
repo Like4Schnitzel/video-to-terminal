@@ -46,7 +46,7 @@ class BinaryUtils {
 
         static float byteArrayToFloat(std::shared_ptr<Byte> arr, int arrLen);
 
-        static SmartPtr<Byte> charInfoToByteArray(const CharInfo ci);
+        static auto charInfoToByteArray(const CharInfo ci);
 
         static SmartPtr<bool> byteArrayToBitArray(SmartPtr<Byte> input);
 };

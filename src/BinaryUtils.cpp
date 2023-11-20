@@ -82,24 +82,24 @@ float BinaryUtils::byteArrayToFloat(std::shared_ptr<Byte> arr, int arrLen)
     return temp.f;
 }
 
-SmartPtr<Byte> BinaryUtils::charInfoToByteArray(const CharInfo ci)
+auto BinaryUtils::charInfoToByteArray(const CharInfo ci)
 {
-    SmartPtr<Byte> result = SmartPtr<Byte>(sizeof(CharInfo));
+    std::array<Byte, sizeof(CharInfo)> result;
     int index = 0;
 
     for (int i = 0; i < 3; i++)
     {
-        result.set(index, ci.foregroundRGB[i]);
+        result[index] = ci.foregroundRGB[i];
         index++;
     }
 
     for (int i = 0; i < 3; i++)
     {
-        result.set(index, ci.backgroundRGB[i]);
+        result[index] = ci.backgroundRGB[i];
         index++;
     }
 
-    result.set(index, ci.chara);
+    result[index] = ci.chara;
 
     return result;
 }
