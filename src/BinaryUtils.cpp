@@ -67,9 +67,9 @@ ulong BinaryUtils::byteArrayToUint(std::shared_ptr<Byte> arr, int arrLen)
     return num;
 }
 
-float BinaryUtils::byteArrayToFloat(SmartPtr<Byte> arr)
+float BinaryUtils::byteArrayToFloat(std::shared_ptr<Byte> arr, int arrLen)
 {
-    if (arr.getSize() != 4)
+    if (arrLen != 4)
     {
         std::logic_error("Can only convert char arrays of length 4 to float.");
     }
@@ -78,7 +78,7 @@ float BinaryUtils::byteArrayToFloat(SmartPtr<Byte> arr)
         unsigned int x;
         float f;
     } temp;
-    temp.x = byteArrayToUint(arr);
+    temp.x = byteArrayToUint(arr, arrLen);
     return temp.f;
 }
 

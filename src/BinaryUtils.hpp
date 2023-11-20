@@ -44,7 +44,7 @@ class BinaryUtils {
 
         static ulong byteArrayToUint(std::shared_ptr<Byte> arr, int arrLen);
 
-        static float byteArrayToFloat(SmartPtr<Byte> arr);
+        static float byteArrayToFloat(std::shared_ptr<Byte> arr, int arrLen);
 
         static SmartPtr<Byte> charInfoToByteArray(const CharInfo ci);
 
