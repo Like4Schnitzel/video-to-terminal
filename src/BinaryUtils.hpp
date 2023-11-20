@@ -42,7 +42,7 @@ class BinaryUtils {
             return arr;
         }
 
-        static ulong byteArrayToUint(SmartPtr<Byte> arr);
+        static ulong byteArrayToUint(std::shared_ptr<Byte> arr, int arrLen);
 
         static float byteArrayToFloat(SmartPtr<Byte> arr);
 

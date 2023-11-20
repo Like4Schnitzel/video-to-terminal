@@ -55,13 +55,13 @@ auto BinaryUtils::numToByteArray(const float num)
     return numToByteArray(data.output);
 }
 
-ulong BinaryUtils::byteArrayToUint(SmartPtr<Byte> arr)
+ulong BinaryUtils::byteArrayToUint(std::shared_ptr<Byte> arr, int arrLen)
 {
     ulong num = 0;
 
-    for (int i = 0; i < arr.getSize(); i++)
+    for (int i = 0; i < arrLen; i++)
     {
-        num |= (ulong) arr.get(i) << ((arr.getSize()-i-1)*8);    // going from right to left
+        num |= (ulong) arr.get()[i] << ((arrLen-i-1)*8);    // going from right to left
     }
 
     return num;
