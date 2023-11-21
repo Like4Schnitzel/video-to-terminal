@@ -30,6 +30,6 @@ class VideoTranscoder
         ~VideoTranscoder();
         cv::Mat getFrame();
         void transcodeFile();
-        SmartPtr<CharInfo> transcodeFrame();
-        std::vector<bool> compressFrame(SmartPtr<CharInfo> currentFrame, SmartPtr<CharInfo> prevFrame);
+        std::shared_ptr<CharInfo []> transcodeFrame();
+        std::vector<bool> compressFrame(std::shared_ptr<CharInfo[]> currentFrame, std::shared_ptr<CharInfo[]> prevFrame);
 };
