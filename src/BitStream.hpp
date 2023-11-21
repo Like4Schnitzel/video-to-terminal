@@ -1,15 +1,14 @@
 #pragma once
 
 #include "BinaryUtils.hpp"
-#include "SmartPtr.hpp"
 
 #include <fstream>
 
 class BitStream{
     private:
         std::ifstream* inFile;
-        SmartPtr<Byte> bytes;
-        SmartPtr<bool> bits;
+        std::vector<Byte> bytes;
+        std::vector<bool> bits;
         int index;
         int bufferSize;
         int bitBufferSize;
@@ -18,7 +17,8 @@ class BitStream{
     public:
         BitStream();
         BitStream(std::ifstream* inFile, int bufferSize);
-        SmartPtr<bool> readBits(int n);
+        std::vector<Byte> readBytes(int n);
+        std::vector<bool> readBits(int n);
 
         int getIndex();
 };

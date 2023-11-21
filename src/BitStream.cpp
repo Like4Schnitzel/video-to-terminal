@@ -12,8 +12,8 @@ BitStream::BitStream(std::ifstream* inF, int buf)
     this->inFile = inF;
     this->bufferSize = buf;
     this->bitBufferSize = buf*8;
-    this->bytes = SmartPtr<Byte>(buf);
-    this->bits = SmartPtr<bool>(8*buf);
+    this->bytes.reserve(buf);
+    this->bits.reserve(8*buf);
     this->index = 0;
 
     readFileBytesToBuffer(buf);
@@ -25,36 +25,57 @@ void BitStream::readFileBytesToBuffer(int n)
     // shift elements to the left
     for (int i = 0; i < bufferSize - n; i++)
     {
-        bytes.set(bytes.get(i+n), i);
+        bytes[i] = bytes[i+n];
     }
     for (int i = 0; i < bitBufferSize - bitsToReplace; i++)
     {
-        bits.set(bits.get(i+bitsToReplace), i);
+        bits[i] = bits[i+bitsToReplace];
     }
 
     // fill elements on the right up with read content
-    SmartPtr<char> readBytes = SmartPtr<char>(n);
-    (*inFile).read(readBytes.unsafeData(), n);
+    std::vector<char> readBytes;
+    readBytes.reserve(n);
+    (*inFile).read(readBytes.data(), n);
     for (int i = 0; i < n; i++)
     {
         const int bytesIndex = bufferSize-n+i;
         const int eightTimesBytesIndex = 8*bytesIndex;
-        bytes.set(readBytes.get(i), bytesIndex);
+        bytes[bytesIndex] = readBytes[i];
 
         for (int j = 0; j < 8; j++)
         {
-            bits.set((bytes.get(bytesIndex) >> (7-j)) & 0b1, eightTimesBytesIndex+j);
+            bits[eightTimesBytesIndex+j] = (bytes[bytesIndex] >> (7-j)) & 0b1;
         }
     }
 }
 
-SmartPtr<bool> BitStream::readBits(int n)
+std::vector<Byte> BitStream::readBytes(int n)
 {
-    SmartPtr<bool> result = SmartPtr<bool>(n);
+    std::vector<Byte> result;
+    result.resize(n, 0);
 
     for (int i = 0; i < n; i++)
     {
-        result.set(bits.get(index), i);
+        for (int j = 0; j < 8; j++)
+        {
+            result[i] = result[i] | (bits[index] << (7 - j));
+            index++;
+        }
+    }
+
+    readFileBytesToBuffer(n);
+    index -= 8*n;
+    return result;
+}
+
+std::vector<bool> BitStream::readBits(int n)
+{
+    std::vector<bool> result;
+    result.reserve(n);
+
+    for (int i = 0; i < n; i++)
+    {
+        result[i] = bits[index];
         index++;
     }
 
