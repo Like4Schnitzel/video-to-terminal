@@ -82,7 +82,7 @@ float BinaryUtils::byteArrayToFloat(const Byte* arr, int arrLen)
     return temp.f;
 }
 
-auto BinaryUtils::charInfoToByteArray(const CharInfo ci)
+std::array<Byte, 7UL> BinaryUtils::charInfoToByteArray(const CharInfo ci)
 {
     std::array<Byte, sizeof(CharInfo)> result;
     int index = 0;
@@ -104,7 +104,7 @@ auto BinaryUtils::charInfoToByteArray(const CharInfo ci)
     return result;
 }
 
-auto BinaryUtils::byteArrayToBitArray(const Byte* input, int inputLen)
+std::vector<bool> BinaryUtils::byteArrayToBitArray(const Byte* input, int inputLen)
 {
     std::vector<bool> result;
     result.reserve(inputLen);

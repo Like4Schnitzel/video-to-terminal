@@ -46,7 +46,7 @@ class BinaryUtils {
 
         static float byteArrayToFloat(const Byte* arr, const int arrLen);
 
-        static auto charInfoToByteArray(const CharInfo ci);
+        static std::array<Byte, 7UL> charInfoToByteArray(const CharInfo ci);
 
-        static auto byteArrayToBitArray(const Byte* input, int inputLen);
+        static std::vector<bool> byteArrayToBitArray(const Byte* input, int inputLen);
 };

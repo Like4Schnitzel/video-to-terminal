@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <vector>
 #include <array>
+#include <memory>
 
 class VariousUtils {
     public:
@@ -20,7 +21,7 @@ class VariousUtils {
             int subIndex = 0;
             for (int i = indexStart; i < indexEnd; i++)
             {
-                sub[subIndex] = initArr.get()[i]);
+                sub[subIndex] = initArr.get()[i];
                 subIndex++;
             }
             return sub;
