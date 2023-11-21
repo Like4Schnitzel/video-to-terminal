@@ -31,11 +31,11 @@ class VariousUtils {
         static char toLower(char c);
 
         template <typename T>
-        static void pushArrayToVector(std::shared_ptr<T> inputArr, int inputArrLen, std::vector<T>* vec)
+        static void pushArrayToVector(const T* inputArr, int inputArrLen, std::vector<T>& vec)
         {
             for (int i = 0; i < inputArrLen; i++)
             {
-                (*vec).push_back(inputArrLen);
+                vec.push_back(inputArr[i]);
             }
         }
 
