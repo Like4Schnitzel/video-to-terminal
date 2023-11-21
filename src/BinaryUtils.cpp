@@ -1,6 +1,6 @@
 #include "BinaryUtils.hpp"
 
-auto BinaryUtils::bitArrayToByteArray(const bool* bits, const ulong bitLen)
+std::vector<Byte> BinaryUtils::bitArrayToByteArray(const bool* bits, const ulong bitLen)
 {
     if (bitLen % 8 != 0)
     {
@@ -44,7 +44,7 @@ void BinaryUtils::writeToFile(const std::string fileName, const char* bytes, con
     file.close();
 }
 
-auto BinaryUtils::numToByteArray(const float num)
+std::array<Byte, sizeof(float)> BinaryUtils::numToByteArray(const float num)
 {
     union
     {

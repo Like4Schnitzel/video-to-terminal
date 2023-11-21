@@ -15,7 +15,7 @@
 
 class BinaryUtils {
     public:
-        static auto bitArrayToByteArray(const bool* bits, const ulong bitlen);
+        static std::vector<Byte> bitArrayToByteArray(const bool* bits, const ulong bitlen);
 
         template <typename T>
         static void pushArray(std::vector<T>* vec, const T* arr, const ulong arrLen)
@@ -27,10 +27,10 @@ class BinaryUtils {
 
         static void writeToFile(const std::string fileName, const char* bytes, const ulong byteSize, const bool append);
 
-        static auto numToByteArray(const float num);
+        static std::array<Byte, sizeof(float)> numToByteArray(const float num);
 
         template <typename uints>
-        static auto numToByteArray(uints num)
+        static std::array<Byte, sizeof(uints)> numToByteArray(uints num)
         {
             const int byteSize = sizeof(num);
 
