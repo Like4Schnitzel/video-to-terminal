@@ -430,35 +430,6 @@ CharInfo findBestBlockCharacter(cv::Mat img)
 
 std::shared_ptr<CharInfo []> VideoTranscoder::transcodeFrame()
 {
-    auto transcodeRow = [](
-        int vidTWidth,
-        cv::Mat frame,
-        int i,
-        int heightPixelsPerChar,
-        int widthPixelsPerChar,
-        std::shared_ptr<CharInfo[]> frameInfo,
-        int charIndex
-    )
-    {
-        int y = heightPixelsPerChar * i;
-        for (int j = 0; j < vidTWidth; j++)
-        {
-            int x = widthPixelsPerChar * j;
-            cv::Mat framePart = frame(cv::Rect((int)x, (int)y, (int)widthPixelsPerChar, (int)heightPixelsPerChar));
-            CharInfo best = findBestBlockCharacter(framePart);
-
-            CharInfo ci = frameInfo.get()[charIndex];
-            for (int k = 0; k < 3; k++)
-            {
-                ci.foregroundRGB[k] = best.foregroundRGB[k];
-                ci.backgroundRGB[k] = best.backgroundRGB[k];
-            }
-            ci.chara = best.chara;
-
-            charIndex++;
-        }
-    };
-
     std::shared_ptr<CharInfo[]> frameInfo = std::make_shared<CharInfo[]>(vidTWidth*vidTHeight);
     int charIndex = 0;
 
@@ -466,9 +437,30 @@ std::shared_ptr<CharInfo []> VideoTranscoder::transcodeFrame()
     const int heightPixelsPerChar = vidHeight / vidTHeight;
 
     std::vector<std::thread> threads;
+    threads.reserve(vidTHeight);
     for (int i = 0; i < vidTHeight; i++)
     {
-        threads.emplace_back(transcodeRow, vidTWidth, frame, i, heightPixelsPerChar, widthPixelsPerChar, frameInfo, charIndex);
+        threads.emplace_back([&, charIndex](){
+            int ciIndexCopy = charIndex;
+            int y = heightPixelsPerChar * i;
+            for (int j = 0; j < vidTWidth; j++)
+            {
+                int x = widthPixelsPerChar * j;
+                CharInfo best = findBestBlockCharacter(
+                    frame(cv::Rect((int)x, (int)y, (int)widthPixelsPerChar, (int)heightPixelsPerChar))
+                );
+
+                CharInfo ci = frameInfo.get()[ciIndexCopy];
+                for (int k = 0; k < 3; k++)
+                {
+                    ci.foregroundRGB[k] = best.foregroundRGB[k];
+                    ci.backgroundRGB[k] = best.backgroundRGB[k];
+                }
+                ci.chara = best.chara;
+
+                ciIndexCopy++;
+            }
+        });
         charIndex += vidTWidth;
     }
 
