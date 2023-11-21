@@ -88,7 +88,7 @@ int main(int argc, char** argv)
             cin >> tHeight;
         }
 
-        VideoTranscoder trans = VideoTranscoder(videoPath, vtdiFilePath, tWidth, tHeight);
+        VideoTranscoder trans(videoPath, vtdiFilePath, tWidth, tHeight);
         trans.transcodeFile();
     }
 
