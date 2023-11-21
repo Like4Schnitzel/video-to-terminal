@@ -41,7 +41,7 @@ bool VariousUtils::fileExists(std::string fileName)
 #ifdef WIN32
 #include <windows.h>
 
-auto VariousUtils::getTerminalDimensions()
+std::array<int, 2> VariousUtils::getTerminalDimensions()
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     int columns, rows;
@@ -61,7 +61,7 @@ auto VariousUtils::getTerminalDimensions()
 #include <stdio.h>
 #include <unistd.h>
 
-auto VariousUtils::getTerminalDimensions()
+std::array<int, 2> VariousUtils::getTerminalDimensions()
 {
     struct winsize w;
     ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);

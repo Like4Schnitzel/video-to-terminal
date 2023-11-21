@@ -14,20 +14,20 @@ class VariousUtils {
         static bool fileExists(std::string fileName);
 
         template <typename T>
-        static auto subArray(std::shared_ptr<T> initArr, const int indexStart, const int indexEnd)
+        static auto subArray(const T* initArr, const int indexStart, const int indexEnd)
         {
             std::vector<T> sub;
             sub.reserve(indexEnd-indexStart);
             int subIndex = 0;
             for (int i = indexStart; i < indexEnd; i++)
             {
-                sub[subIndex] = initArr.get()[i];
+                sub[subIndex] = initArr[i];
                 subIndex++;
             }
             return sub;
         }
 
-        static auto getTerminalDimensions();
+        static std::array<int, 2> getTerminalDimensions();
         static char toLower(char c);
 
         template <typename T>

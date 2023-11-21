@@ -9,7 +9,6 @@
 #include "VariousUtils.hpp"
 #include "BinaryUtils.hpp"
 #include "BitStream.hpp"
-#include "SmartPtr.hpp"
 
 class VTDIDecoder {
     private:
