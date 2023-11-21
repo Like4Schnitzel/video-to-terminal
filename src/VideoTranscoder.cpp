@@ -440,7 +440,7 @@ std::shared_ptr<CharInfo []> VideoTranscoder::transcodeFrame()
     threads.reserve(vidTHeight);
     for (int i = 0; i < vidTHeight; i++)
     {
-        threads.emplace_back([&, charIndex](){
+        threads.emplace_back([&, charIndex, i](){
             int ciIndexCopy = charIndex;
             int y = heightPixelsPerChar * i;
             for (int j = 0; j < vidTWidth; j++)
@@ -450,13 +450,12 @@ std::shared_ptr<CharInfo []> VideoTranscoder::transcodeFrame()
                     frame(cv::Rect((int)x, (int)y, (int)widthPixelsPerChar, (int)heightPixelsPerChar))
                 );
 
-                CharInfo ci = frameInfo.get()[ciIndexCopy];
                 for (int k = 0; k < 3; k++)
                 {
-                    ci.foregroundRGB[k] = best.foregroundRGB[k];
-                    ci.backgroundRGB[k] = best.backgroundRGB[k];
+                    frameInfo.get()[ciIndexCopy].foregroundRGB[k] = best.foregroundRGB[k];
+                    frameInfo.get()[ciIndexCopy].backgroundRGB[k] = best.backgroundRGB[k];
                 }
-                ci.chara = best.chara;
+                frameInfo.get()[ciIndexCopy].chara = best.chara;
 
                 ciIndexCopy++;
             }
