@@ -98,7 +98,7 @@ void VTDIDecoder::playVideo()
     // move past the static bytes
     vtdiFile.seekg(staticByteSize);
 
-    BitStream inBits = BitStream(&vtdiFile, 5); // 5 byte buffer since we never need to read more than 4 bytes at once
+    BitStream inBits(&vtdiFile, 5); // 5 byte buffer since we never need to read more than 4 bytes at once
 
     if (this->version == 0)
     {
@@ -163,11 +163,12 @@ void VTDIDecoder::readAndDisplayNextFrame(BitStream& inBits, bool display)
     auto startBit = inBits.readBits(1);
     if (startBit[0] == 1)   // frame hasn't changed from the last one, continue to next frame
     {
+        // pad to full byte
+        inBits.readBits(7);
         return;
     }
 
     std::vector<bool> endMarker;
-    endMarker.reserve(2);
     do
     {
         std::string fgColorSetter = "\x1B[38;2";

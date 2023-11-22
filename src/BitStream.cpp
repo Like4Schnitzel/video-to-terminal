@@ -12,8 +12,8 @@ BitStream::BitStream(std::ifstream* inF, int buf)
     this->inFile = inF;
     this->bufferSize = buf;
     this->bitBufferSize = buf*8;
-    this->bytes.reserve(buf);
-    this->bits.reserve(8*buf);
+    this->bytes.resize(buf);
+    this->bits.resize(8*buf);
     this->index = 0;
 
     readFileBytesToBuffer(buf);
@@ -34,7 +34,7 @@ void BitStream::readFileBytesToBuffer(int n)
 
     // fill elements on the right up with read content
     std::vector<char> readBytes;
-    readBytes.reserve(n);
+    readBytes.resize(n);
     (*inFile).read(readBytes.data(), n);
     for (int i = 0; i < n; i++)
     {
@@ -75,7 +75,7 @@ std::vector<bool> BitStream::readBits(int n)
 
     for (int i = 0; i < n; i++)
     {
-        result[i] = bits[index];
+        result.push_back(bits[index]);
         index++;
     }
 
