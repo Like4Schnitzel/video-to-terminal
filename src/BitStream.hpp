@@ -8,10 +8,8 @@ class BitStream{
     private:
         std::ifstream* inFile;
         std::vector<Byte> bytes;
-        std::vector<bool> bits;
         int index;
         int bufferSize;
-        int bitBufferSize;
 
         void readFileBytesToBuffer(int n);
     public:

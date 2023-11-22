@@ -11,9 +11,7 @@ BitStream::BitStream(std::ifstream* inF, int buf)
 {
     this->inFile = inF;
     this->bufferSize = buf;
-    this->bitBufferSize = buf*8;
     this->bytes.resize(buf);
-    this->bits.resize(8*buf);
     this->index = 0;
 
     readFileBytesToBuffer(buf);
@@ -27,44 +25,45 @@ void BitStream::readFileBytesToBuffer(int n)
     {
         bytes[i] = bytes[i+n];
     }
-    for (int i = 0; i < bitBufferSize - bitsToReplace; i++)
-    {
-        bits[i] = bits[i+bitsToReplace];
-    }
 
     // fill elements on the right up with read content
-    std::vector<char> readBytes;
-    readBytes.resize(n);
-    (*inFile).read(readBytes.data(), n);
+    std::unique_ptr<char[]> readBytes = std::make_unique<char[]>(n);
+    (*inFile).read(readBytes.get(), n);
     for (int i = 0; i < n; i++)
     {
         const int bytesIndex = bufferSize-n+i;
         const int eightTimesBytesIndex = 8*bytesIndex;
         bytes[bytesIndex] = readBytes[i];
-
-        for (int j = 0; j < 8; j++)
-        {
-            bits[eightTimesBytesIndex+j] = (bytes[bytesIndex] >> (7-j)) & 0b1;
-        }
     }
 }
 
 std::vector<Byte> BitStream::readBytes(int n)
 {
     std::vector<Byte> result;
-    result.resize(n, 0);
+    result.reserve(n);
 
+    const int endIndex = index-1;
     for (int i = 0; i < n; i++)
     {
-        for (int j = 0; j < 8; j++)
+        Byte b = 0;
+        Byte bits = bytes[i];
+        int bitsToProcess = 7;
+        for (int j = index; j < 8; j++)
         {
-            result[i] = result[i] | (bits[index] << (7 - j));
-            index++;
+            b |= (bits >> (7-j) & 1) << bitsToProcess;
+            bitsToProcess--;
         }
+
+        bits = bytes[i+1];
+        for (int j = 0; j < index; j++)
+        {
+            b |= (bits >> (7-j) & 1) << bitsToProcess;
+            bitsToProcess--;
+        }
+        result.push_back(b);
     }
 
     readFileBytesToBuffer(n);
-    index -= 8*n;
     return result;
 }
 
@@ -73,16 +72,54 @@ std::vector<bool> BitStream::readBits(int n)
     std::vector<bool> result;
     result.reserve(n);
 
-    for (int i = 0; i < n; i++)
-    {
-        result.push_back(bits[index]);
-        index++;
-    }
+    const int endIndex = index + n;
 
-    if (index > 7)
+    if (endIndex < 8)
     {
-        readFileBytesToBuffer(index / 8);
-        index %= 8;
+        Byte currentlyProcessing = bytes[0];
+        for (int j = index; j < endIndex; j++)
+        {
+            result.push_back(currentlyProcessing >> (7-j) & 1);
+        }
+        index = endIndex;
+    }
+    else
+    {
+        const int byteRange = endIndex / 8;
+        const int trailingBits = endIndex % 8;
+
+        int bi = 0; // byteIndex
+        // first byte
+        Byte currentlyProcessing = bytes[bi];
+        for (int j = index; j < 8; j++)
+        {
+            result.push_back(currentlyProcessing >> (7-j) & 1);
+        }
+        bi++;
+
+        // inbetween full bytes
+        for (; bi < byteRange; bi++)
+        {
+            currentlyProcessing = bytes[bi];
+            for (int j = 0; j < 8; j++)
+            {
+                result.push_back(currentlyProcessing >> (7-j) & 1);
+            }
+        }
+
+        // last byte
+        currentlyProcessing = bytes[bi];
+        for (int j = 0; j < endIndex; j++)
+        {
+            result.push_back(currentlyProcessing >> (7-j) & 1);
+        }
+
+        index = endIndex;
+        if (index > 7)
+        {
+            readFileBytesToBuffer(index / 8);
+            index %= 8;
+        }
     }
 
     return result;

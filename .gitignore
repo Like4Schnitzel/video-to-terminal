@@ -2,3 +2,5 @@ build
 .vscode
 .cache
 data
+gmon.out
+*.png

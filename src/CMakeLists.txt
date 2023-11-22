@@ -8,9 +8,11 @@ find_package( ZLIB REQUIRED )
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 
 add_executable( Transcoder transcoder_main.cpp VideoTranscoder.cpp BinaryUtils.cpp VariousUtils.cpp )
-#target_compile_options( Transcoder PRIVATE -fsanitize=thread -O1 -g )
-#target_link_options( Transcoder PRIVATE -fsanitize=thread -O1 -g )
+#target_compile_options( Transcoder PRIVATE -pg )
+#target_link_options( Transcoder PRIVATE -pg )
 target_link_libraries( Transcoder stdc++fs ${OpenCV_LIBS} ZLIB::ZLIB )
 
 add_executable( Decoder decoder_main.cpp BinaryUtils.cpp VTDIDecoder.cpp VariousUtils.cpp BitStream.cpp )
+#target_compile_options( Decoder PRIVATE -pg )
+#target_link_options( Decoder PRIVATE -pg )
 target_link_libraries( Decoder stdc++fs ${OpenCV_LIBS} ZLIB::ZLIB )
