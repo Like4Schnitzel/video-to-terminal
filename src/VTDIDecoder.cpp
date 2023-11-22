@@ -245,7 +245,7 @@ void VTDIDecoder::readAndDisplayNextFrame(BitStream& inBits, bool display, bool 
                 }
                 else    // position
                 {
-                    int* corners = (int*)malloc(2*sizeof(int));
+                    std::array<int, 2> corners;
 
                     for (int i = 0; i < 2; i++)
                     {
