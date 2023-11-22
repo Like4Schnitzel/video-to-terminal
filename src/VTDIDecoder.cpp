@@ -15,11 +15,6 @@ VTDIDecoder::VTDIDecoder(std::string path)
     vtdiPath = path;
 }
 
-VTDIDecoder::~VTDIDecoder()
-{
-    free(this->currentFrame);
-}
-
 template <typename T>
 T applyAssign(T num, int& index, const Byte* sib)
 {
@@ -117,14 +112,14 @@ void VTDIDecoder::playVideo()
         throw std::runtime_error(errorMessage.str());
     }
 
-    this->currentFrame = (CharInfo*)malloc(terminalWidth*terminalHeight*sizeof(CharInfo));
+    this->currentFrame = std::make_unique<CharInfo[]>(terminalWidth*terminalHeight);
     const int nanoSecondsPerFrame = 1000000000/this->FPS;
 
     std::cout << "\x1B[2J\x1B[H";    // clear screen and move to 0,0
     for (uint32_t i = 0; i < this->frameCount; i++)
     {
         auto startTime = std::chrono::system_clock::now();
-        readAndDisplayNextFrame(inBits, true);
+        readAndDisplayNextFrame(inBits, true, true);
         std::this_thread::sleep_until(startTime + std::chrono::nanoseconds(nanoSecondsPerFrame));
     }
     std::cout << "\x1B[H" << "\x1B[" + std::to_string(vidHeight+1) + "B"    // move cursor below the video
@@ -141,7 +136,7 @@ void VTDIDecoder::displayCurrentFrame()
     {
         for (int j = 0; j < this->vidWidth; j++)
         {
-            auto ciAtLocation = this->currentFrame[i*vidWidth+j];
+            auto ciAtLocation = this->currentFrame.get()[i*vidWidth+j];
             std::string fgColorSetter = "\x1B[38;2";
             std::string bgColorSetter = "\x1B[48;2";
             for (int k = 0; k < 3; k++)
@@ -158,7 +153,7 @@ void VTDIDecoder::displayCurrentFrame()
     }
 }
 
-void VTDIDecoder::readAndDisplayNextFrame(BitStream& inBits, bool display)
+void VTDIDecoder::readAndDisplayNextFrame(BitStream& inBits, bool display, bool save)
 {
     auto startBit = inBits.readBits(1);
     if (startBit[0] == 1)   // frame hasn't changed from the last one, continue to next frame
@@ -224,13 +219,16 @@ void VTDIDecoder::readAndDisplayNextFrame(BitStream& inBits, bool display)
                         std::cout << fgColorSetter << bgColorSetter;
                         for (int x = corners[0]; x <= corners[2]; x++)
                         {
-                            int matIndex = y*vidWidth+x;
-                            for (int i = 0; i < 3; i++)
+                            if (save)
                             {
-                                currentFrame[matIndex].foregroundRGB[i] = current.foregroundRGB[i];
-                                currentFrame[matIndex].backgroundRGB[i] = current.backgroundRGB[i];
+                                int matIndex = y*vidWidth+x;
+                                for (int i = 0; i < 3; i++)
+                                {
+                                    currentFrame.get()[matIndex].foregroundRGB[i] = current.foregroundRGB[i];
+                                    currentFrame.get()[matIndex].backgroundRGB[i] = current.backgroundRGB[i];
+                                }
+                                currentFrame.get()[matIndex].chara = current.chara;
                             }
-                            currentFrame[matIndex].chara = current.chara;
 
                             if (display)
                             {
@@ -257,13 +255,16 @@ void VTDIDecoder::readAndDisplayNextFrame(BitStream& inBits, bool display)
                         );
                     }
 
-                    int matIndex = corners[1]*vidWidth+corners[0];
-                    for (int i = 0; i < 3; i++)
+                    if (save)
                     {
-                        currentFrame[matIndex].foregroundRGB[i] = current.foregroundRGB[i];
-                        currentFrame[matIndex].backgroundRGB[i] = current.backgroundRGB[i];
+                        int matIndex = corners[1]*vidWidth+corners[0];
+                        for (int i = 0; i < 3; i++)
+                        {
+                            currentFrame.get()[matIndex].foregroundRGB[i] = current.foregroundRGB[i];
+                            currentFrame.get()[matIndex].backgroundRGB[i] = current.backgroundRGB[i];
+                        }
+                        currentFrame.get()[matIndex].chara = current.chara;
                     }
-                    currentFrame[matIndex].chara = current.chara;
 
                     if (display)
                     {

@@ -15,7 +15,7 @@ class VTDIDecoder {
         int staticByteSize;
         std::string vtdiPath;
         std::ifstream vtdiFile;
-        CharInfo* currentFrame;
+        std::unique_ptr<CharInfo[]> currentFrame;
         uint32_t frameCount;
         uint16_t vidWidth;
         uint16_t vidHeight;
@@ -27,10 +27,9 @@ class VTDIDecoder {
         ulong compressedSize;
     public:
         VTDIDecoder(std::string path);
-        ~VTDIDecoder();
         void getStaticInfo();
         void playVideo();
-        void readAndDisplayNextFrame(BitStream& inBits, bool display=true);
+        void readAndDisplayNextFrame(BitStream& inBits, bool display=true, bool save=true);
         void displayCurrentFrame();
 
         int getVersion();
