@@ -21,7 +21,7 @@ class VariousUtils {
             int subIndex = 0;
             for (int i = indexStart; i < indexEnd; i++)
             {
-                sub[subIndex] = initArr[i];
+                sub.push_back(initArr[i]);
                 subIndex++;
             }
             return sub;

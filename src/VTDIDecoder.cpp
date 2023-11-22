@@ -21,16 +21,14 @@ VTDIDecoder::~VTDIDecoder()
 }
 
 template <typename T>
-T applyAssign(T num, int* index, std::vector<Byte>& sib)
+T applyAssign(T num, int& index, const Byte* sib)
 {
-    float comparisonTool;
-
     int bytes = sizeof(T);
-    int oldIndex = *index;
-    *index += bytes;
-    auto sub = VariousUtils::subArray(sib.data(), oldIndex, *index);
+    int oldIndex = index;
+    index += bytes;
+    auto sub = VariousUtils::subArray(sib, oldIndex, index);
     T result;
-    if (typeid(T) == typeid(comparisonTool))
+    if (typeid(T) == typeid(float))
     {
         result = BinaryUtils::byteArrayToFloat(sub.data(), sub.size());
     }
@@ -47,22 +45,21 @@ void VTDIDecoder::getStaticInfo()
     // these are taken from the spec
     const int expectedSig[] = {86, 84, 68, 73};
 
-    std::vector<Byte> staticInfoBytes;
-    staticInfoBytes.reserve(6);
+    std::unique_ptr<Byte[]> staticInfoBytes = std::make_unique<Byte[]>(6);
     vtdiFile.open(vtdiPath);
-    vtdiFile.read((char*)staticInfoBytes.data(), 6);
+    vtdiFile.read((char*)staticInfoBytes.get(), 6);
     int index;
 
     for (index = 0; index < 4; index++)
     {
-        if (staticInfoBytes[index] != expectedSig[index])
+        if (staticInfoBytes.get()[index] != expectedSig[index])
         {
             throw std::runtime_error("File signature does not match expected signature.");
         }
     }
     std::cout << "File signature is correct!\n";
 
-    version = applyAssign(version, &index, staticInfoBytes);
+    version = applyAssign(version, std::ref(index), staticInfoBytes.get());
 
     switch (version)
     {
@@ -80,15 +77,15 @@ void VTDIDecoder::getStaticInfo()
     }
 
     const int remainingBytes = staticByteSize - 6;
-    staticInfoBytes.reserve(remainingBytes);
-    vtdiFile.read((char*)staticInfoBytes.data(), remainingBytes);
+    staticInfoBytes = std::make_unique_for_overwrite<Byte[]>(remainingBytes);
+    vtdiFile.read((char*)staticInfoBytes.get(), remainingBytes);
     index = 0;
 
     auto args = std::make_tuple(
         &frameCount, &FPS, &vidWidth, &vidHeight, &uncompressedSize, &compressedSize
     );
     std::apply([&](auto&... args) {
-        (..., (*args = applyAssign(*args, &index, staticInfoBytes)));
+        (..., (*args = applyAssign(*args, std::ref(index), staticInfoBytes.get())));
     }, args);
 
     vtdiFile.close();
