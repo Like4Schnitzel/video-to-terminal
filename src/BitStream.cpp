@@ -109,7 +109,7 @@ std::vector<bool> BitStream::readBits(int n)
 
         // last byte
         currentlyProcessing = bytes[bi];
-        for (int j = 0; j < endIndex; j++)
+        for (int j = 0; j < trailingBits; j++)
         {
             result.push_back(currentlyProcessing >> (7-j) & 1);
         }
