@@ -164,9 +164,13 @@ void VTDIDecoder::readAndDisplayNextFrame(BitStream& inBits, bool display, bool 
     }
 
     std::vector<bool> endMarker;
+    std::string fgColorSetter;
+    fgColorSetter.reserve(20);
+    std::string bgColorSetter;
+    bgColorSetter.reserve(20);
     do
     {
-        std::string fgColorSetter = "\x1B[38;2";
+        fgColorSetter = "\x1B[38;2";
 
         CharInfo current;
         for (int i = 0; i < 3; i++)
@@ -177,7 +181,7 @@ void VTDIDecoder::readAndDisplayNextFrame(BitStream& inBits, bool display, bool 
         }
         fgColorSetter += "m";
 
-        std::string bgColorSetter = "\x1B[48;2";
+        bgColorSetter = "\x1B[48;2";
         for (int i = 0; i < 3; i++)
         {
             int byteNum = inBits.readBytes(1)[0];
