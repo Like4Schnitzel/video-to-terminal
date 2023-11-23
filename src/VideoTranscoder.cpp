@@ -339,44 +339,11 @@ std::vector<bool> VideoTranscoder::compressFrame(std::shared_ptr<CharInfo[]> cur
     return result;
 }
 
-int getColorDiff(cv::Vec3b col1, cv::Vec3b col2)
+int getColorDiff(cv::Scalar col1, cv::Scalar col2)
 {
     return pow(col1[0] - col2[0], 2) + 
            pow(col1[1] - col2[1], 2) + 
            pow(col1[2] - col2[2], 2);
-}
-
-cv::Vec3b getAverageColor(cv::Mat img)
-{
-    long sums[3] = {0, 0, 0};
-
-    for (int i = 0; i < img.cols; i++)
-    {
-        for (int j = 0; j < img.rows; j++)
-        {
-            cv::Vec3b bgrVals = img.at<cv::Vec3b>(cv::Point(i, j));
-
-            for (int k = 0; k < 3; k++)
-            {
-                sums[k] += bgrVals[k];
-            }
-        }
-    }
-
-    // turn bgr into rgb
-    long temp = sums[0];
-    sums[0] = sums[2];
-    sums[2] = temp;
-
-    const int totalPixels = img.cols*img.rows;
-    for (int i = 0; i < 3; i++)
-    {
-        sums[i] /= totalPixels;
-    }
-    
-    cv::Vec3b averages = {(uchar)sums[0], (uchar)sums[1], (uchar)sums[2]};
-
-    return averages;
 }
 
 CharInfo findBestBlockCharacter(cv::Mat img)
@@ -399,21 +366,21 @@ CharInfo findBestBlockCharacter(cv::Mat img)
 
         fgRect = img(cv::Rect(0, round(currentHeight), imageWidth, imageHeight-round(currentHeight)));
         if (fgRect.rows == 0) continue;
-        cv::Vec3b avrgFgRGB = getAverageColor(fgRect);
+        cv::Scalar avrgFgBGR = cv::mean(fgRect);
 
         bgRect = img(cv::Rect(0, 0, imageWidth, round(currentHeight)));
         if (bgRect.rows == 0) continue;
-        cv::Vec3b avrgBgRGB = getAverageColor(bgRect);
+        cv::Scalar avrgBgBGR = cv::mean(bgRect);
 
-        int colorDiff = getColorDiff(avrgFgRGB, avrgBgRGB);    
+        int colorDiff = getColorDiff(avrgFgBGR, avrgBgBGR);    
         if (colorDiff > maxDiff)
         {
             maxDiff = colorDiff;
             for (int i = 0; i < 3; i++)
             {
                 // turn around BGR so RGB gets saved instead
-                maxDiffCharInfo.foregroundRGB[i] = avrgFgRGB[i];
-                maxDiffCharInfo.backgroundRGB[i] = avrgBgRGB[i];
+                maxDiffCharInfo.foregroundRGB[i] = avrgFgBGR[2-i];
+                maxDiffCharInfo.backgroundRGB[i] = avrgBgBGR[2-i];
             }
             maxDiffCharInfo.chara = currentOption;
 
