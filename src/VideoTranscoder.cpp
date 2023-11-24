@@ -229,83 +229,6 @@ std::vector<bool> VideoTranscoder::compressFrame(std::shared_ptr<CharInfo[]> cur
     }
     else
     {
-        auto compressCI = [](std::vector<bool>& compressedBits, ulong ciHash, std::shared_ptr<bool[]> bitmap, int vidTWidth, int arraySize)
-        {
-            // append CI bits
-            auto ciHashBytes = BinaryUtils::numToByteArray(ciHash);
-            for (int i = 1; i <= sizeof(CharInfo); i++) // start at the second byte, since CIs only have 7 but ulongs have 8
-            {
-                char c = ciHashBytes[i];
-                for (int j = 0; j < 8; j++)
-                {
-                    bool bit = (bool)((c >> (7-j)) & 1);
-                    compressedBits.push_back(bit);
-                }
-            }
-
-            auto rect = findBiggestRectangle(bitmap, arraySize*sizeof(bool), vidTWidth);
-            while(rect[0] != -1)
-            {
-                // write rectangle info to resulting bit vector
-                // true if the rectangle is just 1 element
-                if (rect[0] == rect[2] && rect[1] == rect[3])
-                {
-                    // 0b01 is the code for position
-                    compressedBits.push_back(0);
-                    compressedBits.push_back(1);
-
-                    for (int i = 0; i < 2; i++)
-                    {
-                        auto bits = BinaryUtils::byteArrayToBitArray(
-                            BinaryUtils::numToByteArray((uint16_t) rect[i]).data(),
-                            sizeof(uint16_t)
-                        );
-
-                        for (int j = 0; j < 16; j++)
-                        {
-                            compressedBits.push_back(bits[j]);
-                        }
-                    }
-                }
-                else
-                {
-                    // 0b00 is the code for rectangle
-                    compressedBits.push_back(0);
-                    compressedBits.push_back(0);
-
-                    for (int i = 0; i < 4; i++)
-                    {
-                        auto bits = BinaryUtils::byteArrayToBitArray(
-                            BinaryUtils::numToByteArray((uint16_t) rect[i]).data(),
-                            sizeof(uint16_t)
-                        );
-
-                        for (int j = 0; j < 16; j++)
-                        {
-                            compressedBits.push_back(bits[j]);
-                        }
-                    }
-                }
-
-                // clear rectangle from bitmap
-                // y coordinate
-                for (int i = rect[1]; i <= rect[3]; i++)
-                {
-                    // x coordinate
-                    for (int j = rect[0]; j <= rect[2]; j++)
-                    {
-                        bitmap.get()[i*vidTWidth+j] = 0;
-                    }
-                }
-
-                rect = findBiggestRectangle(bitmap, arraySize*sizeof(bool), vidTWidth);
-            }
-
-            // 0b10 is the code for end of CI segment
-            compressedBits.push_back(1);
-            compressedBits.push_back(0);
-        };
-
         std::vector<std::thread> threads;
         std::vector<std::vector<bool>> threadResults;
         threads.reserve(bitmaps.size());
@@ -319,7 +242,90 @@ std::vector<bool> VideoTranscoder::compressFrame(std::shared_ptr<CharInfo[]> cur
             ulong ciHash = it->first;
             auto bitmap = it->second;
 
-            threads.emplace_back(std::thread(compressCI, std::ref(threadResults[threads.size()]), ciHash, bitmap, vidTWidth, arraySize));
+            threads.emplace_back(
+            [
+                &compressedBits = threadResults[threads.size()],
+                ciHash,
+                bitmap,
+                vidTWidth = this->vidTWidth,
+                arraySize
+            ]
+            ()
+            {
+                // append CI bits
+                auto ciHashBytes = BinaryUtils::numToByteArray(ciHash);
+                for (int i = 1; i <= sizeof(CharInfo); i++) // start at the second byte, since CIs only have 7 but ulongs have 8
+                {
+                    char c = ciHashBytes[i];
+                    for (int j = 0; j < 8; j++)
+                    {
+                        bool bit = (bool)((c >> (7-j)) & 1);
+                        compressedBits.push_back(bit);
+                    }
+                }
+
+                auto rect = findBiggestRectangle(bitmap, arraySize*sizeof(bool), vidTWidth);
+                while(rect[0] != -1)
+                {
+                    // write rectangle info to resulting bit vector
+                    // true if the rectangle is just 1 element
+                    if (rect[0] == rect[2] && rect[1] == rect[3])
+                    {
+                        // 0b01 is the code for position
+                        compressedBits.push_back(0);
+                        compressedBits.push_back(1);
+
+                        for (int i = 0; i < 2; i++)
+                        {
+                            auto bits = BinaryUtils::byteArrayToBitArray(
+                                BinaryUtils::numToByteArray((uint16_t) rect[i]).data(),
+                                sizeof(uint16_t)
+                            );
+
+                            for (int j = 0; j < 16; j++)
+                            {
+                                compressedBits.push_back(bits[j]);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // 0b00 is the code for rectangle
+                        compressedBits.push_back(0);
+                        compressedBits.push_back(0);
+
+                        for (int i = 0; i < 4; i++)
+                        {
+                            auto bits = BinaryUtils::byteArrayToBitArray(
+                                BinaryUtils::numToByteArray((uint16_t) rect[i]).data(),
+                                sizeof(uint16_t)
+                            );
+
+                            for (int j = 0; j < 16; j++)
+                            {
+                                compressedBits.push_back(bits[j]);
+                            }
+                        }
+                    }
+
+                    // clear rectangle from bitmap
+                    // y coordinate
+                    for (int i = rect[1]; i <= rect[3]; i++)
+                    {
+                        // x coordinate
+                        for (int j = rect[0]; j <= rect[2]; j++)
+                        {
+                            bitmap.get()[i*vidTWidth+j] = 0;
+                        }
+                    }
+
+                    rect = findBiggestRectangle(bitmap, arraySize*sizeof(bool), vidTWidth);
+                }
+
+                // 0b10 is the code for end of CI segment
+                compressedBits.push_back(1);
+                compressedBits.push_back(0);
+            });
         }
 
         // wait for all threads to finish
