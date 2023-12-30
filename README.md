@@ -28,7 +28,7 @@ Every frame is compressed to simply contain the bytes for a CharInfo, followed b
   - 1, marking that the next frame is the same as the current one. 
 Areas that haven't changed from the last frame won't be listed.
 # Version 2
-Misaligned bits have been replaced with padded bytes.\
+Misaligned bits have been replaced with padded bytes for speed reasons.\
 What this means is that the signifier bits after a CharInfo now look like this:
 - 00 -> 00000000
 - 01 -> 00000001
