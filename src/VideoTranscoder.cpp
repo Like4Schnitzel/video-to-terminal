@@ -37,7 +37,7 @@ cv::Mat VideoTranscoder::getFrame()
 
 void VideoTranscoder::transcodeFile()
 {
-    const uint16_t versionNumber = 1;   // change if updates to the file format are made
+    const uint16_t versionNumber = 2;   // change if updates to the file format are made
 
     // reset output file just in case
     BinaryUtils::writeToFile(vtdiPath, (char*)nullptr, 0, false);
@@ -52,7 +52,7 @@ void VideoTranscoder::transcodeFile()
 
     // settings constants for video byte writing
     const int totalTerminalChars = vidTWidth * vidTHeight;
-    std::shared_ptr<CharInfo[]> frameChars = std::make_shared<CharInfo[]>(totalTerminalChars);
+    std::shared_ptr<CharInfo[]> frameCIs = std::make_shared<CharInfo[]>(totalTerminalChars);
     std::shared_ptr<CharInfo[]> previousFrameChars;
 
     uint32_t frameBytesIndex = 0;
@@ -71,25 +71,10 @@ void VideoTranscoder::transcodeFile()
         }
         frameIndex++;
 
-        frameChars = transcodeFrame();
-        std::vector<bool> frameBits = compressFrame(frameChars, previousFrameChars);
-        // pad bits to full byte
-        while (frameBits.size() % 8 != 0)
-        {
-            frameBits.push_back(0);
-        }
-
-        std::vector<Byte> frameBytes(frameBits.size() / 8, 0);
-        for(int i = 0; i < frameBytes.size(); i++)
-        {
-            for (int j = 0; j < 8; j++)
-            {
-                frameBytes[i] |= frameBits[i*8+j] << (7-j);
-            }
-        }
-
-        BinaryUtils::writeToFile(vtdiPath, (char*)frameBytes.data(), frameBits.size()/8, true);
-        previousFrameChars = frameChars;
+        frameCIs = transcodeFrame();
+        std::vector<Byte> frameBytes = compressFrame(frameCIs, previousFrameChars);
+        BinaryUtils::writeToFile(vtdiPath, (char*)frameBytes.data(), frameBytes.size()/8, true);
+        previousFrameChars = frameCIs;
     }
 
     std::cout << "\33[2k\r" << "100\% done!    \n" << std::flush;
@@ -177,11 +162,11 @@ auto findBiggestRectangle(const std::shared_ptr<bool[]> bitmap, const int bitCou
     return maxPositions;
 }
 
-std::vector<bool> VideoTranscoder::compressFrame(std::shared_ptr<CharInfo[]> currentFrame, std::shared_ptr<CharInfo[]> prevFrame)
+std::vector<Byte> VideoTranscoder::compressFrame(std::shared_ptr<CharInfo[]> currentFrame, std::shared_ptr<CharInfo[]> prevFrame)
 {
     const bool prevFrameExists = (prevFrame.get() != nullptr);
     const uint32_t arraySize = vidTWidth * vidTHeight; 
-    std::vector<bool> result;
+    std::vector<Byte> result;
 
     std::map<ulong, std::shared_ptr<bool[]>> bitmaps;
 
@@ -230,7 +215,7 @@ std::vector<bool> VideoTranscoder::compressFrame(std::shared_ptr<CharInfo[]> cur
     else
     {
         std::vector<std::thread> threads;
-        std::vector<std::vector<bool>> threadResults;
+        std::vector<std::vector<Byte>> threadResults;
         threads.reserve(bitmaps.size());
         threadResults.resize(bitmaps.size());
 
@@ -244,7 +229,7 @@ std::vector<bool> VideoTranscoder::compressFrame(std::shared_ptr<CharInfo[]> cur
 
             threads.emplace_back(
             [
-                &compressedBits = threadResults[threads.size()],
+                &compressedBytes = threadResults[threads.size()],
                 ciHash,
                 bitmap,
                 vidTWidth = this->vidTWidth,
@@ -256,12 +241,7 @@ std::vector<bool> VideoTranscoder::compressFrame(std::shared_ptr<CharInfo[]> cur
                 auto ciHashBytes = BinaryUtils::numToByteArray(ciHash);
                 for (int i = 1; i <= sizeof(CharInfo); i++) // start at the second byte, since CIs only have 7 but ulongs have 8
                 {
-                    char c = ciHashBytes[i];
-                    for (int j = 0; j < 8; j++)
-                    {
-                        bool bit = (bool)((c >> (7-j)) & 1);
-                        compressedBits.push_back(bit);
-                    }
+                    compressedBytes.push_back(ciHashBytes[i]);
                 }
 
                 auto rect = findBiggestRectangle(bitmap, arraySize*sizeof(bool), vidTWidth);
@@ -271,39 +251,27 @@ std::vector<bool> VideoTranscoder::compressFrame(std::shared_ptr<CharInfo[]> cur
                     // true if the rectangle is just 1 element
                     if (rect[0] == rect[2] && rect[1] == rect[3])
                     {
-                        // 0b01 is the code for position
-                        compressedBits.push_back(0);
-                        compressedBits.push_back(1);
+                        // 1 is the code for position
+                        compressedBytes.push_back(1);
 
                         for (int i = 0; i < 2; i++)
                         {
-                            auto bits = BinaryUtils::byteArrayToBitArray(
-                                BinaryUtils::numToByteArray((uint16_t) rect[i]).data(),
-                                sizeof(uint16_t)
-                            );
-
-                            for (int j = 0; j < 16; j++)
+                            for (Byte byte : BinaryUtils::numToByteArray((uint16_t) rect[i]))
                             {
-                                compressedBits.push_back(bits[j]);
+                                compressedBytes.push_back(byte);
                             }
                         }
                     }
                     else
                     {
-                        // 0b00 is the code for rectangle
-                        compressedBits.push_back(0);
-                        compressedBits.push_back(0);
+                        // 0 is the code for rectangle
+                        compressedBytes.push_back(0);
 
                         for (int i = 0; i < 4; i++)
                         {
-                            auto bits = BinaryUtils::byteArrayToBitArray(
-                                BinaryUtils::numToByteArray((uint16_t) rect[i]).data(),
-                                sizeof(uint16_t)
-                            );
-
-                            for (int j = 0; j < 16; j++)
+                            for (Byte byte : BinaryUtils::numToByteArray((uint16_t) rect[i]))
                             {
-                                compressedBits.push_back(bits[j]);
+                                compressedBytes.push_back(byte);
                             }
                         }
                     }
@@ -322,9 +290,8 @@ std::vector<bool> VideoTranscoder::compressFrame(std::shared_ptr<CharInfo[]> cur
                     rect = findBiggestRectangle(bitmap, arraySize*sizeof(bool), vidTWidth);
                 }
 
-                // 0b10 is the code for end of CI segment
-                compressedBits.push_back(1);
-                compressedBits.push_back(0);
+                // 3 is the code for end of CI segment
+                compressedBytes.push_back(3);
             });
         }
 
@@ -332,14 +299,14 @@ std::vector<bool> VideoTranscoder::compressFrame(std::shared_ptr<CharInfo[]> cur
         for (int i = 0; i < threads.size(); i++)
         {
             threads[i].join();
-            for (bool bit : threadResults[i])
+            for (Byte byte : threadResults[i])
             {
-                result.push_back(bit);
+                result.push_back(byte);
             }
         }
 
-        // replace last end of CI (0b10) with end of frame (0b11)
-        result[result.size()-1] = 1;
+        // replace last end of CI (3) with end of frame (4)
+        result[result.size()-1] = 4;
     }
 
     return result;
