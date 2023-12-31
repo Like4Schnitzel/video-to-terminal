@@ -38,59 +38,61 @@ int main(int argc, char** argv)
 
     const int fileEndingStart = VariousUtils::rfind(videoPath, '.');
     const string fileEnding = videoPath.substr(fileEndingStart);
-    if (fileEnding != ".vtdi")
+    if (fileEnding == ".vtdi")
     {
-        string vtdiFilePath;
-        if (cliArgs.count("--vtdi-path") > 0)
-        {
-            vtdiFilePath = cliArgs["--vtdi-path"];
-        }
-        else
-        {
-            vtdiFilePath = videoPath.substr(0, VariousUtils::rfind(videoPath, '.')) + ".vtdi";
-        }
+        throw invalid_argument("You entered the path to a vtdi file. This is the transcoder. Don't do that.");
+    }
 
-        if (VariousUtils::fileExists(vtdiFilePath))
+    string vtdiFilePath;
+    if (cliArgs.count("--vtdi-path") > 0)
+    {
+        vtdiFilePath = cliArgs["--vtdi-path"];
+    }
+    else
+    {
+        vtdiFilePath = videoPath.substr(0, VariousUtils::rfind(videoPath, '.')) + ".vtdi";
+    }
+
+    if (VariousUtils::fileExists(vtdiFilePath))
+    {
+        if (cliArgs.count("--skip") == 0)
         {
-            if (cliArgs.count("--skip") == 0)
+            char option;
+            cout << vtdiFilePath << " already exists. It will be overwritten if you continue. Continue anyways? [y/N] ";
+            cin >> option;
+            if (VariousUtils::toLower(option) != 'y')
             {
-                char option;
-                cout << vtdiFilePath << " already exists. It will be overwritten if you continue. Continue anyways? [y/N] ";
-                cin >> option;
-                if (VariousUtils::toLower(option) != 'y')
-                {
-                    return 0;
-                }
-            }
-            else if (cliArgs["--skip"] != "-y" && cliArgs["--skip"] != "-Y")
-            {
-                cout << vtdiFilePath << " already exists. Exiting.\n";
                 return 0;
             }
         }
-
-        if (cliArgs.count("--width") > 0)
+        else if (cliArgs["--skip"] != "-y" && cliArgs["--skip"] != "-Y")
         {
-            tWidth = VariousUtils::stringToInt(cliArgs["--width"]);
+            cout << vtdiFilePath << " already exists. Exiting.\n";
+            return 0;
         }
-        else
-        {
-            cout << "Please enter a 16 bit unsigned int for the terminal width: ";
-            cin >> tWidth;
-        }
-        if (cliArgs.count("--height") > 0)
-        {
-            tHeight = VariousUtils::stringToInt(cliArgs["--height"]);
-        }
-        else
-        {
-            cout << "Please enter a 16 bit unsigned int for the terminal height: ";
-            cin >> tHeight;
-        }
-
-        VideoTranscoder trans(videoPath, vtdiFilePath, tWidth, tHeight);
-        trans.transcodeFile();
     }
+
+    if (cliArgs.count("--width") > 0)
+    {
+        tWidth = VariousUtils::stringToInt(cliArgs["--width"]);
+    }
+    else
+    {
+        cout << "Please enter a 16 bit unsigned int for the terminal width: ";
+        cin >> tWidth;
+    }
+    if (cliArgs.count("--height") > 0)
+    {
+        tHeight = VariousUtils::stringToInt(cliArgs["--height"]);
+    }
+    else
+    {
+        cout << "Please enter a 16 bit unsigned int for the terminal height: ";
+        cin >> tHeight;
+    }
+
+    VideoTranscoder trans(videoPath, vtdiFilePath, tWidth, tHeight);
+    trans.transcodeFile();
 
     return 0;
 }
