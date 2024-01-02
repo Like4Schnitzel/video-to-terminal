@@ -73,7 +73,7 @@ void VideoTranscoder::transcodeFile()
 
         frameCIs = transcodeFrame();
         std::vector<Byte> frameBytes = compressFrame(frameCIs, previousFrameChars);
-        BinaryUtils::writeToFile(vtdiPath, (char*)frameBytes.data(), frameBytes.size()/8, true);
+        BinaryUtils::writeToFile(vtdiPath, (char*)frameBytes.data(), frameBytes.size(), true);
         previousFrameChars = frameCIs;
     }
 
@@ -332,7 +332,7 @@ CharInfo findBestBlockCharacter(cv::Mat img)
     // loop through the lower eights
     const double eigthHeight = imageHeight / 8.0;
     double currentHeight = imageHeight;
-    // don't need to check full block since it'll just go with fg=bg at check 1
+    // don't need to check full block (8) since it'll just go with fg=bg at check 1
     for (currentOption = 1; currentOption < 7; currentOption++)
     {
         currentHeight -= eigthHeight;
