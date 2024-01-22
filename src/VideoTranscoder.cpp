@@ -290,8 +290,8 @@ std::vector<Byte> VideoTranscoder::compressFrame(std::shared_ptr<CharInfo[]> cur
                     rect = findBiggestRectangle(bitmap, arraySize*sizeof(bool), vidTWidth);
                 }
 
-                // 3 is the code for end of CI segment
-                compressedBytes.push_back(3);
+                // 2 is the code for end of CI segment
+                compressedBytes.push_back(2);
             });
         }
 
@@ -305,8 +305,8 @@ std::vector<Byte> VideoTranscoder::compressFrame(std::shared_ptr<CharInfo[]> cur
             }
         }
 
-        // replace last end of CI (3) with end of frame (4)
-        result[result.size()-1] = 4;
+        // replace last end of CI (2) with end of frame (3)
+        result[result.size()-1] = 3;
     }
 
     return result;
