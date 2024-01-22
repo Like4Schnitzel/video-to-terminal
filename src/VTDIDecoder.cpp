@@ -58,7 +58,7 @@ void VTDIDecoder::getStaticInfo()
 
     switch (version)
     {
-        case 1:
+        case 2:
         {
             this->staticByteSize = 18;
             break;
@@ -93,8 +93,6 @@ void VTDIDecoder::playVideo()
     // move past the static bytes
     vtdiFile.seekg(staticByteSize);
 
-    BitStream inBits(&vtdiFile, 5); // 5 byte buffer since we never need to read more than 4 bytes at once
-
     if (this->version == 0)
     {
         throw std::runtime_error("It seems static info hasn't been initialized yet. Try running VTDIDecoder.getStaticInfo()");
@@ -109,7 +107,7 @@ void VTDIDecoder::playVideo()
         std::stringstream errorMessage;
         errorMessage << "The terminal's size (" << terminalWidth << "x" << terminalHeight << 
         ") isn't big enough to display the video (" << vidWidth << "x" << vidHeight <<  ").";
-        throw std::runtime_error(errorMessage.str());
+        //throw std::runtime_error(errorMessage.str());
     }
 
     this->currentFrame = std::make_unique<CharInfo[]>(terminalWidth*terminalHeight);
@@ -119,7 +117,7 @@ void VTDIDecoder::playVideo()
     for (uint32_t i = 0; i < this->frameCount; i++)
     {
         auto startTime = std::chrono::system_clock::now();
-        readAndDisplayNextFrame(inBits, true, true);
+        readAndDisplayNextFrame(true, false);
         std::this_thread::sleep_until(startTime + std::chrono::nanoseconds(nanoSecondsPerFrame));
     }
     std::cout << "\x1B[H" << "\x1B[" + std::to_string(vidHeight+1) + "B"    // move cursor below the video
@@ -153,17 +151,16 @@ void VTDIDecoder::displayCurrentFrame()
     }
 }
 
-void VTDIDecoder::readAndDisplayNextFrame(BitStream& inBits, bool display, bool save)
+void VTDIDecoder::readAndDisplayNextFrame(bool display, bool save)
 {
-    auto startBit = inBits.readBits(1);
-    if (startBit[0] == 1)   // frame hasn't changed from the last one, continue to next frame
-    {
-        // pad to full byte
-        inBits.readBits(7);
+    vtdiFile.read(buffer.data(), 1);
+    int bytePos = vtdiFile.tellg();
+    if (buffer[0] == 1)   // frame hasn't changed from the last one, continue to next frame
         return;
-    }
+    else if (buffer[0] != 0)
+        throw std::runtime_error("At the start of a frame there should only be either 0 or 1, not " + std::to_string(buffer[0]) + ".");
 
-    std::vector<bool> endMarker;
+    int endMarker;
     std::string fgColorSetter;
     fgColorSetter.reserve(20);
     std::string bgColorSetter;
@@ -172,10 +169,11 @@ void VTDIDecoder::readAndDisplayNextFrame(BitStream& inBits, bool display, bool 
     {
         fgColorSetter = "\x1B[38;2";
 
+        vtdiFile.read(buffer.data(), 7);
         CharInfo current;
         for (int i = 0; i < 3; i++)
         {
-            int byteNum = inBits.readBytes(1)[0];
+            int byteNum = buffer[i];
             current.foregroundRGB[i] = byteNum;
             fgColorSetter += ";" + std::to_string(byteNum);
         }
@@ -184,112 +182,106 @@ void VTDIDecoder::readAndDisplayNextFrame(BitStream& inBits, bool display, bool 
         bgColorSetter = "\x1B[48;2";
         for (int i = 0; i < 3; i++)
         {
-            int byteNum = inBits.readBytes(1)[0];
+            int byteNum = buffer[i+3];
             current.backgroundRGB[i] = byteNum;
             bgColorSetter += ";" + std::to_string(byteNum);
         }
         bgColorSetter += "m";
 
-        current.chara = inBits.readBytes(1)[0];
+        current.chara = buffer[6];
 
         do
         {
-            endMarker = inBits.readBits(2);
+            vtdiFile.read(buffer.data(), 1);
+            endMarker = buffer[0];
 
-            if (endMarker[0] == 0)
+            if (endMarker == 0)  // rectangle
             {
-                if (endMarker[1] == 0)  // rectangle
+                std::array<int, 4> corners;
+
+                for (int i = 0; i < 4; i++)
                 {
-                    std::array<int, 4> corners;
+                    vtdiFile.read(buffer.data(), sizeof(uint16_t));
+                    corners[i] = BinaryUtils::byteArrayToUint(
+                        (Byte*) buffer.data(),
+                        sizeof(uint16_t)
+                    );
+                }
 
-                    for (int i = 0; i < 4; i++)
-                    {
-                        corners[i] = BinaryUtils::byteArrayToUint(
-                            inBits.readBytes(sizeof(uint16_t)).data(),
-                            sizeof(uint16_t)
-                        );
-                    }
+                std::string moveRight = "\x1B[" + std::to_string(corners[0]) + "C";
+                if (display)
+                {
+                    std::cout << "\x1B[H"   // move cursor to top left
+                                << "\x1B[" + std::to_string(corners[1]) + "B"    // move cursor down
+                                << moveRight;
+                }
 
-                    std::string moveRight = "\x1B[" + std::to_string(corners[0]) + "C";
-                    if (display)
+                for (int y = corners[1]; y <= corners[3]; y++)
+                {
+                    std::cout << fgColorSetter << bgColorSetter;
+                    for (int x = corners[0]; x <= corners[2]; x++)
                     {
-                        std::cout << "\x1B[H"   // move cursor to top left
-                                  << "\x1B[" + std::to_string(corners[1]) + "B"    // move cursor down
-                                  << moveRight;
-                    }
-
-                    for (int y = corners[1]; y <= corners[3]; y++)
-                    {
-                        std::cout << fgColorSetter << bgColorSetter;
-                        for (int x = corners[0]; x <= corners[2]; x++)
+                        if (save)
                         {
-                            if (save)
+                            int matIndex = y*vidWidth+x;
+                            for (int i = 0; i < 3; i++)
                             {
-                                int matIndex = y*vidWidth+x;
-                                for (int i = 0; i < 3; i++)
-                                {
-                                    currentFrame.get()[matIndex].foregroundRGB[i] = current.foregroundRGB[i];
-                                    currentFrame.get()[matIndex].backgroundRGB[i] = current.backgroundRGB[i];
-                                }
-                                currentFrame.get()[matIndex].chara = current.chara;
+                                currentFrame.get()[matIndex].foregroundRGB[i] = current.foregroundRGB[i];
+                                currentFrame.get()[matIndex].backgroundRGB[i] = current.backgroundRGB[i];
                             }
-
-                            if (display)
-                            {
-                                std::cout << VariousUtils::numToUnicodeBlockChar(current.chara);
-                            }
+                            currentFrame.get()[matIndex].chara = current.chara;
                         }
+
                         if (display)
                         {
-                            std::cout << "\x1B[0m"  // unset color
-                                      << "\x1B[E"   // move cursor to start of next line
-                                      << moveRight;
+                            std::cout << VariousUtils::numToUnicodeBlockChar(current.chara);
                         }
                     }
-                }
-                else    // position
-                {
-                    std::array<int, 2> corners;
-
-                    for (int i = 0; i < 2; i++)
-                    {
-                        corners[i] = BinaryUtils::byteArrayToUint(
-                            inBits.readBytes(sizeof(uint16_t)).data(),
-                            sizeof(uint16_t)
-                        );
-                    }
-
-                    if (save)
-                    {
-                        int matIndex = corners[1]*vidWidth+corners[0];
-                        for (int i = 0; i < 3; i++)
-                        {
-                            currentFrame.get()[matIndex].foregroundRGB[i] = current.foregroundRGB[i];
-                            currentFrame.get()[matIndex].backgroundRGB[i] = current.backgroundRGB[i];
-                        }
-                        currentFrame.get()[matIndex].chara = current.chara;
-                    }
-
                     if (display)
                     {
-                        std::cout << "\x1B[H"   // move cursor to top left
-                                  << "\x1B[" + std::to_string(corners[1]) + "B"    // move cursor down
-                                  << "\x1B[" + std::to_string(corners[0]) + "C"    // move cursor right
-                                  << fgColorSetter << bgColorSetter
-                                  << VariousUtils::numToUnicodeBlockChar(current.chara);
+                        std::cout << "\x1B[0m"  // unset color
+                                    << "\x1B[E"   // move cursor to start of next line
+                                    << moveRight;
                     }
                 }
             }
-        } while(endMarker[0] == 0); // 00 for rect, 01 for pos, 10 for end of CI
 
-    } while(endMarker[1] == 0); // 11 marks the end of the frame
+            else if (endMarker == 1)    // position
+            {
+                std::array<int, 2> corners;
 
-    // go through padding bits
-    int bitStreamIndex = inBits.getIndex();
-    if (bitStreamIndex > 0)
-    {
-        inBits.readBits(8-bitStreamIndex);
-    }
+                for (int i = 0; i < 2; i++)
+                {
+                    vtdiFile.read(buffer.data(), sizeof(uint16_t));
+                    corners[i] = BinaryUtils::byteArrayToUint(
+                        (Byte*) buffer.data(),
+                        sizeof(uint16_t)
+                    );
+                }
+
+                if (save)
+                {
+                    int matIndex = corners[1]*vidWidth+corners[0];
+                    for (int i = 0; i < 3; i++)
+                    {
+                        currentFrame.get()[matIndex].foregroundRGB[i] = current.foregroundRGB[i];
+                        currentFrame.get()[matIndex].backgroundRGB[i] = current.backgroundRGB[i];
+                    }
+                    currentFrame.get()[matIndex].chara = current.chara;
+                }
+
+                if (display)
+                {
+                    std::cout << "\x1B[H"   // move cursor to top left
+                                << "\x1B[" + std::to_string(corners[1]) + "B"    // move cursor down
+                                << "\x1B[" + std::to_string(corners[0]) + "C"    // move cursor right
+                                << fgColorSetter << bgColorSetter
+                                << VariousUtils::numToUnicodeBlockChar(current.chara);
+                }
+            }
+        } while(endMarker < 2); // 0 for rect, 1 for pos, 2 for end of CI
+
+    } while(endMarker < 3); // marks the end of the frame
 }
 
 int VTDIDecoder::getVersion()

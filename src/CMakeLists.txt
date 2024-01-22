@@ -12,7 +12,7 @@ add_executable( Transcoder transcoder_main.cpp VideoTranscoder.cpp BinaryUtils.c
 #target_link_options( Transcoder PRIVATE -pg )
 target_link_libraries( Transcoder stdc++fs ${OpenCV_LIBS} ZLIB::ZLIB )
 
-add_executable( Decoder decoder_main.cpp BinaryUtils.cpp VTDIDecoder.cpp VariousUtils.cpp BitStream.cpp )
+add_executable( Decoder decoder_main.cpp BinaryUtils.cpp VTDIDecoder.cpp VariousUtils.cpp )
 #target_compile_options( Decoder PRIVATE -pg )
 #target_link_options( Decoder PRIVATE -pg )
 target_link_libraries( Decoder stdc++fs ${OpenCV_LIBS} ZLIB::ZLIB )

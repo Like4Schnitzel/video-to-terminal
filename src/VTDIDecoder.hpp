@@ -8,13 +8,13 @@
 #include "CharInfoStruct.hpp"
 #include "VariousUtils.hpp"
 #include "BinaryUtils.hpp"
-#include "BitStream.hpp"
 
 class VTDIDecoder {
     private:
         int staticByteSize;
         std::string vtdiPath;
         std::ifstream vtdiFile;
+        std::array<char, 7> buffer;
         std::unique_ptr<CharInfo[]> currentFrame;
         uint32_t frameCount;
         uint16_t vidWidth;
@@ -29,7 +29,7 @@ class VTDIDecoder {
         VTDIDecoder(std::string path);
         void getStaticInfo();
         void playVideo();
-        void readAndDisplayNextFrame(BitStream& inBits, bool display=true, bool save=true);
+        void readAndDisplayNextFrame(bool display=true, bool save=true);
         void displayCurrentFrame();
 
         int getVersion();
