@@ -154,7 +154,7 @@ void VTDIDecoder::displayCurrentFrame()
 void VTDIDecoder::readAndDisplayNextFrame(bool display, bool save)
 {
     vtdiFile.read(buffer.data(), 1);
-    int bytePos = vtdiFile.tellg();
+    //int bytePos = vtdiFile.tellg();
     if (buffer[0] == 1)   // frame hasn't changed from the last one, continue to next frame
         return;
     else if (buffer[0] != 0)
@@ -173,7 +173,7 @@ void VTDIDecoder::readAndDisplayNextFrame(bool display, bool save)
         CharInfo current;
         for (int i = 0; i < 3; i++)
         {
-            int byteNum = buffer[i];
+            uint8_t byteNum = buffer[i];
             current.foregroundRGB[i] = byteNum;
             fgColorSetter += ";" + std::to_string(byteNum);
         }
@@ -182,7 +182,7 @@ void VTDIDecoder::readAndDisplayNextFrame(bool display, bool save)
         bgColorSetter = "\x1B[48;2";
         for (int i = 0; i < 3; i++)
         {
-            int byteNum = buffer[i+3];
+            uint8_t byteNum = buffer[i+3];
             current.backgroundRGB[i] = byteNum;
             bgColorSetter += ";" + std::to_string(byteNum);
         }
