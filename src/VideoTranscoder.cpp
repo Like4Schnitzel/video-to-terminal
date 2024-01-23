@@ -105,7 +105,8 @@ auto findBiggestRectangle(const std::shared_ptr<bool[]> bitmap, const int bitCou
             }
             else
             {
-                addedValsRow[j] = addedValsRow[j]+1;
+                addedValsRow[j]++;
+                // if addedValsRow[j] not already in uniqueDepths, add it
                 if (std::none_of(
                     uniqueDepths.begin(),
                     uniqueDepths.end(),
@@ -116,6 +117,13 @@ auto findBiggestRectangle(const std::shared_ptr<bool[]> bitmap, const int bitCou
                 }
             }
         }
+
+        // say there are 2 separated shapes of 1s in the bitmap that are separated by at least one line of 0s
+        // we don't need to check both in the same call since we'll go through both of them either way
+        // this does technically make the name of the function inaccurate since it just finds the biggest rectangle in the first shape now
+        // but in the context of this program it'll do its job faster than before
+        if (uniqueDepths.size() == 0 && maxPositions[0] != -1)
+            return maxPositions;
 
         // find biggest rectangle
         for (auto& currentDepth : uniqueDepths)
@@ -148,6 +156,9 @@ auto findBiggestRectangle(const std::shared_ptr<bool[]> bitmap, const int bitCou
                         area += colDepth;
                     }
                 }
+                // break early if there's a horizontally disconnected shape
+                else if (colDepth == 0 && attemptPositions[0] != -1)
+                    break;
             }
 
             if (area > maxArea)
