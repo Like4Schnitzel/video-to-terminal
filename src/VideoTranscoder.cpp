@@ -340,11 +340,11 @@ CharInfo findBestBlockCharacter(cv::Mat img)
     cv::Mat fgRect, bgRect;
 
     // skip upper half (0) since lower half can be used
-    // loop through the lower eights
+    // loop through the height characters from 1/8th to 7/8ths block
     const double eigthHeight = imageHeight / 8.0;
     double currentHeight = imageHeight;
     // don't need to check full block (8) since it'll just go with fg=bg at check 1
-    for (currentOption = 1; currentOption < 7; currentOption++)
+    for (currentOption = 1; currentOption < 8; currentOption++)
     {
         currentHeight -= eigthHeight;
 
@@ -373,6 +373,35 @@ CharInfo findBestBlockCharacter(cv::Mat img)
             {
                 return maxDiffCharInfo;
             }
+        }
+    }
+
+    // loop through the width characters from 7/8ths to 1/8th
+    const double eigthWidth = imageWidth / 8.0;
+    double currentWidth = imageWidth;
+    for (currentOption = 9; currentOption < 0xF; currentOption++)
+    {
+        currentWidth -= eigthWidth;
+
+        fgRect = img(cv::Rect(0, 0, round(currentWidth), imageHeight));
+        if (fgRect.rows == 0) continue;
+        cv::Scalar avrgFgBGR = cv::mean(fgRect);
+
+        bgRect = img(cv::Rect(round(currentWidth), 0, imageWidth - round(currentWidth), imageHeight));
+        if (bgRect.rows == 0) continue;
+        cv::Scalar avrgBgBGR = cv::mean(bgRect);
+
+        int colorDiff = getColorDiff(avrgFgBGR, avrgBgBGR);    
+        if (colorDiff > maxDiff)
+        {
+            maxDiff = colorDiff;
+            for (int i = 0; i < 3; i++)
+            {
+                // turn around BGR so RGB gets saved instead
+                maxDiffCharInfo.foregroundRGB[i] = avrgFgBGR[2-i];
+                maxDiffCharInfo.backgroundRGB[i] = avrgBgBGR[2-i];
+            }
+            maxDiffCharInfo.chara = currentOption;
         }
     }
 
