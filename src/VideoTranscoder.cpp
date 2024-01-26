@@ -405,6 +405,76 @@ CharInfo findBestBlockCharacter(cv::Mat img)
         }
     }
 
+    /* CORNER CHARACTER IMPLEMENTATION COMMENTED OUT BECAUSE IT DIDN'T REALLY WORK.
+    * WILL LOOK INTO THAT LATER MAYBE
+    // corner characters. They're weird.
+    // we're saving each of the means so that we can use them for calculations later
+    const int halfWidth = imageWidth / 2;
+    const int halfHeight = imageHeight / 2;
+    if (halfHeight > 0 && halfWidth > 0)
+    {
+        const int cornerArea = halfHeight * halfWidth;
+
+        fgRect = img(cv::Rect(0, halfHeight, halfWidth, halfHeight));
+        cv::Scalar lowLeftMean = cv::mean(fgRect);
+
+        fgRect = img(cv::Rect(halfWidth, halfHeight, halfWidth, halfHeight));
+        cv::Scalar lowRightMean = cv::mean(fgRect);
+
+        fgRect = img(cv::Rect(0, 0, halfWidth, halfHeight));
+        cv::Scalar upLeftMean = cv::mean(fgRect);
+
+        fgRect = img(cv::Rect(halfWidth, 0, halfWidth, halfHeight));
+        cv::Scalar upRightMean = cv::mean(fgRect);
+
+        cv::Scalar fgMean;
+        cv::Scalar bgMean;
+
+        const auto checkDiff = [&maxDiff, &maxDiffCharInfo, &fgMean, &bgMean, &currentOption]()
+        {
+            int colorDiff = getColorDiff(fgMean, bgMean);
+            if (colorDiff > maxDiff)
+            {
+                maxDiff = colorDiff;
+                for (int i = 0; i < 3; i++)
+                {
+                    // turn around BGR so RGB gets saved instead
+                    maxDiffCharInfo.foregroundRGB[i] = fgMean[2-i];
+                    maxDiffCharInfo.backgroundRGB[i] = bgMean[2-i];
+                }
+                maxDiffCharInfo.chara = currentOption;
+            }
+        };
+
+        currentOption = 0x16;
+        fgMean = lowLeftMean;
+        bgMean = (lowRightMean + upLeftMean + upRightMean) / 3;
+        checkDiff();
+
+        currentOption = 0x17;
+        fgMean = lowRightMean;
+        bgMean = lowLeftMean + upLeftMean + upRightMean / 3;
+        checkDiff();
+
+        currentOption = 0x18;
+        fgMean = upLeftMean;
+        bgMean = (lowLeftMean + lowRightMean + upRightMean) / 3;
+        checkDiff();
+
+        // I don't fucking know why it just skips 4 elements until it does the last corner block but that's how it is.
+        currentOption = 0x1D;
+        fgMean = upRightMean;
+        bgMean = (lowLeftMean + lowRightMean + upLeftMean) / 3;
+        checkDiff();
+
+        // And now the double corner character.
+        currentOption = 0x1A;
+        fgMean = (upLeftMean + lowRightMean) / 2;
+        bgMean = (lowLeftMean + upRightMean) / 2;
+        checkDiff();
+    }
+    */
+
     return maxDiffCharInfo;
 }
 
