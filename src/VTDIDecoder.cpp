@@ -153,6 +153,8 @@ void VTDIDecoder::displayCurrentFrame()
 
 void VTDIDecoder::readAndDisplayNextFrame(bool display, bool save)
 {
+    std::stringstream outputBuffer;
+    
     vtdiFile.read(buffer.data(), 1);
     //int bytePos = vtdiFile.tellg();
     if (buffer[0] == 1)   // frame hasn't changed from the last one, continue to next frame
@@ -211,14 +213,14 @@ void VTDIDecoder::readAndDisplayNextFrame(bool display, bool save)
                 std::string moveRight = "\x1B[" + std::to_string(corners[0]) + "C";
                 if (display)
                 {
-                    std::cout << "\x1B[H"   // move cursor to top left
+                    outputBuffer << "\x1B[H"   // move cursor to top left
                                 << "\x1B[" + std::to_string(corners[1]) + "B"    // move cursor down
                                 << moveRight;
                 }
 
                 for (int y = corners[1]; y <= corners[3]; y++)
                 {
-                    std::cout << fgColorSetter << bgColorSetter;
+                    outputBuffer << fgColorSetter << bgColorSetter;
                     for (int x = corners[0]; x <= corners[2]; x++)
                     {
                         if (save)
@@ -234,12 +236,12 @@ void VTDIDecoder::readAndDisplayNextFrame(bool display, bool save)
 
                         if (display)
                         {
-                            std::cout << VariousUtils::numToUnicodeBlockChar(current.chara);
+                            outputBuffer << VariousUtils::numToUnicodeBlockChar(current.chara);
                         }
                     }
                     if (display)
                     {
-                        std::cout << "\x1B[0m"  // unset color
+                        outputBuffer << "\x1B[0m"  // unset color
                                     << "\x1B[E"   // move cursor to start of next line
                                     << moveRight;
                     }
@@ -272,7 +274,7 @@ void VTDIDecoder::readAndDisplayNextFrame(bool display, bool save)
 
                 if (display)
                 {
-                    std::cout << "\x1B[H"   // move cursor to top left
+                    outputBuffer << "\x1B[H"   // move cursor to top left
                                 << "\x1B[" + std::to_string(corners[1]) + "B"    // move cursor down
                                 << "\x1B[" + std::to_string(corners[0]) + "C"    // move cursor right
                                 << fgColorSetter << bgColorSetter
@@ -282,6 +284,8 @@ void VTDIDecoder::readAndDisplayNextFrame(bool display, bool save)
         } while(endMarker < 2); // 0 for rect, 1 for pos, 2 for end of CI
 
     } while(endMarker < 3); // marks the end of the frame
+
+    std::cout << outputBuffer.str();
 }
 
 int VTDIDecoder::getVersion()
