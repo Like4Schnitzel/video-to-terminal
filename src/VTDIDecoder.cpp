@@ -77,7 +77,7 @@ void VTDIDecoder::getStaticInfo()
     index = 0;
 
     auto args = std::make_tuple(
-        &frameCount, &FPS, &vidWidth, &vidHeight, &uncompressedSize, &compressedSize
+        &frameCount, &FPS, &vidWidth, &vidHeight
     );
     std::apply([&](auto&... args) {
         (..., (*args = applyAssign(*args, std::ref(index), staticInfoBytes.get())));

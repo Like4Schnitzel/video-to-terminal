@@ -18,11 +18,9 @@ class VariousUtils {
         {
             std::vector<T> sub;
             sub.reserve(indexEnd-indexStart);
-            int subIndex = 0;
             for (int i = indexStart; i < indexEnd; i++)
             {
                 sub.push_back(initArr[i]);
-                subIndex++;
             }
             return sub;
         }

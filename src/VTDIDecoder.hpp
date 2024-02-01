@@ -23,8 +23,6 @@ class VTDIDecoder {
         int terminalHeight;
         float FPS;
         uint16_t version;
-        ulong uncompressedSize;
-        ulong compressedSize;
     public:
         VTDIDecoder(std::string path);
         void getStaticInfo();
