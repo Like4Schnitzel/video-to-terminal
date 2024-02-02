@@ -8,9 +8,9 @@
 #include <math.h>
 #include <thread>
 #include <future>
-#include "CharInfoStruct.hpp"
-#include "BinaryUtils.hpp"
-#include "VariousUtils.hpp"
+#include "../libs/CharInfoStruct.hpp"
+#include "../libs/BinaryUtils.hpp"
+#include "../libs/VariousUtils.hpp"
 
 class VideoTranscoder 
 {

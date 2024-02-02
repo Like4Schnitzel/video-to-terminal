@@ -5,9 +5,9 @@
 #include <chrono>
 #include <thread>
 #include <sstream>
-#include "CharInfoStruct.hpp"
-#include "VariousUtils.hpp"
-#include "BinaryUtils.hpp"
+#include "../libs/CharInfoStruct.hpp"
+#include "../libs/VariousUtils.hpp"
+#include "../libs/BinaryUtils.hpp"
 
 class VTDIDecoder {
     private:
