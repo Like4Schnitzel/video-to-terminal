@@ -15,3 +15,6 @@ add_executable( Decoder decoder/decoder_main.cpp decoder/VTDIDecoder.cpp libs/Bi
 #target_compile_options( Decoder PRIVATE -pg -fsanitize=address )
 #target_link_options( Decoder PRIVATE -pg -fsanitize=address )
 target_link_libraries( Decoder stdc++fs )
+
+add_executable( ImgViewer imgViewer/main.cpp imgViewer/ImgViewer.cpp libs/VariousUtils.cpp )
+target_link_libraries( ImgViewer stdc++fs ${OpenCV_LIBS} )
