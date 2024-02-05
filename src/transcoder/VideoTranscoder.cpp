@@ -405,8 +405,6 @@ CharInfo findBestBlockCharacter(cv::Mat img)
         }
     }
 
-    /* CORNER CHARACTER IMPLEMENTATION COMMENTED OUT BECAUSE IT DIDN'T REALLY WORK.
-    * WILL LOOK INTO THAT LATER MAYBE
     // corner characters. They're weird.
     // we're saving each of the means so that we can use them for calculations later
     const int halfWidth = imageWidth / 2;
@@ -453,7 +451,7 @@ CharInfo findBestBlockCharacter(cv::Mat img)
 
         currentOption = 0x17;
         fgMean = lowRightMean;
-        bgMean = lowLeftMean + upLeftMean + upRightMean / 3;
+        bgMean = (lowLeftMean + upLeftMean + upRightMean) / 3;
         checkDiff();
 
         currentOption = 0x18;
@@ -473,7 +471,6 @@ CharInfo findBestBlockCharacter(cv::Mat img)
         bgMean = (lowLeftMean + upRightMean) / 2;
         checkDiff();
     }
-    */
 
     return maxDiffCharInfo;
 }
