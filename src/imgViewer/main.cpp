@@ -19,6 +19,8 @@ int main(int argc, char** argv)
         cin >> filePath;
     }
 
+    if (argc <= 3) cout << "Original size: " << cv::imread(filePath).size() << "\n";
+
     if (argc > 2)
     {
         width = VariousUtils::stringToInt(argv[2]);
