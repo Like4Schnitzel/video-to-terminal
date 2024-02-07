@@ -207,7 +207,6 @@ void ImgViewer::print()
 {
     if (transcodedFile.size() == 0) throw std::logic_error("File has not been transcoded yet.");
 
-    std::cout << "\x1B[2J\x1B[H";
     for (int i = 0; i < height; i++)
     {
         for (int j = 0; j < width; j++)
