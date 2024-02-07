@@ -4,8 +4,10 @@
 #include <iostream>
 #include <thread>
 #include <error.h>
-#include "../libs/VariousUtils.hpp"
-#include "../libs/CharInfoStruct.hpp"
+#include "../libs/variousutils.hpp"
+#include "../libs/charinfo.hpp"
+
+namespace vtt {
 
 class ImgViewer {
     private:
@@ -18,3 +20,5 @@ class ImgViewer {
         void transcode(const int width, const int height);
         void print();
 };
+
+}

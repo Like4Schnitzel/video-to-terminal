@@ -1,7 +1,8 @@
 #include <iostream>
-#include "ImgViewer.hpp"
+#include "imgviewer.hpp"
 
 using namespace std;
+using namespace vtt;
 
 int main(int argc, char** argv)
 {

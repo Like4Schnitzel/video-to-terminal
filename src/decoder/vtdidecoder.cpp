@@ -1,4 +1,6 @@
-#include "VTDIDecoder.hpp"
+#include "vtdidecoder.hpp"
+
+namespace vtt {
 
 VTDIDecoder::VTDIDecoder(std::string path)
 {
@@ -311,4 +313,6 @@ int VTDIDecoder::getVidWidth()
 int VTDIDecoder::getVidHeight()
 {
     return vidHeight;
+}
+
 }

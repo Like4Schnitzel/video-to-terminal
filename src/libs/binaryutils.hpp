@@ -11,7 +11,9 @@
 #include <zlib.h>
 #include <memory>
 #include <array>
-#include "CharInfoStruct.hpp"
+#include "charinfo.hpp"
+
+namespace vtt {
 
 class BinaryUtils {
     public:
@@ -50,3 +52,5 @@ class BinaryUtils {
 
         static std::vector<bool> byteArrayToBitArray(const Byte* input, int inputLen);
 };
+
+}

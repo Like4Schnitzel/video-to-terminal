@@ -1,8 +1,9 @@
 #include <map>
-#include "VideoTranscoder.hpp"
-#include "../libs/VariousUtils.hpp"
+#include "videotranscoder.hpp"
+#include "../libs/variousutils.hpp"
 
 using namespace std;
+using namespace vtt;
 
 int main(int argc, char** argv)
 {

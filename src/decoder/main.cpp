@@ -1,7 +1,8 @@
-#include "VTDIDecoder.hpp"
+#include "vtdidecoder.hpp"
 #include <string.h>
 
 using namespace std;
+using namespace vtt;
 
 int main(int argc, char** argv)
 {

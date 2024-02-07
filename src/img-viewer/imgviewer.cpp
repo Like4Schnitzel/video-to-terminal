@@ -1,4 +1,6 @@
-#include "ImgViewer.hpp"
+#include "imgviewer.hpp"
+
+namespace vtt {
 
 ImgViewer::ImgViewer(const std::string path)
 {
@@ -225,4 +227,6 @@ void ImgViewer::print()
         }
         std::cout << "\x1B[0m\n";
     }
+}
+
 }

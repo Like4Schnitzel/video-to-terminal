@@ -5,9 +5,11 @@
 #include <chrono>
 #include <thread>
 #include <sstream>
-#include "../libs/CharInfoStruct.hpp"
-#include "../libs/VariousUtils.hpp"
-#include "../libs/BinaryUtils.hpp"
+#include "../libs/charinfo.hpp"
+#include "../libs/variousutils.hpp"
+#include "../libs/binaryutils.hpp"
+
+namespace vtt {
 
 class VTDIDecoder {
     private:
@@ -36,3 +38,5 @@ class VTDIDecoder {
         int getVidWidth();
         int getVidHeight();
 };
+
+}

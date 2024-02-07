@@ -8,9 +8,11 @@
 #include <math.h>
 #include <thread>
 #include <future>
-#include "../libs/CharInfoStruct.hpp"
-#include "../libs/BinaryUtils.hpp"
-#include "../libs/VariousUtils.hpp"
+#include "../libs/charinfo.hpp"
+#include "../libs/binaryutils.hpp"
+#include "../libs/variousutils.hpp"
+
+namespace vtt {
 
 class VideoTranscoder 
 {
@@ -33,3 +35,5 @@ class VideoTranscoder
         std::shared_ptr<CharInfo []> transcodeFrame();
         std::vector<Byte> compressFrame(std::shared_ptr<CharInfo[]> currentFrame, std::shared_ptr<CharInfo[]> prevFrame);
 };
+
+}

@@ -1,4 +1,6 @@
-#include "VideoTranscoder.hpp"
+#include "videotranscoder.hpp"
+
+namespace vtt {
 
 VideoTranscoder::VideoTranscoder(const std::string path, const std::string vtdiPath, const uint16_t terminalWidth, const uint16_t terminalHeight)
 {
@@ -517,4 +519,6 @@ std::shared_ptr<CharInfo []> VideoTranscoder::transcodeFrame()
     }
 
     return frameInfo;
+}
+
 }

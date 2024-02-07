@@ -1,4 +1,6 @@
-#include "BinaryUtils.hpp"
+#include "binaryutils.hpp"
+
+namespace vtt {
 
 std::vector<Byte> BinaryUtils::bitArrayToByteArray(const bool* bits, const ulong bitLen)
 {
@@ -117,4 +119,6 @@ std::vector<bool> BinaryUtils::byteArrayToBitArray(const Byte* input, int inputL
         }
     }
     return result;
+}
+
 }

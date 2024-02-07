@@ -7,6 +7,8 @@
 #include <array>
 #include <memory>
 
+namespace vtt {
+
 class VariousUtils {
     public:
         static int rfind(std::string str, char c);
@@ -39,3 +41,5 @@ class VariousUtils {
 
         static std::string numToUnicodeBlockChar(int num);
 };
+
+}

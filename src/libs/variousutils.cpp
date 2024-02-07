@@ -1,4 +1,6 @@
-#include "VariousUtils.hpp"
+#include "variousutils.hpp"
+
+namespace vtt {
 
 int VariousUtils::rfind(std::string str, char c)
 {
@@ -92,4 +94,6 @@ std::string VariousUtils::numToUnicodeBlockChar(int num)
     buf[1] = 0x96;
     buf[2] = 0x80 + num;
     return std::string(reinterpret_cast<char*>(buf), 3);
+}
+
 }
