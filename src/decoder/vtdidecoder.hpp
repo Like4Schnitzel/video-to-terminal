@@ -8,6 +8,7 @@
 #include "../libs/charinfo.hpp"
 #include "../libs/variousutils.hpp"
 #include "../libs/binaryutils.hpp"
+#include "../libs/termutils.hpp"
 
 namespace vtt {
 

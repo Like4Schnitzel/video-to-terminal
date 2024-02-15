@@ -100,7 +100,7 @@ void VTDIDecoder::playVideo()
         throw std::runtime_error("It seems static info hasn't been initialized yet. Try running VTDIDecoder.getStaticInfo()");
     }
 
-    auto terminalDimensions = VariousUtils::getTerminalDimensions();
+    auto terminalDimensions = TermUtils::getTerminalDimensions();
     this->terminalWidth = terminalDimensions[0];
     this->terminalHeight = terminalDimensions[1];
 

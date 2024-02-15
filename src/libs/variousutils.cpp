@@ -38,55 +38,6 @@ bool VariousUtils::fileExists(std::string fileName)
     return (stat (fileName.c_str(), &buffer) == 0);
 }
 
-
-// taken from https://stackoverflow.com/a/23370070
-#ifdef WIN32
-#include <windows.h>
-
-std::array<int, 2> VariousUtils::getTerminalDimensions()
-{
-    CONSOLE_SCREEN_BUFFER_INFO csbi;
-    int columns, rows;
-
-    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
-    columns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
-    rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
-
-    std::array<int, 2> dimensions;
-    dimensions[0] = columns;
-    dimensions[1] rows;
-
-    return dimensions;
-}
-#else
-#include <sys/ioctl.h>
-#include <stdio.h>
-#include <unistd.h>
-
-std::array<int, 2> VariousUtils::getTerminalDimensions()
-{
-    struct winsize w;
-    ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
-    std::array<int, 2> dimensions;
-    dimensions[0] = w.ws_col;
-    dimensions[1] = w.ws_row;
-
-    return dimensions;
-}
-#endif
-
-char VariousUtils::toLower(char c)
-{
-    if (c >= 'A' && c <= 'Z')
-    {
-        return c - 32;
-    }
-    else
-    {
-        return c;
-    }
-}
-
 std::string VariousUtils::numToUnicodeBlockChar(int num)
 {
     char buf[3];
@@ -94,6 +45,32 @@ std::string VariousUtils::numToUnicodeBlockChar(int num)
     buf[1] = 0x96;
     buf[2] = 0x80 + num;
     return std::string(reinterpret_cast<char*>(buf), 3);
+}
+
+std::vector<dirent> VariousUtils::getFilesInDir(std::filesystem::path path)
+{
+    if (!std::filesystem::is_directory(path))
+    {
+        std::stringstream errorMsg;
+        errorMsg << path.c_str() << " is not a directory.";
+        throw std::runtime_error(errorMsg.str());
+    }
+
+    std::vector<dirent> files;
+    DIR* dp = nullptr;
+    dirent* entry = nullptr;
+    dp = opendir(path.c_str());
+
+    while ((entry = readdir(dp)))
+    {
+        // d_type 8 is file. 4 is directory.
+        if (entry->d_type == 8)
+        {
+            files.push_back(*entry);
+        }
+    }
+
+    return files;
 }
 
 }

@@ -61,7 +61,7 @@ int main(int argc, char** argv)
             char option;
             cout << vtdiFilePath << " already exists. It will be overwritten if you continue. Continue anyways? [y/N] ";
             cin >> option;
-            if (VariousUtils::toLower(option) != 'y')
+            if (std::tolower(option) != 'y')
             {
                 return 0;
             }

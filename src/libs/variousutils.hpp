@@ -6,6 +6,8 @@
 #include <vector>
 #include <array>
 #include <memory>
+#include <filesystem>
+#include <dirent.h>
 
 namespace vtt {
 
@@ -27,9 +29,6 @@ class VariousUtils {
             return sub;
         }
 
-        static std::array<int, 2> getTerminalDimensions();
-        static char toLower(char c);
-
         template <typename T>
         static void pushArrayToVector(const T* inputArr, int inputArrLen, std::vector<T>& vec)
         {
@@ -40,6 +39,8 @@ class VariousUtils {
         }
 
         static std::string numToUnicodeBlockChar(int num);
+
+        static std::vector<dirent> getFilesInDir(std::filesystem::path path);
 };
 
 }
