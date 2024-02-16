@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 set(CMAKE_CXX_STANDARD 20)
-set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread" )
+set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -stdlib=libc++ -std=c++20" )
 project( video-to-terminal )
 find_package( OpenCV REQUIRED )
 include_directories( ${OpenCV_INCLUDE_DIRS} )
