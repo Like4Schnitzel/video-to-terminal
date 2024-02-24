@@ -23,7 +23,7 @@ int main(int argc, char** argv)
     }
 
     VTDIDecoder player = VTDIDecoder(videoPath);
-    player.getStaticInfo();
+    player.readStaticInfo();
 
     std::cout << "VTDI Info:\n";
     std::cout << "Version: " << player.getVersion() << "\n";

@@ -27,8 +27,8 @@ class VTDIDecoder {
         float FPS;
         uint16_t version;
     public:
-        VTDIDecoder(std::string path);
-        void getStaticInfo();
+        VTDIDecoder(std::string path, bool debugInfo = true);
+        void readStaticInfo();
         void playVideo();
         void readAndDisplayNextFrame(bool display=true, bool save=true);
         void displayCurrentFrame();

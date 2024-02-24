@@ -1,5 +1,11 @@
 #pragma once
 
+#include <array>
+#include <vector>
+#include <iostream>
+#include "binaryutils.hpp"
+#include "_kbhit.hpp"
+
 #ifdef WIN32
 #include <windows.h>
 #else
@@ -8,9 +14,13 @@
 #include <unistd.h>
 #include <termios.h>
 #endif
-#include <array>
 
 namespace vtt {
+
+struct KeyPress {
+    bool keyDown;
+    unsigned int keyValue;
+};
 
 class TermUtils {
     private:
@@ -24,6 +34,7 @@ class TermUtils {
 #endif
     public:
         TermUtils();
+        static KeyPress getKeyPress();
         static std::array<int, 2> getTerminalDimensions();
         void hideInput();
         void showInput();

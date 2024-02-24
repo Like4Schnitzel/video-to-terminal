@@ -2,16 +2,19 @@
 
 namespace vtt {
 
-VTDIDecoder::VTDIDecoder(std::string path)
+VTDIDecoder::VTDIDecoder(std::string path, bool debugInfo)
 {
     this->version = 0;
 
     this->vtdiFile.open(path);
     if (!vtdiFile.good())
     {
-        throw std::runtime_error("Cannot open file to read from.");
+        std::stringstream errorMessage;
+        errorMessage << "Cannot open file \"" << path << "\" to read from.";
+        throw std::runtime_error(errorMessage.str());
     }
-    std::cout << "File opened succesfully.\n";
+    if (debugInfo)
+        std::cout << "File opened succesfully.\n";
     vtdiFile.close();
     vtdiFile.clear();
     vtdiPath = path;
@@ -37,7 +40,7 @@ T applyAssign(T num, int& index, const Byte* sib)
     return result;
 }
 
-void VTDIDecoder::getStaticInfo()
+void VTDIDecoder::readStaticInfo()
 {
     // these are taken from the spec
     const int expectedSig[] = {86, 84, 68, 73};
@@ -97,7 +100,7 @@ void VTDIDecoder::playVideo()
 
     if (this->version == 0)
     {
-        throw std::runtime_error("It seems static info hasn't been initialized yet. Try running VTDIDecoder.getStaticInfo()");
+        throw std::runtime_error("It seems static info hasn't been initialized yet. Try running VTDIDecoder.readStaticInfo()");
     }
 
     auto terminalDimensions = TermUtils::getTerminalDimensions();

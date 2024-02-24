@@ -7,6 +7,29 @@ TermUtils::TermUtils()
     hidden = false;
 }
 
+KeyPress TermUtils::getKeyPress()
+{
+    KeyPress kp;
+    kp.keyDown = false;
+    kp.keyValue = 0;
+
+    if (_kbhit())
+    {
+        kp.keyDown = true;
+
+        char tmp;
+        std::vector<char> stdinVals;
+        while (_kbhit())
+        {
+            std::cin >> tmp;
+            stdinVals.push_back(tmp);
+        }
+        kp.keyValue = BinaryUtils::byteArrayToUint((Byte*)stdinVals.data(), stdinVals.size());
+    }
+
+    return kp;
+}
+
 // taken from https://stackoverflow.com/a/23370070
 #ifdef WIN32
 
