@@ -1,6 +1,7 @@
 #pragma once
 
 #include <filesystem>
+#include <bits/stdc++.h>
 #include "../transcoder/videotranscoder.hpp"
 #include "../decoder/vtdidecoder.hpp"
 #include "../img-viewer/imgviewer.hpp"

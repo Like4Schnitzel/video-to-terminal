@@ -39,7 +39,7 @@ int main(int argc, char** argv)
 
             // left arrow
             if (kp.keyValue == 1792836)
-                cout << "Selected file: " << mv.current()->path << "\n";
+                cout << "Selected file: " << mv.prev()->path << "\n";
 
             // ESC
             if (kp.keyValue == 27)

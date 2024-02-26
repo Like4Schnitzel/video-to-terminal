@@ -35,7 +35,9 @@ MediaViewer::MediaViewer(const std::filesystem::path path)
     }
 
     int i = 0;
-    for (const auto file : VariousUtils::getFilesInDir(dirPath))
+    auto unfilteredFiles = VariousUtils::getFilesInDir(dirPath);
+    sort(unfilteredFiles.begin(), unfilteredFiles.end(), [](dirent d1, dirent d2){return (std::string)d1.d_name < (std::string)d2.d_name;});
+    for (const auto file : unfilteredFiles)
     {
         auto dirPathCopy = dirPath;
         std::string pathFileName = dirPath.concat(file.d_name);
@@ -71,6 +73,11 @@ MediaViewer::MediaViewer(const std::filesystem::path path)
         }
         else if (validVTDI(pathFileName))
         {
+            // VTDI file might have already been added in a previous mp4 check. Make sure it's not a dupe.
+            if (!std::none_of(files.begin(), files.end(), [&pathFileName](File d){return std::strcmp(d.path.c_str(), pathFileName.c_str()) == 0;}))
+            {
+                continue;
+            }
             if (pathFileName == path)
             {
                 filesIndex = i;
