@@ -34,25 +34,35 @@ MediaViewer::MediaViewer(const std::filesystem::path path)
         dirPath = path.parent_path();
     }
 
-    int i = 0;
     auto unfilteredFiles = VariousUtils::getFilesInDir(dirPath);
     sort(unfilteredFiles.begin(), unfilteredFiles.end(), [](dirent d1, dirent d2){return (std::string)d1.d_name < (std::string)d2.d_name;});
     for (const auto file : unfilteredFiles)
     {
-        auto dirPathCopy = dirPath;
-        std::string pathFileName = dirPath.concat(file.d_name);
-        dirPath = dirPathCopy;
+        std::string pathFileName = dirPath / file.d_name;
 
-        if (cv::VideoCapture(pathFileName).isOpened())
+        if (!cv::imread(pathFileName).empty())
+        {
+            if (checkForFile && pathFileName == path)
+            {
+                filesIndex = files.size();
+            }
+            
+            File fileStruct;
+            fileStruct.path = pathFileName;
+            fileStruct.type = FileType::IMG;
+
+            files.push_back(fileStruct);
+        }
+        else if (cv::VideoCapture(pathFileName).isOpened())
         {
             File fileStruct;
 
             std::string vtdiPath = ((std::string)pathFileName).substr(0, VariousUtils::rfind(pathFileName, '.')) + ".vtdi";
             if (std::filesystem::exists(vtdiPath) && validVTDI(vtdiPath))
             {
-                if (pathFileName == path)
+                if (checkForFile && pathFileName == path)
                 {
-                    filesIndex = i;
+                    filesIndex = files.size();
                 }
 
                 fileStruct.path = vtdiPath;
@@ -60,9 +70,9 @@ MediaViewer::MediaViewer(const std::filesystem::path path)
             }
             else
             {
-                if (pathFileName == path)
+                if (checkForFile && pathFileName == path)
                 {
-                    filesIndex = i;
+                    filesIndex = files.size();
                 }
                 
                 fileStruct.path = pathFileName;
@@ -78,9 +88,9 @@ MediaViewer::MediaViewer(const std::filesystem::path path)
             {
                 continue;
             }
-            if (pathFileName == path)
+            if (checkForFile && pathFileName == path)
             {
-                filesIndex = i;
+                filesIndex = files.size();
             }
             
             File fileStruct;
@@ -89,21 +99,6 @@ MediaViewer::MediaViewer(const std::filesystem::path path)
 
             files.push_back(fileStruct);
         }
-        else if (!cv::imread(pathFileName).empty())
-        {
-            if (pathFileName == path)
-            {
-                filesIndex = i;
-            }
-            
-            File fileStruct;
-            fileStruct.path = pathFileName;
-            fileStruct.type = FileType::IMG;
-
-            files.push_back(fileStruct);
-        }
-
-        i++;
     }
 }
 
@@ -134,6 +129,31 @@ File* MediaViewer::prev()
     filesIndex--;
     if (filesIndex < 0) filesIndex += files.size();
     return &files[filesIndex];
+}
+
+void MediaViewer::view(TermUtils* tu)
+{
+    auto currentFile = current();
+    switch (currentFile->type)
+    {
+        case FileType::IMG:
+        {
+            int width, height;
+            auto viewer = ImgViewer(currentFile->path);
+            if (tu != nullptr)
+                (*tu).showInput();
+            std::cout << "Enter width: ";
+            std::cin >> width;
+            std::cout << "Enter height: ";
+            std::cin >> height;
+            std::cout << "\n";
+            if (tu != nullptr)
+                (*tu).hideInput();
+            viewer.transcode(width, height);
+            viewer.print();
+            break;
+        }
+    }
 }
 
 }

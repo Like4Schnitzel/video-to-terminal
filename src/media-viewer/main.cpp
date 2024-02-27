@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include "mediaviewer.hpp"
 #include "../libs/variousutils.hpp"
 #include "../libs/termutils.hpp"
@@ -22,6 +23,7 @@ int main(int argc, char** argv)
         return 0;
     }
 
+    bool viewing = false;
     TermUtils tu;
     int fileIndex = 0;
     cout << "Selected file: " << mv.current()->path << "\n" << flush;
@@ -34,16 +36,28 @@ int main(int argc, char** argv)
         if (kp.keyDown)
         {
             // right arrow
-            if (kp.keyValue == 1792835)
+            if (!viewing && kp.keyValue == 1792835)
                 cout << "Selected file: " << mv.next()->path << "\n";
 
             // left arrow
-            if (kp.keyValue == 1792836)
+            if (!viewing && kp.keyValue == 1792836)
                 cout << "Selected file: " << mv.prev()->path << "\n";
+
+            // V key
+            if (!viewing && std::toupper(kp.keyValue) == 'V')
+            {
+                viewing = true;
+                mv.view(&tu);
+            }
 
             // ESC
             if (kp.keyValue == 27)
-                break;
+            {
+                if (viewing)
+                    viewing = false;
+                else
+                    break;
+            }
         }
     }
     tu.showInput();

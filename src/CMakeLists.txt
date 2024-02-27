@@ -21,6 +21,7 @@ target_link_libraries( img-viewer stdc++fs ${OpenCV_LIBS} )
 add_executable (
     media-viewer media-viewer/main.cpp media-viewer/mediaviewer.cpp
     decoder/vtdidecoder.cpp
+    img-viewer/imgviewer.cpp
     libs/termutils.cpp libs/variousutils.cpp libs/binaryutils.cpp libs/_kbhit.cpp
 )
 target_link_libraries( media-viewer stdc++fs ${OpenCV_LIBS} )
