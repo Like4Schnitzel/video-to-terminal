@@ -34,16 +34,14 @@ int main(int argc, char** argv)
         KeyPress kp = TermUtils::getKeyPress();
         if (kp.keyDown)
         {
-            // right arrow
-            if (!viewing && kp.keyValue == 1792835)
+            if (!viewing && kp.keyValue == KeyPressValues::RIGHTARROW)
                 cout << "Selected file: " << mv.next()->path << "\n";
 
-            // left arrow
-            if (!viewing && kp.keyValue == 1792836)
+            if (!viewing && kp.keyValue == KeyPressValues::LEFTARROW)
                 cout << "Selected file: " << mv.prev()->path << "\n";
 
             // displaying a file
-            if ((!viewing && std::toupper(kp.keyValue) == 'V') || mv.current()->type == FileType::IMG)
+            if ((!viewing && std::toupper(kp.keyValue) == KeyPressValues::V) || mv.current()->type == FileType::IMG)
             {
                 if (mv.current()->type != FileType::IMG)
                 {
@@ -56,7 +54,7 @@ int main(int argc, char** argv)
             }
 
             // ESC
-            if (kp.keyValue == 27)
+            if (kp.keyValue == KeyPressValues::ESC)
             {
                 if (viewing)
                     viewing = false;

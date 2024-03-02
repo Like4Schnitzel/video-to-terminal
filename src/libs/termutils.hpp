@@ -17,6 +17,8 @@
 
 namespace vtt {
 
+enum KeyPressValues {RIGHTARROW = 1792835, LEFTARROW = 1792836, V = 'V', ESC = 27};
+
 struct KeyPress {
     bool keyDown;
     unsigned int keyValue;
