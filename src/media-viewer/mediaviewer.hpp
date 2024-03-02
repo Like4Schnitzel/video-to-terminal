@@ -32,7 +32,7 @@ class MediaViewer {
         /// @brief Move to the previous file in the list.
         /// @return A pointer to the previous file in the list, or nullptr if the directory is empty.
         File* prev();
-        void view(TermUtils* tu = nullptr);
+        void view();
 };
 
 }

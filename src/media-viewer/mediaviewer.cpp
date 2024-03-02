@@ -131,25 +131,34 @@ File* MediaViewer::prev()
     return &files[filesIndex];
 }
 
-void MediaViewer::view(TermUtils* tu)
+void MediaViewer::view()
 {
     auto currentFile = current();
     switch (currentFile->type)
     {
         case FileType::IMG:
         {
-            int width, height;
             auto viewer = ImgViewer(currentFile->path);
-            if (tu != nullptr)
-                (*tu).showInput();
-            std::cout << "Enter width: ";
-            std::cin >> width;
-            std::cout << "Enter height: ";
-            std::cin >> height;
-            std::cout << "\n";
-            if (tu != nullptr)
-                (*tu).hideInput();
-            viewer.transcode(width, height);
+            auto pDims = std::array<int, 2>();
+            pDims[0] = viewer.getPixelWidth();
+            pDims[1] = viewer.getPixelHeight();
+            auto tMax = TermUtils::getTerminalDimensions();
+
+            double aspectRatio = (double) pDims[0] / pDims[1];
+            std::array<double, 2> tDims;
+
+            // try maxing out height
+            tDims[1] = tMax[1];
+            tDims[0] = 2 * aspectRatio * tDims[1];
+
+            // if that doesn't work, max out width
+            if (tDims[0] > tMax[0])
+            {
+                tDims[0] = tMax[0];
+                tDims[1] = 0.5 * tDims[0] / aspectRatio;
+            }
+
+            viewer.transcode(tDims[0], tDims[1]);
             viewer.print();
             break;
         }

@@ -228,4 +228,24 @@ void ImgViewer::print()
     }
 }
 
+int ImgViewer::getPixelWidth()
+{
+    return file.size().width;
+}
+
+int ImgViewer::getPixelHeight()
+{
+    return file.size().height;
+}
+
+int ImgViewer::getTerminalWidth()
+{
+    return width;
+}
+
+int ImgViewer::getTerminalHeight()
+{
+    return height;
+}
+
 }

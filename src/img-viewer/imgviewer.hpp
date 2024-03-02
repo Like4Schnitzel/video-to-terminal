@@ -19,6 +19,16 @@ class ImgViewer {
         ImgViewer(const std::string path);
         void transcode(const int width, const int height);
         void print();
+
+        /// @brief Get the width of the original image file.
+        int getPixelWidth();
+        /// @brief Get the height of the original image file.
+        int getPixelHeight();
+
+        /// @brief Get the width of the transcoded image.
+        int getTerminalWidth();
+        /// @brief Get the height of the transcoded image.
+        int getTerminalHeight();
 };
 
 }

@@ -11,9 +11,9 @@ int main(int argc, char** argv)
 {
     filesystem::path path;
     if (argc > 1)
-        path = filesystem::absolute(argv[1]);
+        path = filesystem::relative(argv[1]);
     else
-        path = filesystem::current_path();
+        path = filesystem::relative(filesystem::current_path());
 
     auto mv = MediaViewer(path);
 
@@ -47,7 +47,7 @@ int main(int argc, char** argv)
             if (!viewing && std::toupper(kp.keyValue) == 'V')
             {
                 viewing = true;
-                mv.view(&tu);
+                mv.view();
             }
 
             // ESC
