@@ -32,7 +32,9 @@ class MediaViewer {
         /// @brief Move to the previous file in the list.
         /// @return A pointer to the previous file in the list, or nullptr if the directory is empty.
         File* prev();
-        void view();
+        /// @brief Displays the currently selected file's contents in the terminal.
+        /// @param maxDims The maximum allowed size to use for the displaying. The image will be scaled to this as far as possible while staying close to the original aspect ratio.
+        void view(std::array<int, 2> maxDims = TermUtils::getTerminalDimensions());
 };
 
 }

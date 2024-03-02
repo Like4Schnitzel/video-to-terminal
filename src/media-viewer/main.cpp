@@ -26,9 +26,8 @@ int main(int argc, char** argv)
     bool viewing = false;
     TermUtils tu;
     int fileIndex = 0;
-    cout << "Selected file: " << mv.current()->path << "\n" << flush;
-    unsigned char keyValue;
     cout << "waiting for a keypress...\npress ESC to close the program.\n" << flush;
+    cout << "Selected file: " << mv.current()->path << "\n" << flush;
     tu.hideInput();
     while (true)
     {
@@ -43,11 +42,17 @@ int main(int argc, char** argv)
             if (!viewing && kp.keyValue == 1792836)
                 cout << "Selected file: " << mv.prev()->path << "\n";
 
-            // V key
-            if (!viewing && std::toupper(kp.keyValue) == 'V')
+            // displaying a file
+            if ((!viewing && std::toupper(kp.keyValue) == 'V') || mv.current()->type == FileType::IMG)
             {
-                viewing = true;
-                mv.view();
+                if (mv.current()->type != FileType::IMG)
+                {
+                    viewing = true;
+                }
+
+                auto sizeToUse = TermUtils::getTerminalDimensions();
+                sizeToUse[1] -= 2; // leave space for the file name line
+                mv.view(sizeToUse);
             }
 
             // ESC

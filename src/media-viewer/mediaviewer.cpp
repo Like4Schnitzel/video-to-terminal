@@ -131,7 +131,7 @@ File* MediaViewer::prev()
     return &files[filesIndex];
 }
 
-void MediaViewer::view()
+void MediaViewer::view(std::array<int, 2> maxDims)
 {
     auto currentFile = current();
     switch (currentFile->type)
@@ -142,19 +142,18 @@ void MediaViewer::view()
             auto pDims = std::array<int, 2>();
             pDims[0] = viewer.getPixelWidth();
             pDims[1] = viewer.getPixelHeight();
-            auto tMax = TermUtils::getTerminalDimensions();
 
             double aspectRatio = (double) pDims[0] / pDims[1];
             std::array<double, 2> tDims;
 
             // try maxing out height
-            tDims[1] = tMax[1];
+            tDims[1] = maxDims[1];
             tDims[0] = 2 * aspectRatio * tDims[1];
 
             // if that doesn't work, max out width
-            if (tDims[0] > tMax[0])
+            if (tDims[0] > maxDims[0])
             {
-                tDims[0] = tMax[0];
+                tDims[0] = maxDims[0];
                 tDims[1] = 0.5 * tDims[0] / aspectRatio;
             }
 
