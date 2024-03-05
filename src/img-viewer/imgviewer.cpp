@@ -165,8 +165,8 @@ void ImgViewer::transcode(const int width, const int height)
     this->height = height;
     transcodedFile.resize(width*height);
 
-    const int widthPixelsPerChar = file.size().width / this->width;
-    const int heightPixelsPerChar = file.size().height / this->height;
+    const double widthPixelsPerChar = (double) file.size().width / this->width;
+    const double heightPixelsPerChar = (double) file.size().height / this->height;
 
     int charIndex = 0;
     std::vector<std::thread> threads;

@@ -482,8 +482,8 @@ std::shared_ptr<CharInfo []> VideoTranscoder::transcodeFrame()
     std::shared_ptr<CharInfo[]> frameInfo = std::make_shared<CharInfo[]>(vidTWidth*vidTHeight);
     int charIndex = 0;
 
-    const int widthPixelsPerChar = vidWidth / vidTWidth;
-    const int heightPixelsPerChar = vidHeight / vidTHeight;
+    const double widthPixelsPerChar = (double) vidWidth / vidTWidth;
+    const double heightPixelsPerChar = (double) vidHeight / vidTHeight;
 
     std::vector<std::thread> threads;
     threads.reserve(vidTHeight);
