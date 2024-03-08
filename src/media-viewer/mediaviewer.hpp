@@ -10,6 +10,13 @@ namespace vtt {
 
 // Image, Encoded Video, Transcoded Video
 enum FileType { IMG, VIDENC, VIDTRANS };
+enum class ViewExitCode { ALLGOOD, FILETYPEUNKNOWN, TERMINALTOOSMALL };
+const std::map<ViewExitCode, std::string> ExitCodes
+{ 
+    {ViewExitCode::ALLGOOD, "All good."},
+    {ViewExitCode::FILETYPEUNKNOWN, "File type unknown."},
+    {ViewExitCode::TERMINALTOOSMALL, "The terminal's size is too small to display the video."}
+};
 
 struct File {
     std::string path;
@@ -33,8 +40,9 @@ class MediaViewer {
         /// @return A pointer to the previous file in the list, or nullptr if the directory is empty.
         File* prev();
         /// @brief Displays the currently selected file's contents in the terminal.
-        /// @param maxDims The maximum allowed size to use for the displaying. The image will be scaled to this as far as possible while staying close to the original aspect ratio.
-        void view(std::array<int, 2> maxDims = TermUtils::getTerminalDimensions());
+        /// @param maxDims The maximum allowed size to use for the displaying. The image will be scaled to this as far as possible while staying close to the original aspect ratio. Defaults to the size of the terminal.
+        /// @param ignoreWarning Whether or not to ignore warnings. If this is false, warnings will return with their corresponding exit code.
+        ViewExitCode view(std::array<int, 2> maxDims = TermUtils::getTerminalDimensions(), bool ignoreWarning = false);
 };
 
 }

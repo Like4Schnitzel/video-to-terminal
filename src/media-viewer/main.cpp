@@ -28,6 +28,13 @@ int main(int argc, char** argv)
     int fileIndex = 0;
     cout << "waiting for a keypress...\npress ESC to close the program.\n" << flush;
     cout << "Selected file: " << mv.current()->path << "\n" << flush;
+    if (mv.current()->type == FileType::IMG)
+    {
+        auto sizeToUse = TermUtils::getTerminalDimensions();
+        sizeToUse[1] -= 2; // leave space for the file name line
+        mv.view(sizeToUse);
+    }
+
     tu.hideInput();
     while (true)
     {
@@ -50,7 +57,27 @@ int main(int argc, char** argv)
 
                 auto sizeToUse = TermUtils::getTerminalDimensions();
                 sizeToUse[1] -= 2; // leave space for the file name line
-                mv.view(sizeToUse);
+                auto returnCode = mv.view(sizeToUse);
+
+                if (returnCode != ViewExitCode::ALLGOOD)
+                {
+                    viewing = false;
+                    cout << ExitCodes.at(returnCode) << "\n";
+
+                    if (returnCode == ViewExitCode::TERMINALTOOSMALL)
+                    {
+                        char ans;
+                        cout << "Display anyways? [y/N] ";
+                        tu.showInput();
+                        cin >> ans;
+                        tu.hideInput();
+
+                        if (std::toupper(ans) == 'Y')
+                        {
+                            mv.view(sizeToUse, true);
+                        }
+                    }
+                }
             }
 
             // ESC

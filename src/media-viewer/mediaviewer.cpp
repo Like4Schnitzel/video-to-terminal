@@ -7,7 +7,7 @@ bool validVTDI(std::string path)
     auto decoder = VTDIDecoder(path, false);
     try
     {
-        decoder.readStaticInfo();
+        decoder.readStaticInfo(false);
     }
     catch (std::runtime_error)
     {
@@ -131,7 +131,7 @@ File* MediaViewer::prev()
     return &files[filesIndex];
 }
 
-void MediaViewer::view(std::array<int, 2> maxDims)
+ViewExitCode MediaViewer::view(std::array<int, 2> maxDims, bool ignoreWarning)
 {
     auto currentFile = current();
     switch (currentFile->type)
@@ -161,7 +161,33 @@ void MediaViewer::view(std::array<int, 2> maxDims)
             viewer.print();
             break;
         }
+
+        case FileType::VIDTRANS:
+        {
+            auto viewer = VTDIDecoder(currentFile->path, false);
+            auto tDims = TermUtils::getTerminalDimensions();
+            viewer.readStaticInfo(false);
+
+            if (!ignoreWarning && (viewer.getVidWidth() > tDims[0] || viewer.getVidHeight() > tDims[1]))
+            {
+                return ViewExitCode::TERMINALTOOSMALL;
+            }
+
+            else
+            {
+                viewer.playVideo();
+            }
+
+            break;
+        }
+
+        default:
+        {
+            return ViewExitCode::FILETYPEUNKNOWN;
+        }
     }
+
+    return ViewExitCode::ALLGOOD;
 }
 
 }

@@ -40,7 +40,7 @@ T applyAssign(T num, int& index, const Byte* sib)
     return result;
 }
 
-void VTDIDecoder::readStaticInfo()
+void VTDIDecoder::readStaticInfo(bool debugInfo)
 {
     // these are taken from the spec
     const int expectedSig[] = {86, 84, 68, 73};
@@ -57,7 +57,8 @@ void VTDIDecoder::readStaticInfo()
             throw std::runtime_error("File signature does not match expected signature.");
         }
     }
-    std::cout << "File signature is correct!\n";
+    if (debugInfo)
+        std::cout << "File signature is correct!\n";
 
     version = applyAssign(version, std::ref(index), staticInfoBytes.get());
 
