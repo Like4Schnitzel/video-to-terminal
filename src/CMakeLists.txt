@@ -16,6 +16,8 @@ add_executable( decoder decoder/main.cpp decoder/vtdidecoder.cpp libs/binaryutil
 target_link_libraries( decoder stdc++fs )
 
 add_executable( img-viewer img-viewer/main.cpp img-viewer/imgviewer.cpp libs/variousutils.cpp )
+#target_compile_options( img-viewer PRIVATE -pg -fsanitize=address )
+#target_link_options( img-viewer PRIVATE -pg -fsanitize=address )
 target_link_libraries( img-viewer stdc++fs ${OpenCV_LIBS} )
 
 add_executable (

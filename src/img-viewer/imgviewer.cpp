@@ -159,29 +159,73 @@ CharInfo findBestBlockCharacter(cv::Mat img)
     return maxDiffCharInfo;
 }
 
+double min(double a, double b) {if (a < b) return a; else return b;}
+double max(double a, double b) {if (a < b) return b; else return a;}
+
+/// @brief Calculates the mean color of a possibly pixel-misaligned submatrix inside a pixel matrix.
+cv::Vec3b meanColWithSubPixels(cv::Mat mat, double x, double y, double width, double height)
+{
+    cv::Vec3b result = {0, 0, 0};
+
+    auto slice = mat(cv::Rect(floor(x), floor(y), ceil(width), ceil(height)));
+
+    for (int i = 0; i < slice.rows; i++)
+    {
+        for (int j = 0; j < slice.cols; j++)
+        {
+            auto pixel = slice.at<cv::Vec3b>(i, j);
+
+            double xPercentage = (min(x+width, floor(x)+j+1) - max(x, floor(x)+j)) / width;
+            double yPercentage = (min(y+height, floor(y)+i+1) - max(y, floor(y)+i)) / height;
+
+            result += xPercentage * yPercentage * pixel;
+        }
+    }
+
+    return result;
+}
+
 void ImgViewer::transcode(const int width, const int height)
 {
     this->width = width;
     this->height = height;
     transcodedFile.resize(width*height);
 
+    const int subPixelMatrixSize = 8;
+
     const double widthPixelsPerChar = (double) file.size().width / this->width;
+    const double nthWidth = widthPixelsPerChar / subPixelMatrixSize;
     const double heightPixelsPerChar = (double) file.size().height / this->height;
+    const double nthHeight = heightPixelsPerChar / subPixelMatrixSize;
 
     int charIndex = 0;
     std::vector<std::thread> threads;
     threads.reserve(this->height);
+
+    double y = 0;
     for (int i = 0; i < this->height; i++)
     {
-        threads.emplace_back([&, charIndex, i](){
+        threads.emplace_back([&, y, charIndex](){
             int ciIndexCopy = charIndex;
-            int y = heightPixelsPerChar * i;
+            double xAnchor = 0;
+
             for (int j = 0; j < this->width; j++)
             {
-                int x = widthPixelsPerChar * j;
-                CharInfo best = findBestBlockCharacter(
-                    file(cv::Rect((int)x, (int)y, (int)widthPixelsPerChar, (int)heightPixelsPerChar))
-                );
+                double tempY = y;
+                // now we're gonna make an 8x8 pixel matrix to pass since we at max have an eighth of a character as resolution
+                cv::Mat3b rect(subPixelMatrixSize, subPixelMatrixSize);
+                for (int u = 0; u < subPixelMatrixSize; u++)
+                {
+                    double tempX = xAnchor;
+                    for (int v = 0; v < subPixelMatrixSize; v++)
+                    {
+                        rect.at<cv::Vec3b>(u, v) = meanColWithSubPixels(file, tempX, tempY, nthWidth, nthHeight);
+                        tempX += nthWidth;
+                    }
+                    tempY += nthHeight;
+                }
+
+                CharInfo best = findBestBlockCharacter(rect);
 
                 for (int k = 0; k < 3; k++)
                 {
@@ -190,9 +234,11 @@ void ImgViewer::transcode(const int width, const int height)
                 }
                 transcodedFile[ciIndexCopy].chara = best.chara;
 
+                xAnchor += widthPixelsPerChar;
                 ciIndexCopy++;
             }
         });
+        y += heightPixelsPerChar;
         charIndex += this->width;
     }
 

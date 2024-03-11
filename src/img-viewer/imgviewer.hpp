@@ -4,6 +4,7 @@
 #include <iostream>
 #include <thread>
 #include <error.h>
+#include <math.h>
 #include "../libs/variousutils.hpp"
 #include "../libs/charinfo.hpp"
 
