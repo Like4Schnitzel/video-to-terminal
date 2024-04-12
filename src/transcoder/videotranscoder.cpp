@@ -24,6 +24,9 @@ VideoTranscoder::VideoTranscoder(const std::string path, const std::string vtdiP
     vidTWidth = terminalWidth;
     vidTHeight = terminalHeight;
     std::cout << "Terminal dimensions: " << terminalWidth << "x" << terminalHeight << " characters\n";
+
+    widthPixelsPerChar = (double) vidWidth / vidTWidth;
+    heightPixelsPerChar = (double) vidHeight / vidTHeight;
 }
 
 VideoTranscoder::~VideoTranscoder()
@@ -332,6 +335,56 @@ int getColorDiff(cv::Scalar col1, cv::Scalar col2)
            pow(col1[2] - col2[2], 2);
 }
 
+/// @brief Calculates the mean color of a possibly pixel-misaligned submatrix inside a pixel matrix.
+cv::Vec3b meanColWithSubPixels(cv::Mat mat, double x, double y, double width, double height)
+{
+    // thanks to https://github.com/marceldobehere/ for helping me out with this one
+    cv::Vec3d result = {0, 0, 0};
+    double pixelCount = 0;
+
+    int x0 = (int)floor(x);
+    int y0 = (int)floor(y);
+    int x1 = (int)ceil(x+width);
+    int y1 = (int)ceil(y+height);
+
+    double ax0 = x;
+    double ay0 = y;
+    double ax1 = x + width;
+    double ay1 = y + height;
+
+    double x0Percent = ax0 - x0;
+    double y0Percent = ay0 - y0;
+    double x1Percent = x1 - ax1;
+    double y1Percent = y1 - ay1;
+
+    int maxW = min(x1 - x0 + 1, mat.cols - x0 - 1);
+    int maxH = min(y1 - y0 + 1, mat.rows - y0 - 1);
+    auto slice = mat(cv::Rect(x0, y0, maxW, maxH));
+
+    for (int y = 0; y < maxH; y++)
+        for (int x = 0; x < maxW; x++)
+        {
+            double pixelPercent = 1.0;
+            if (x == 0)
+                pixelPercent *= x0Percent;
+            if (x == maxW - 1)
+                pixelPercent *= x1Percent;
+            if (y == 0)
+                pixelPercent *= y0Percent;
+            if (y == maxH - 1)
+                pixelPercent *= y1Percent;
+            
+            auto pixel = slice.at<cv::Vec3b>(x, y);
+            result += pixel * pixelPercent;
+            pixelCount += pixelPercent;
+        }
+        
+        
+        
+    result /= pixelCount;
+    return (cv::Vec3b)result;
+}
+
 CharInfo findBestBlockCharacter(cv::Mat img)
 {
     CharInfo maxDiffCharInfo;
@@ -479,37 +532,54 @@ CharInfo findBestBlockCharacter(cv::Mat img)
 
 std::shared_ptr<CharInfo []> VideoTranscoder::transcodeFrame()
 {
-    std::shared_ptr<CharInfo[]> frameInfo = std::make_shared<CharInfo[]>(vidTWidth*vidTHeight);
+    std::shared_ptr<CharInfo[]> frameInfo = std::make_shared<CharInfo[]>(vidTWidth*vidTHeight);    
+
+    const int subPixelMatrixSize = 8;
+    const double nthWidth = widthPixelsPerChar / subPixelMatrixSize;
+    const double nthHeight = heightPixelsPerChar / subPixelMatrixSize;
+
     int charIndex = 0;
-
-    const double widthPixelsPerChar = (double) vidWidth / vidTWidth;
-    const double heightPixelsPerChar = (double) vidHeight / vidTHeight;
-
     std::vector<std::thread> threads;
-    threads.reserve(vidTHeight);
-    for (int i = 0; i < vidTHeight; i++)
+    threads.reserve(this->vidTHeight);
+
+    double y = 0;
+    for (int i = 0; i < this->vidTHeight; i++)
     {
-        threads.emplace_back([&, charIndex, i](){
+        threads.emplace_back([&, y, charIndex](){
             int ciIndexCopy = charIndex;
-            int y = heightPixelsPerChar * i;
-            for (int j = 0; j < vidTWidth; j++)
+            double xAnchor = 0;
+
+            for (int j = 0; j < this->vidTWidth; j++)
             {
-                int x = widthPixelsPerChar * j;
-                CharInfo best = findBestBlockCharacter(
-                    frame(cv::Rect((int)x, (int)y, (int)widthPixelsPerChar, (int)heightPixelsPerChar))
-                );
+                double tempY = y;
+                // now we're gonna make an 8x8 pixel matrix to pass since we at max have an eighth of a character as resolution
+                cv::Mat3b rect(subPixelMatrixSize, subPixelMatrixSize);
+                for (int u = 0; u < subPixelMatrixSize; u++)
+                {
+                    double tempX = xAnchor;
+                    for (int v = 0; v < subPixelMatrixSize; v++)
+                    {
+                        rect.at<cv::Vec3b>(u, v) = meanColWithSubPixels(file, tempX, tempY, nthWidth, nthHeight);
+                        tempX += nthWidth;
+                    }
+                    tempY += nthHeight;
+                }
+
+                CharInfo best = findBestBlockCharacter(rect);
 
                 for (int k = 0; k < 3; k++)
                 {
-                    frameInfo.get()[ciIndexCopy].foregroundRGB[k] = best.foregroundRGB[k];
-                    frameInfo.get()[ciIndexCopy].backgroundRGB[k] = best.backgroundRGB[k];
+                    frameInfo[ciIndexCopy].foregroundRGB[k] = best.foregroundRGB[k];
+                    frameInfo[ciIndexCopy].backgroundRGB[k] = best.backgroundRGB[k];
                 }
-                frameInfo.get()[ciIndexCopy].chara = best.chara;
+                frameInfo[ciIndexCopy].chara = best.chara;
 
+                xAnchor += widthPixelsPerChar;
                 ciIndexCopy++;
             }
         });
-        charIndex += vidTWidth;
+        y += heightPixelsPerChar;
+        charIndex += this->vidTWidth;
     }
 
     // wait for all threads to finish

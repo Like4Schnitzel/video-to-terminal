@@ -26,6 +26,8 @@ class VideoTranscoder
         uint32_t vidFrames;
         uint16_t vidTHeight;
         uint16_t vidTWidth;
+        double widthPixelsPerChar;
+        double heightPixelsPerChar;
         float vidFPS;
     public:
         VideoTranscoder(const std::string path, const std::string vtdiPath, const uint16_t terminalWidth, const uint16_t terminalHeight);
