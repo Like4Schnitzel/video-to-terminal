@@ -335,6 +335,9 @@ int getColorDiff(cv::Scalar col1, cv::Scalar col2)
            pow(col1[2] - col2[2], 2);
 }
 
+double min(double a, double b) {if (a < b) return a; else return b;}
+double max(double a, double b) {if (a < b) return b; else return a;}
+
 /// @brief Calculates the mean color of a possibly pixel-misaligned submatrix inside a pixel matrix.
 cv::Vec3b meanColWithSubPixels(cv::Mat mat, double x, double y, double width, double height)
 {
@@ -559,7 +562,7 @@ std::shared_ptr<CharInfo []> VideoTranscoder::transcodeFrame()
                     double tempX = xAnchor;
                     for (int v = 0; v < subPixelMatrixSize; v++)
                     {
-                        rect.at<cv::Vec3b>(u, v) = meanColWithSubPixels(file, tempX, tempY, nthWidth, nthHeight);
+                        rect.at<cv::Vec3b>(u, v) = meanColWithSubPixels(frame, tempX, tempY, nthWidth, nthHeight);
                         tempX += nthWidth;
                     }
                     tempY += nthHeight;
