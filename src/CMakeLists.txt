@@ -10,7 +10,7 @@ add_executable( transcoder transcoder/main.cpp transcoder/videotranscoder.cpp li
 #target_link_options( transcoder PRIVATE -pg )
 target_link_libraries( transcoder stdc++fs ${OpenCV_LIBS} )
 
-add_executable( decoder decoder/main.cpp decoder/vtdidecoder.cpp libs/binaryutils.cpp libs/variousutils.cpp libs/termutils.cpp )
+add_executable( decoder decoder/main.cpp decoder/vtdidecoder.cpp libs/binaryutils.cpp libs/variousutils.cpp libs/termutils.cpp libs/_kbhit.cpp )
 #target_compile_options( decoder PRIVATE -pg -fsanitize=address )
 #target_link_options( decoder PRIVATE -pg -fsanitize=address )
 target_link_libraries( decoder stdc++fs )
