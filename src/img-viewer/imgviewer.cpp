@@ -165,24 +165,51 @@ double max(double a, double b) {if (a < b) return b; else return a;}
 /// @brief Calculates the mean color of a possibly pixel-misaligned submatrix inside a pixel matrix.
 cv::Vec3b meanColWithSubPixels(cv::Mat mat, double x, double y, double width, double height)
 {
-    cv::Vec3b result = {0, 0, 0};
+    // thanks to https://github.com/marceldobehere/ for helping me out with this one
+    cv::Vec3d result = {0, 0, 0};
+    double pixelCount = 0;
 
-    auto slice = mat(cv::Rect(floor(x), floor(y), ceil(width), ceil(height)));
+    int x0 = (int)floor(x);
+    int y0 = (int)floor(y);
+    int x1 = (int)ceil(x+width);
+    int y1 = (int)ceil(y+height);
 
-    for (int i = 0; i < slice.rows; i++)
-    {
-        for (int j = 0; j < slice.cols; j++)
+    double ax0 = x;
+    double ay0 = y;
+    double ax1 = x + width;
+    double ay1 = y + height;
+
+    double x0Percent = ax0 - x0;
+    double y0Percent = ay0 - y0;
+    double x1Percent = x1 - ax1;
+    double y1Percent = y1 - ay1;
+
+    int maxW = min(x1 - x0 + 1, mat.cols - x0 - 1);
+    int maxH = min(y1 - y0 + 1, mat.rows - y0 - 1);
+    auto slice = mat(cv::Rect(x0, y0, maxW, maxH));
+
+    for (int y = 0; y < maxH; y++)
+        for (int x = 0; x < maxW; x++)
         {
-            auto pixel = slice.at<cv::Vec3b>(i, j);
-
-            double xPercentage = (min(x+width, floor(x)+j+1) - max(x, floor(x)+j)) / width;
-            double yPercentage = (min(y+height, floor(y)+i+1) - max(y, floor(y)+i)) / height;
-
-            result += xPercentage * yPercentage * pixel;
+            double pixelPercent = 1.0;
+            if (x == 0)
+                pixelPercent *= x0Percent;
+            if (x == maxW - 1)
+                pixelPercent *= x1Percent;
+            if (y == 0)
+                pixelPercent *= y0Percent;
+            if (y == maxH - 1)
+                pixelPercent *= y1Percent;
+            
+            auto pixel = slice.at<cv::Vec3b>(x, y);
+            result += pixel * pixelPercent;
+            pixelCount += pixelPercent;
         }
-    }
-
-    return result;
+        
+        
+        
+    result /= pixelCount;
+    return (cv::Vec3b)result;
 }
 
 void ImgViewer::transcode(const int width, const int height)
