@@ -201,7 +201,7 @@ cv::Vec3b meanColWithSubPixels(cv::Mat mat, double x, double y, double width, do
             if (y == maxH - 1)
                 pixelPercent *= y1Percent;
             
-            auto pixel = slice.at<cv::Vec3b>(y, x);
+            auto pixel = slice.at<cv::Vec3b>(x, y);
             result += pixel * pixelPercent;
             pixelCount += pixelPercent;
         }
