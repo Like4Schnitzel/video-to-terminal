@@ -15,8 +15,13 @@ int main(int argc, char** argv)
     else
         path = filesystem::relative(filesystem::current_path());
 
-    auto mv = MediaViewer(path);
+    int cacheSize;
+    if (argc > 2)
+        cacheSize = VariousUtils::stringToInt(argv[1]);
+    else
+        cacheSize = 10;        
 
+    auto mv = MediaViewer(path, cacheSize);
     if (mv.empty())
     {
         cout << "The selected folder " << path << " does not contain viewable files.\n";
@@ -39,6 +44,16 @@ int main(int argc, char** argv)
     while (true)
     {
         KeyPress kp = TermUtils::getKeyPress();
+
+        // ESC
+        if (kp.keyValue == KeyPressValues::ESC)
+        {
+            if (viewing)
+                viewing = false;
+            else
+                break;
+        }
+
         if (kp.keyDown)
         {
             if (!viewing && kp.keyValue == KeyPressValues::RIGHTARROW)
@@ -80,14 +95,6 @@ int main(int argc, char** argv)
                 }
             }
 
-            // ESC
-            if (kp.keyValue == KeyPressValues::ESC)
-            {
-                if (viewing)
-                    viewing = false;
-                else
-                    break;
-            }
         }
     }
     tu.showInput();

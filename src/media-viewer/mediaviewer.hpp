@@ -21,14 +21,19 @@ const std::map<ViewExitCode, std::string> ExitCodes
 struct File {
     std::string path;
     FileType type;
+    int unfilteredFilesIndex = -1;
 };
 
 class MediaViewer {
     private:
-        std::vector<File> files;
+        std::vector<File> fileCache;
+        int maxCacheSize;
+        std::vector<dirent> unfilteredFiles;
         int filesIndex;
+        File* readFile(std::string filePath);
+        std::filesystem::path dirPath;
     public:
-        MediaViewer(const std::filesystem::path path);
+        MediaViewer(const std::filesystem::path path, int maxCacheSize);
         const bool empty();
         /// @brief Get the currently selected file.
         /// @return A pointer to the file struct, or nullptr if the directory is empty.
@@ -43,6 +48,7 @@ class MediaViewer {
         /// @param maxDims The maximum allowed size to use for the displaying. The image will be scaled to this as far as possible while staying close to the original aspect ratio. Defaults to the size of the terminal.
         /// @param ignoreWarning Whether or not to ignore warnings. If this is false, warnings will return with their corresponding exit code.
         ViewExitCode view(std::array<int, 2> maxDims = TermUtils::getTerminalDimensions(), bool ignoreWarning = false);
+        int getIndex();
 };
 
 }

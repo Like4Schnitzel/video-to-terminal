@@ -17,12 +17,58 @@ bool validVTDI(std::string path)
     return true;
 }
 
-MediaViewer::MediaViewer(const std::filesystem::path path)
+File* MediaViewer::readFile(std::string filePath)
 {
-    filesIndex = 0;
+    if (!cv::imread(filePath).empty())
+    {
+        File* fileStruct = new File;
+        (*fileStruct).path = filePath;
+        (*fileStruct).type = FileType::IMG;
+
+        return fileStruct;
+    }
+    else if (cv::VideoCapture(filePath).isOpened())
+    {
+        File* fileStruct = new File;
+
+        std::string vtdiPath = ((std::string)filePath).substr(0, VariousUtils::rfind(filePath, '.')) + ".vtdi";
+        if (std::filesystem::exists(vtdiPath) && validVTDI(vtdiPath))
+        {
+            (*fileStruct).path = vtdiPath;
+            (*fileStruct).type = FileType::VIDTRANS;
+        }
+        else
+        {
+            (*fileStruct).path = filePath;
+            (*fileStruct).type = FileType::VIDENC;
+        }
+
+        return fileStruct;
+    }
+    else if (validVTDI(filePath))
+    {
+        // VTDI file might have already been added in a previous mp4 check. Make sure it's not a dupe.
+        if (!std::none_of(fileCache.begin(), fileCache.end(), [&filePath](File d){return std::strcmp(d.path.c_str(), filePath.c_str()) == 0;}))
+        {
+            return nullptr;
+        }
+
+        File* fileStruct = new File;
+        (*fileStruct).path = filePath;
+        (*fileStruct).type = FileType::VIDTRANS;
+
+        return fileStruct;
+    }
+
+    // this is practically an else
+    return nullptr;
+}
+
+MediaViewer::MediaViewer(const std::filesystem::path path, int maxCacheSize)
+{
+    this->maxCacheSize = maxCacheSize;
 
     bool checkForFile;
-    std::filesystem::path dirPath;
     if (std::filesystem::is_directory(path))
     {
         checkForFile = false;
@@ -34,101 +80,125 @@ MediaViewer::MediaViewer(const std::filesystem::path path)
         dirPath = path.parent_path();
     }
 
-    auto unfilteredFiles = VariousUtils::getFilesInDir(dirPath);
+    unfilteredFiles = VariousUtils::getFilesInDir(dirPath);
     sort(unfilteredFiles.begin(), unfilteredFiles.end(), [](dirent d1, dirent d2){return (std::string)d1.d_name < (std::string)d2.d_name;});
-    for (const auto file : unfilteredFiles)
+
+    int startIndex = 0;
+    if (checkForFile)
     {
-        std::string pathFileName = dirPath / file.d_name;
-
-        if (!cv::imread(pathFileName).empty())
+        for (int i = 0; i < unfilteredFiles.size(); i++)
         {
-            if (checkForFile && pathFileName == path)
+            if (dirPath / unfilteredFiles[i].d_name == path)
             {
-                filesIndex = files.size();
+                startIndex = i;
+                break;
             }
-            
-            File fileStruct;
-            fileStruct.path = pathFileName;
-            fileStruct.type = FileType::IMG;
-
-            files.push_back(fileStruct);
-        }
-        else if (cv::VideoCapture(pathFileName).isOpened())
-        {
-            File fileStruct;
-
-            std::string vtdiPath = ((std::string)pathFileName).substr(0, VariousUtils::rfind(pathFileName, '.')) + ".vtdi";
-            if (std::filesystem::exists(vtdiPath) && validVTDI(vtdiPath))
-            {
-                if (checkForFile && pathFileName == path)
-                {
-                    filesIndex = files.size();
-                }
-
-                fileStruct.path = vtdiPath;
-                fileStruct.type = FileType::VIDTRANS;
-            }
-            else
-            {
-                if (checkForFile && pathFileName == path)
-                {
-                    filesIndex = files.size();
-                }
-                
-                fileStruct.path = pathFileName;
-                fileStruct.type = FileType::VIDENC;
-            }
-
-            files.push_back(fileStruct);
-        }
-        else if (validVTDI(pathFileName))
-        {
-            // VTDI file might have already been added in a previous mp4 check. Make sure it's not a dupe.
-            if (!std::none_of(files.begin(), files.end(), [&pathFileName](File d){return std::strcmp(d.path.c_str(), pathFileName.c_str()) == 0;}))
-            {
-                continue;
-            }
-            if (checkForFile && pathFileName == path)
-            {
-                filesIndex = files.size();
-            }
-            
-            File fileStruct;
-            fileStruct.path = pathFileName;
-            fileStruct.type = FileType::VIDTRANS;
-
-            files.push_back(fileStruct);
         }
     }
+
+    // used later if the file is found
+    int i;
+    for (i = startIndex; i < unfilteredFiles.size() && fileCache.size() < maxCacheSize / 2; i++)
+    {
+        auto filePath = dirPath / unfilteredFiles[i].d_name;
+        auto file = readFile(filePath);
+
+        if (file != nullptr)
+        {
+            (*file).unfilteredFilesIndex = i;
+            fileCache.push_back(*file);
+        }
+    }
+
+    if (i < unfilteredFiles.size())
+    {
+        for (int j = (startIndex-1+unfilteredFiles.size()) % unfilteredFiles.size();
+             j != i && fileCache.size() < maxCacheSize;
+             j = (j - 1 + unfilteredFiles.size()) % unfilteredFiles.size())
+        {
+            auto filePath = dirPath / unfilteredFiles[j].d_name;
+            auto file = readFile(filePath);
+
+            if (file != nullptr)
+            {
+                (*file).unfilteredFilesIndex = j;
+                fileCache.insert(fileCache.begin(), *file);
+            }
+        }
+    }
+
+    filesIndex = fileCache.size() / 2;
 }
 
 const bool MediaViewer::empty()
 {
-    return files.empty();
+    return fileCache.empty();
 }
 
 File* MediaViewer::current()
 {
-    if (files.empty()) return nullptr;
+    if (fileCache.empty()) return nullptr;
 
-    return &files[filesIndex];
+    return &fileCache[filesIndex];
 }
 
 File* MediaViewer::next()
 {
-    if (files.empty()) return nullptr;
+    if (fileCache.empty()) return nullptr;
+    
+    // remove file at first index and then add one to the back, we won't need to change the file index
+    // for this we shift everything to the left by one
+    for (int i = 1; i < fileCache.size(); i++)
+        fileCache[i-1] = fileCache[i];
 
-    filesIndex = (filesIndex + 1) % files.size();
-    return &files[filesIndex];
+    // find next file after the current last one
+    File* newLast = nullptr;
+    for (int i = fileCache.back().unfilteredFilesIndex+1;
+         newLast == nullptr && i != fileCache.back().unfilteredFilesIndex;
+         i = (i + 1) % unfilteredFiles.size())
+    {
+        newLast = readFile(dirPath / unfilteredFiles[i].d_name);
+
+        if (newLast != nullptr)
+        {
+            (*newLast).unfilteredFilesIndex = i;
+        }
+    }
+    fileCache.back() = *newLast;
+
+    if (newLast == nullptr)
+        throw std::runtime_error("Couldn't find new next file.");
+
+    return &fileCache[filesIndex];
 }
 
 File* MediaViewer::prev()
 {
-    if (files.empty()) return nullptr;
+    if (fileCache.empty()) return nullptr;
 
-    filesIndex--;
-    if (filesIndex < 0) filesIndex += files.size();
-    return &files[filesIndex];
+    // remove file at last index and then add one at the front, file index doesn't need to be changed
+    for (int i = fileCache.size()-1; i >= 1; i--)
+        fileCache[i] = fileCache[i-1];
+
+    // find new first file before the current first one
+    File* newFirst = nullptr;
+    for (int i = fileCache.front().unfilteredFilesIndex-1;
+         newFirst == nullptr && i != fileCache.front().unfilteredFilesIndex;
+         i = (i - 1 + unfilteredFiles.size()) % unfilteredFiles.size())
+    {
+        newFirst = readFile(dirPath / unfilteredFiles[i].d_name);
+
+        if (newFirst != nullptr)
+        {
+            (*newFirst).unfilteredFilesIndex = i;
+        }
+    }
+    if (newFirst == nullptr)
+        throw std::runtime_error("Couldn't find new previous file.");
+
+    fileCache.front() = *newFirst;
+
+    return &fileCache[filesIndex];
 }
 
 ViewExitCode MediaViewer::view(std::array<int, 2> maxDims, bool ignoreWarning)
@@ -188,6 +258,11 @@ ViewExitCode MediaViewer::view(std::array<int, 2> maxDims, bool ignoreWarning)
     }
 
     return ViewExitCode::ALLGOOD;
+}
+
+int MediaViewer::getIndex()
+{
+    return filesIndex;
 }
 
 }
