@@ -17,7 +17,7 @@ bool validVTDI(std::string path)
     return true;
 }
 
-File* MediaViewer::readFile(std::string filePath)
+File* MediaViewer::readFile(std::filesystem::path filePath)
 {
     if (!cv::imread(filePath).empty())
     {
@@ -34,6 +34,12 @@ File* MediaViewer::readFile(std::string filePath)
         std::string vtdiPath = ((std::string)filePath).substr(0, VariousUtils::rfind(filePath, '.')) + ".vtdi";
         if (std::filesystem::exists(vtdiPath) && validVTDI(vtdiPath))
         {
+            // VTDI file might have already been added in a VTDI check
+            if (!std::none_of(fileCache.begin(), fileCache.end(), [v = filePath](auto d){return v == d.path;}))
+            {
+                return nullptr;
+            }
+            
             (*fileStruct).path = vtdiPath;
             (*fileStruct).type = FileType::VIDTRANS;
         }
@@ -48,7 +54,7 @@ File* MediaViewer::readFile(std::string filePath)
     else if (validVTDI(filePath))
     {
         // VTDI file might have already been added in a previous mp4 check. Make sure it's not a dupe.
-        if (!std::none_of(fileCache.begin(), fileCache.end(), [&filePath](File d){return std::strcmp(d.path.c_str(), filePath.c_str()) == 0;}))
+        if (!std::none_of(fileCache.begin(), fileCache.end(), [v = filePath](auto d){return v == d.path;}))
         {
             return nullptr;
         }

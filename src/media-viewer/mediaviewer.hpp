@@ -19,7 +19,7 @@ const std::map<ViewExitCode, std::string> ExitCodes
 };
 
 struct File {
-    std::string path;
+    std::filesystem::path path;
     FileType type;
     int unfilteredFilesIndex = -1;
 };
@@ -30,7 +30,7 @@ class MediaViewer {
         int maxCacheSize;
         std::vector<dirent> unfilteredFiles;
         int filesIndex;
-        File* readFile(std::string filePath);
+        File* readFile(std::filesystem::path filePath);
         std::filesystem::path dirPath;
     public:
         MediaViewer(const std::filesystem::path path, int maxCacheSize);

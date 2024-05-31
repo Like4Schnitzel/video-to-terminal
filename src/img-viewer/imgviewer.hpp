@@ -7,6 +7,7 @@
 #include <math.h>
 #include "../libs/variousutils.hpp"
 #include "../libs/charinfo.hpp"
+#include "../libs/img2cimat.hpp"
 
 namespace vtt {
 
