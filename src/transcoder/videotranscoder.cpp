@@ -6,24 +6,18 @@ VideoTranscoder::VideoTranscoder(const std::string path, const std::string vtdiP
 {
     vidPath = path;
     this->vtdiPath = vtdiPath;
-    std::cout << "Attempting to open \"" << path << "\".\n";
     vidCap.open(vidPath);
     if (!vidCap.isOpened())
     {
         throw std::invalid_argument("The video at the provided path could not be read.");
     }
-    std::cout << "\"" << path << "\" opened successfully.\n";
 
     vidWidth = vidCap.get(cv::CAP_PROP_FRAME_WIDTH);
     vidHeight = vidCap.get(cv::CAP_PROP_FRAME_HEIGHT);
-    std::cout << "Video dimensions: " << vidWidth << "x" << vidHeight << "\n";
     vidFPS = vidCap.get(cv::CAP_PROP_FPS);
-    std::cout << "Video FPS: " << vidFPS << "\n";
     vidFrames = vidCap.get(cv::CAP_PROP_FRAME_COUNT);
-    std::cout << "Video Frames: " << vidFrames << "\n";
     vidTWidth = terminalWidth;
     vidTHeight = terminalHeight;
-    std::cout << "Terminal dimensions: " << terminalWidth << "x" << terminalHeight << " characters\n";
 
     widthPixelsPerChar = (double) vidWidth / vidTWidth;
     heightPixelsPerChar = (double) vidHeight / vidTHeight;
@@ -40,9 +34,9 @@ cv::Mat VideoTranscoder::getFrame()
     return frame;
 }
 
-void VideoTranscoder::transcodeFile()
+void VideoTranscoder::transcodeFile(const uint maxThreads)
 {
-    const uint16_t versionNumber = 2;   // change if updates to the file format are made
+    constexpr uint16_t versionNumber = 2;   // change if updates to the file format are made
 
     // reset output file just in case
     BinaryUtils::writeToFile(vtdiPath, (char*)nullptr, 0, false);
@@ -55,34 +49,63 @@ void VideoTranscoder::transcodeFile()
         (..., BinaryUtils::writeToFile(vtdiPath, (char*)BinaryUtils::numToByteArray(args).data(), sizeof(args), true));
     }, args);
 
-    // settings constants for video byte writing
+    // setting constants for video byte writing
     const int totalTerminalChars = vidTWidth * vidTHeight;
-    std::shared_ptr<CharInfo[]> frameCIs = std::make_shared<CharInfo[]>(totalTerminalChars);
-    std::shared_ptr<CharInfo[]> previousFrameChars;
-
-    uint32_t frameBytesIndex = 0;
-    int frameIndex = 0;
-    double progress = -1;
-    // writing transcoded video bytes
-    std::cout << "Transcoding frames...\n";
-    for (vidCap>>frame; !frame.empty(); vidCap>>frame)
+    // plus 1 to keep one previous frame saved in transcodedFrames[0]
+    std::unique_ptr<std::shared_ptr<CharInfo[]>[]> transcodedFrames = std::make_unique<std::shared_ptr<CharInfo[]>[]>(maxThreads+1);
+    std::unique_ptr<std::thread[]> transcodingThreads = std::make_unique<std::thread[]>(maxThreads);
+    for (int i = 1; i <= maxThreads; i++)
     {
-        // progress update
-        double newProgress = (int)((double) frameIndex / vidFrames * 10000) / 100.;  // round to 4 digits
-        if (newProgress != progress)
-        {
-            progress = newProgress;
-            std::cout << std::fixed << std::setprecision(2) << "\33[2K\r" << progress << "\% done..." << std::flush;
-        }
-        frameIndex++;
-
-        frameCIs = transcodeFrame();
-        std::vector<Byte> frameBytes = compressFrame(frameCIs, previousFrameChars);
-        BinaryUtils::writeToFile(vtdiPath, (char*)frameBytes.data(), frameBytes.size(), true);
-        previousFrameChars = frameCIs;
+        transcodedFrames[i] = std::make_shared<CharInfo[]>(totalTerminalChars);
     }
 
-    std::cout << "\33[2k\r" << "100\% done!    \n" << std::flush;
+    uint32_t frameBytesIndex = 0;
+    int completedFrames = 0;
+    double previousProgress = -1;
+
+    const auto updateProgress = [&completedFrames, &previousProgress, *this]()
+    {
+        double newProgress = (int)((double) completedFrames / this->vidFrames * 10000) / 100.;  // round to 4 digits
+        if (newProgress != previousProgress)
+        {
+            previousProgress = newProgress;
+            std::cout << std::fixed << std::setprecision(2) << "\33[2K\r" << newProgress << "\% done..." << std::flush;
+        }
+    };
+
+    const auto transcodeOneFrame = [&transcodedFrames, &completedFrames, updateProgress, *this](int i, cv::Mat img)
+    {
+        imgToCIMat(img, this->vidTWidth, this->vidTHeight, transcodedFrames[i]);
+        completedFrames++;
+        updateProgress();
+    };
+
+    std::cout << "Transcoding frames...\n";
+
+    do
+    {
+        int i;
+        for (i = 0; i < maxThreads; i++)
+        {
+            vidCap>>frame;
+            if (frame.empty())
+                break;
+            transcodingThreads[i] = std::thread(transcodeOneFrame, i+1, frame.clone());
+        }
+
+        for (int j = 0; j < i; j++)
+        {
+            transcodingThreads[j].join();
+
+            std::vector<Byte> frameBytes = compressFrame(transcodedFrames[j+1], transcodedFrames[j]);
+            BinaryUtils::writeToFile(vtdiPath, (char*)frameBytes.data(), frameBytes.size(), true);
+        }
+
+        transcodedFrames[0] = transcodedFrames[maxThreads];
+        transcodedFrames[maxThreads] = std::make_shared<CharInfo[]>(totalTerminalChars);
+    } while (!frame.empty());
+
+    std::cout << "\33[2k\r" << "100\% done!     \n" << std::flush;
 }
 
 auto findBiggestRectangle(const std::shared_ptr<bool[]> bitmap, const int bitCount, const int rowLength)
@@ -230,11 +253,6 @@ std::vector<Byte> VideoTranscoder::compressFrame(std::shared_ptr<CharInfo[]> cur
     }
     else
     {
-        std::vector<std::thread> threads;
-        std::vector<std::vector<Byte>> threadResults;
-        threads.reserve(bitmaps.size());
-        threadResults.resize(bitmaps.size());
-
         result.push_back(0);    // marks new info
 
         // now compress the bitmaps
@@ -243,82 +261,61 @@ std::vector<Byte> VideoTranscoder::compressFrame(std::shared_ptr<CharInfo[]> cur
             ulong ciHash = it->first;
             auto bitmap = it->second;
 
-            threads.emplace_back(
-            [
-                &compressedBytes = threadResults[threads.size()],
-                ciHash,
-                bitmap,
-                vidTWidth = this->vidTWidth,
-                arraySize
-            ]
-            ()
+            // append CI bits
+            auto ciHashBytes = BinaryUtils::numToByteArray(ciHash);
+            for (int i = 1; i <= sizeof(CharInfo); i++) // start at the second byte, since CIs only have 7 but ulongs have 8
             {
-                // append CI bits
-                auto ciHashBytes = BinaryUtils::numToByteArray(ciHash);
-                for (int i = 1; i <= sizeof(CharInfo); i++) // start at the second byte, since CIs only have 7 but ulongs have 8
-                {
-                    compressedBytes.push_back(ciHashBytes[i]);
-                }
-
-                auto rect = findBiggestRectangle(bitmap, arraySize*sizeof(bool), vidTWidth);
-                while(rect[0] != -1)
-                {
-                    // write rectangle info to resulting bit vector
-                    // true if the rectangle is just 1 element
-                    if (rect[0] == rect[2] && rect[1] == rect[3])
-                    {
-                        // 1 is the code for position
-                        compressedBytes.push_back(1);
-
-                        for (int i = 0; i < 2; i++)
-                        {
-                            for (Byte byte : BinaryUtils::numToByteArray((uint16_t) rect[i]))
-                            {
-                                compressedBytes.push_back(byte);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        // 0 is the code for rectangle
-                        compressedBytes.push_back(0);
-
-                        for (int i = 0; i < 4; i++)
-                        {
-                            for (Byte byte : BinaryUtils::numToByteArray((uint16_t) rect[i]))
-                            {
-                                compressedBytes.push_back(byte);
-                            }
-                        }
-                    }
-
-                    // clear rectangle from bitmap
-                    // y coordinate
-                    for (int i = rect[1]; i <= rect[3]; i++)
-                    {
-                        // x coordinate
-                        for (int j = rect[0]; j <= rect[2]; j++)
-                        {
-                            bitmap.get()[i*vidTWidth+j] = 0;
-                        }
-                    }
-
-                    rect = findBiggestRectangle(bitmap, arraySize*sizeof(bool), vidTWidth);
-                }
-
-                // 2 is the code for end of CI segment
-                compressedBytes.push_back(2);
-            });
-        }
-
-        // wait for all threads to finish
-        for (int i = 0; i < threads.size(); i++)
-        {
-            threads[i].join();
-            for (Byte byte : threadResults[i])
-            {
-                result.push_back(byte);
+                result.push_back(ciHashBytes[i]);
             }
+
+            auto rect = findBiggestRectangle(bitmap, arraySize*sizeof(bool), vidTWidth);
+            while(rect[0] != -1)
+            {
+                // write rectangle info to resulting bit vector
+                // true if the rectangle is just 1 element
+                if (rect[0] == rect[2] && rect[1] == rect[3])
+                {
+                    // 1 is the code for position
+                    result.push_back(1);
+
+                    for (int i = 0; i < 2; i++)
+                    {
+                        for (Byte byte : BinaryUtils::numToByteArray((uint16_t) rect[i]))
+                        {
+                            result.push_back(byte);
+                        }
+                    }
+                }
+                else
+                {
+                    // 0 is the code for rectangle
+                    result.push_back(0);
+
+                    for (int i = 0; i < 4; i++)
+                    {
+                        for (Byte byte : BinaryUtils::numToByteArray((uint16_t) rect[i]))
+                        {
+                            result.push_back(byte);
+                        }
+                    }
+                }
+
+                // clear rectangle from bitmap
+                // y coordinate
+                for (int i = rect[1]; i <= rect[3]; i++)
+                {
+                    // x coordinate
+                    for (int j = rect[0]; j <= rect[2]; j++)
+                    {
+                        bitmap.get()[i*vidTWidth+j] = 0;
+                    }
+                }
+
+                rect = findBiggestRectangle(bitmap, arraySize*sizeof(bool), vidTWidth);
+            }
+
+            // 2 is the code for end of CI segment
+            result.push_back(2);
         }
 
         // replace last end of CI (2) with end of frame (3)
@@ -326,15 +323,6 @@ std::vector<Byte> VideoTranscoder::compressFrame(std::shared_ptr<CharInfo[]> cur
     }
 
     return result;
-}
-
-std::shared_ptr<CharInfo []> VideoTranscoder::transcodeFrame()
-{
-    std::shared_ptr<CharInfo[]> frameInfo = std::make_shared<CharInfo[]>(vidTWidth*vidTHeight);    
-
-    imgToCIMat<std::shared_ptr<CharInfo[]>>(frame, vidTWidth, vidTHeight, frameInfo);
-
-    return frameInfo;
 }
 
 }

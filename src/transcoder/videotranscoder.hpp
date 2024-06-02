@@ -34,8 +34,7 @@ class VideoTranscoder
         VideoTranscoder(const std::string path, const std::string vtdiPath, const uint16_t terminalWidth, const uint16_t terminalHeight);
         ~VideoTranscoder();
         cv::Mat getFrame();
-        void transcodeFile();
-        std::shared_ptr<CharInfo []> transcodeFrame();
+        void transcodeFile(const uint maxThreads);
         std::vector<Byte> compressFrame(std::shared_ptr<CharInfo[]> currentFrame, std::shared_ptr<CharInfo[]> prevFrame);
 };
 

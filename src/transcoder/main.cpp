@@ -11,6 +11,7 @@ int main(int argc, char** argv)
     uint16_t tWidth;
     uint16_t tHeight;
     uint32_t memoryCap;
+    uint threadCount;
 
     map<string, string> cliArgs;
 
@@ -92,8 +93,17 @@ int main(int argc, char** argv)
         cin >> tHeight;
     }
 
+    if (cliArgs.count("--threads") > 0)
+    {
+        threadCount = VariousUtils::stringToInt(cliArgs["--threads"]);
+    }
+    else
+    {
+        threadCount = max(std::thread::hardware_concurrency(), 1);
+    }
+
     VideoTranscoder trans(videoPath, vtdiFilePath, tWidth, tHeight);
-    trans.transcodeFile();
+    trans.transcodeFile(threadCount);
 
     return 0;
 }
