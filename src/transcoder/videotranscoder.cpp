@@ -54,6 +54,7 @@ void VideoTranscoder::transcodeFile(const uint maxThreads)
     // plus 1 to keep one previous frame saved in transcodedFrames[0]
     std::unique_ptr<std::shared_ptr<CharInfo[]>[]> transcodedFrames = std::make_unique<std::shared_ptr<CharInfo[]>[]>(maxThreads+1);
     std::unique_ptr<std::thread[]> transcodingThreads = std::make_unique<std::thread[]>(maxThreads);
+    std::unique_ptr<std::thread[]> compressionThreads = std::make_unique<std::thread[]>(maxThreads);
     for (int i = 1; i <= maxThreads; i++)
     {
         transcodedFrames[i] = std::make_shared<CharInfo[]>(totalTerminalChars);
@@ -91,15 +92,15 @@ void VideoTranscoder::transcodeFile(const uint maxThreads)
             if (frame.empty())
                 break;
             transcodingThreads[i] = std::thread(transcodeOneFrame, i+1, frame.clone());
+            compressionThreads[i] = std::thread([&transcodingThreads, &compressionThreads, &transcodedFrames, this, i](){
+                transcodingThreads[i].join();
+                if (i > 0) compressionThreads[i-1].join();
+                std::vector<Byte> frameBytes = compressFrame(transcodedFrames[i], transcodedFrames[i-1]);
+                BinaryUtils::writeToFile(vtdiPath, (char*)frameBytes.data(), frameBytes.size(), true);
+            });
         }
 
-        for (int j = 0; j < i; j++)
-        {
-            transcodingThreads[j].join();
-
-            std::vector<Byte> frameBytes = compressFrame(transcodedFrames[j+1], transcodedFrames[j]);
-            BinaryUtils::writeToFile(vtdiPath, (char*)frameBytes.data(), frameBytes.size(), true);
-        }
+        compressionThreads[maxThreads-1].join();
 
         transcodedFrames[0] = transcodedFrames[maxThreads];
         transcodedFrames[maxThreads] = std::make_shared<CharInfo[]>(totalTerminalChars);

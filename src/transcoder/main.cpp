@@ -103,7 +103,9 @@ int main(int argc, char** argv)
     }
 
     VideoTranscoder trans(videoPath, vtdiFilePath, tWidth, tHeight);
-    trans.transcodeFile(threadCount);
+    auto current = chrono::high_resolution_clock::now();
+    trans.transcodeFile(1);
+    cout << chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now() - current) << "\n";
 
     return 0;
 }
